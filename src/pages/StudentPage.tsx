@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import StudentCard from '/Users/mukeshchaudhary/Desktop/au_placements/src/components/StudentCard.tsx'; // adjust path if needed
+import StudentCard from '@/components/StudentCard'; // adjust path if needed
 
 export type Student = {
   id: string;
