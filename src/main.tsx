@@ -5,6 +5,7 @@ import App from './App.tsx';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import LandingPage from './pages/LandingPage.tsx';
 import StudentPage from './pages/StudentPage.tsx';
+import StudentProfile from './pages/StudentProfile.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<App />}>
           <Route index element={<LandingPage />} />
           <Route path="students" element={<StudentPage />} />
+          <Route path="profiles" element={<StudentProfile />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Menu, X } from 'lucide-react';
 import { ModeToggle } from './theme-toggle';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -65,16 +66,18 @@ const Navbar: React.FC = () => {
             <div className="hidden items-center gap-2 md:flex">
               <ModeToggle />
 
-              <Button>View Students</Button>
+              <Link to="/students">
+                <Button>View Students</Button>
+              </Link>
 
-              <a href="/profile">
-                <button className="focus:ring-ring flex items-center gap-2 rounded-full focus:ring-2 focus:outline-none hover:cursor-pointer">
+              <Link to="/profiles">
+                <button className="focus:ring-ring flex items-center gap-2 rounded-full hover:cursor-pointer focus:ring-2 focus:outline-none">
                   <Avatar>
                     <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
                     <AvatarFallback>PS</AvatarFallback>
                   </Avatar>
                 </button>
-              </a>
+              </Link>
             </div>
 
             {/* Mobile menu button */}
