@@ -7,6 +7,13 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MapPin, Edit2, Plus, Trash2, X, Upload } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader as DialogHeaderUI,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 type Experience = { id: string; title: string; org: string; period: string; bullets: string[] };
 type Project = { id: string; title: string; tech: string; description?: string };
@@ -88,11 +95,6 @@ const StudentProfile: React.FC = () => {
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
   const [saving, setSaving] = useState(false);
 
-  // helpers
-  function setExperiencesSafeUpdater(id: string, updater: (exp: Experience) => Experience) {
-    setExperiences((prev) => prev.map((x) => (x.id === id ? updater(x) : x)));
-  }
-
   function addExperience() {
     const id = `e${Date.now()}`;
     setExperiences((prev) => [
@@ -165,7 +167,6 @@ const StudentProfile: React.FC = () => {
     if (!name.trim()) e.name = 'Name is required';
     if (!contact.email.trim()) e.email = 'Email is required';
     else {
-      // simple email regex
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRe.test(contact.email.trim())) e.email = 'Invalid email';
     }
@@ -208,7 +209,7 @@ const StudentProfile: React.FC = () => {
     };
   }
 
-  // Save All (attach JWT if present)
+  // Save All
   async function handleSaveAll() {
     if (!validateAll()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -233,7 +234,7 @@ const StudentProfile: React.FC = () => {
 
       if (cvFile) form.append('cv', cvFile);
 
-      const token = localStorage.getItem('token'); // frontend: store auth token in localStorage/sessionStorage or context
+      const token = localStorage.getItem('token');
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -243,9 +244,8 @@ const StudentProfile: React.FC = () => {
         const txt = await res.text();
         throw new Error(txt || 'Save failed');
       }
-      const data = await res.json();
+      await res.json();
       alert('Saved successfully');
-      // optionally update state from returned data (ex: saved cv path)
     } catch (err: any) {
       console.error(err);
       alert('Error saving: ' + (err?.message || err));
@@ -254,7 +254,7 @@ const StudentProfile: React.FC = () => {
     }
   }
 
-  // JSX: same structure as before but with some inline error messages and disabled Save when saving
+  // JSX
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
       <div className="bg-muted h-48 w-full rounded-md" />
@@ -466,7 +466,7 @@ const StudentProfile: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Experience (unchanged, with join/split trimming) */}
+      {/* Experience */}
       <Card>
         <CardHeader className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Experience</h2>
@@ -494,84 +494,94 @@ const StudentProfile: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {!editingExperienceId || editingExperienceId !== exp.id ? (
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingExperienceId(exp.id)}
-                      >
-                        <Edit2 />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => removeExperience(exp.id)}>
-                        <Trash2 />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="bg-background w-full rounded-md p-2 md:w-96">
-                      <Input
-                        value={exp.title}
-                        onChange={(e) =>
-                          setExperiences((prev) =>
-                            prev.map((x) => (x.id === exp.id ? { ...x, title: e.target.value } : x))
-                          )
-                        }
-                        className="mb-2"
-                      />
-                      <Input
-                        value={exp.org}
-                        onChange={(e) =>
-                          setExperiences((prev) =>
-                            prev.map((x) => (x.id === exp.id ? { ...x, org: e.target.value } : x))
-                          )
-                        }
-                        className="mb-2"
-                      />
-                      <Input
-                        value={exp.period}
-                        onChange={(e) =>
-                          setExperiences((prev) =>
-                            prev.map((x) =>
-                              x.id === exp.id ? { ...x, period: e.target.value } : x
-                            )
-                          )
-                        }
-                        className="mb-2"
-                      />
-                      <Textarea
-                        value={exp.bullets.join('\n')}
-                        onChange={(e) =>
-                          setExperiences((prev) =>
-                            prev.map((x) =>
-                              x.id === exp.id
-                                ? {
-                                    ...x,
-                                    bullets: e.target.value
-                                      .split('\n')
-                                      .map((s) => s.trim())
-                                      .filter(Boolean),
-                                  }
-                                : x
-                            )
-                          )
-                        }
-                      />
-                      <div className="mt-2 flex gap-2">
-                        <Button onClick={() => saveExperience(exp)}>Save</Button>
-                        <Button variant="ghost" onClick={() => setEditingExperienceId(null)}>
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setEditingExperienceId(exp.id)}
+                    >
+                      <Edit2 />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => removeExperience(exp.id)}>
+                      <Trash2 />
+                    </Button>
+                  </div>
                 </div>
               </div>
+
+              {/* Experience Edit Modal */}
+              <Dialog
+                open={editingExperienceId === exp.id}
+                onOpenChange={(open) => {
+                  if (!open) setEditingExperienceId(null);
+                }}
+              >
+                <DialogContent>
+                  <DialogHeaderUI>
+                    <DialogTitle>Edit Experience</DialogTitle>
+                  </DialogHeaderUI>
+                  <div className="mt-2 space-y-2">
+                    <Input
+                      value={exp.title}
+                      onChange={(e) =>
+                        setExperiences((prev) =>
+                          prev.map((x) => (x.id === exp.id ? { ...x, title: e.target.value } : x))
+                        )
+                      }
+                      placeholder="Job Title"
+                    />
+                    <Input
+                      value={exp.org}
+                      onChange={(e) =>
+                        setExperiences((prev) =>
+                          prev.map((x) => (x.id === exp.id ? { ...x, org: e.target.value } : x))
+                        )
+                      }
+                      placeholder="Organization"
+                    />
+                    <Input
+                      value={exp.period}
+                      onChange={(e) =>
+                        setExperiences((prev) =>
+                          prev.map((x) => (x.id === exp.id ? { ...x, period: e.target.value } : x))
+                        )
+                      }
+                      placeholder="Period (e.g. 2023 - 2024)"
+                    />
+                    <Textarea
+                      value={exp.bullets.join('\n')}
+                      onChange={(e) =>
+                        setExperiences((prev) =>
+                          prev.map((x) =>
+                            x.id === exp.id
+                              ? {
+                                  ...x,
+                                  bullets: e.target.value
+                                    .split('\n')
+                                    .map((s) => s.trim())
+                                    .filter(Boolean),
+                                }
+                              : x
+                          )
+                        )
+                      }
+                      placeholder="One bullet per line"
+                    />
+                  </div>
+                  <DialogFooter className="mt-4 flex justify-end gap-2">
+                    <Button onClick={() => saveExperience(exp)}>Save</Button>
+                    <Button variant="ghost" onClick={() => setEditingExperienceId(null)}>
+                      Cancel
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Projects (with editable description) */}
+      {/* Projects */}
       <Card>
         <CardHeader className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Projects</h2>
@@ -621,9 +631,20 @@ const StudentProfile: React.FC = () => {
                       <Trash2 />
                     </Button>
                   </div>
+                </div>
 
-                  {editingProjectId === pr.id && (
-                    <div className="bg-background mt-2 w-full rounded-md p-3 md:w-96">
+                {/* Project Edit Modal */}
+                <Dialog
+                  open={editingProjectId === pr.id}
+                  onOpenChange={(open) => {
+                    if (!open) setEditingProjectId(null);
+                  }}
+                >
+                  <DialogContent>
+                    <DialogHeaderUI>
+                      <DialogTitle>Edit Project</DialogTitle>
+                    </DialogHeaderUI>
+                    <div className="mt-2 space-y-2">
                       <Input
                         value={pr.title}
                         onChange={(e) =>
@@ -631,7 +652,7 @@ const StudentProfile: React.FC = () => {
                             p.map((x) => (x.id === pr.id ? { ...x, title: e.target.value } : x))
                           )
                         }
-                        className="mb-2"
+                        placeholder="Project title"
                       />
                       <Input
                         value={pr.tech}
@@ -640,7 +661,7 @@ const StudentProfile: React.FC = () => {
                             p.map((x) => (x.id === pr.id ? { ...x, tech: e.target.value } : x))
                           )
                         }
-                        className="mb-2"
+                        placeholder="Tech stack"
                       />
                       <Textarea
                         value={pr.description ?? ''}
@@ -651,18 +672,17 @@ const StudentProfile: React.FC = () => {
                             )
                           )
                         }
-                        placeholder="Add a more detailed description of the project"
-                        className="mb-2"
+                        placeholder="Detailed project description"
                       />
-                      <div className="flex gap-2">
-                        <Button onClick={() => saveProject(pr.id, pr)}>Save</Button>
-                        <Button variant="ghost" onClick={() => setEditingProjectId(null)}>
-                          Cancel
-                        </Button>
-                      </div>
                     </div>
-                  )}
-                </div>
+                    <DialogFooter className="mt-4 flex justify-end gap-2">
+                      <Button onClick={() => saveProject(pr.id, pr)}>Save</Button>
+                      <Button variant="ghost" onClick={() => setEditingProjectId(null)}>
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             ))}
           </div>
