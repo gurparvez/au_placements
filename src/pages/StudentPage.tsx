@@ -31,6 +31,7 @@ const MOCK_SKILLS = [
   'React',
   'Node',
 ];
+
 const MOCK_STUDENTS: Student[] = [
   {
     id: 's1',
@@ -82,6 +83,13 @@ const StudentsPage: React.FC = () => {
     );
   };
 
+  const clearAllFilters = () => {
+    setQuery('');
+    setSelectedSkills([]);
+    setOpenToFilter(null);
+    setFieldFilter(null);
+  };
+
   const filteredStudents = useMemo(() => {
     return MOCK_STUDENTS.filter((st) => {
       const q = query.trim().toLowerCase();
@@ -98,27 +106,67 @@ const StudentsPage: React.FC = () => {
         const hasAll = selectedSkills.every((sk) => st.skills.includes(sk));
         if (!hasAll) return false;
       }
+
       if (openToFilter && st.open_to !== openToFilter) return false;
       if (fieldFilter && st.feild_preference !== fieldFilter) return false;
+
       return true;
     });
   }, [query, selectedSkills, openToFilter, fieldFilter]);
 
+  const filtersActive =
+    query.trim() !== '' ||
+    selectedSkills.length > 0 ||
+    openToFilter !== null ||
+    fieldFilter !== null;
+
   return (
-    // Use the semantic tokens from shadcn / tailwind: bg-background & text-foreground toggle with theme
-    <div className="bg-background text-foreground min-h-screen">
-      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+    <main className="bg-background text-foreground min-h-screen">
+      <div className="mx-auto w-full max-w-6xl px-6 pt-28 pb-10">
+        {/* Page header */}
+        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Students</h1>
+            <p className="text-muted-foreground text-sm">
+              Browse students by skills, field preferences, and interests.
+            </p>
+          </div>
+          <div className="text-muted-foreground text-right text-xs">
+            <div>{filteredStudents.length} students shown</div>
+            {filtersActive && (
+              <button
+                onClick={clearAllFilters}
+                className="text-primary mt-1 text-xs font-medium hover:underline"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-12 gap-6">
           {/* Left: skills filter */}
           <aside className="col-span-12 md:col-span-3">
-            <div className="sticky top-8">
+            <div className="sticky top-24">
               <div className="bg-card rounded-md border p-4">
-                <h3 className="mb-4 text-sm font-medium">Skills</h3>
-                <div className="flex max-h-[60vh] flex-col gap-3 overflow-auto pr-2">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-medium">Skills</h3>
+                  {selectedSkills.length > 0 && (
+                    <button
+                      type="button"
+                      className="text-muted-foreground text-[11px] hover:underline"
+                      onClick={() => setSelectedSkills([])}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex max-h-[60vh] flex-col gap-2 overflow-auto pr-1">
                   {MOCK_SKILLS.map((skill) => (
                     <Button
                       key={skill}
-                      variant={selectedSkills.includes(skill) ? undefined : 'ghost'}
+                      variant={selectedSkills.includes(skill) ? 'default' : 'ghost'}
                       onClick={() => toggleSkill(skill)}
                       className="w-full justify-start rounded-full px-3 py-1 text-sm"
                     >
@@ -126,6 +174,12 @@ const StudentsPage: React.FC = () => {
                     </Button>
                   ))}
                 </div>
+
+                {selectedSkills.length > 0 && (
+                  <div className="text-muted-foreground mt-3 text-[11px]">
+                    Selected: <span className="font-medium">{selectedSkills.join(', ')}</span>
+                  </div>
+                )}
               </div>
             </div>
           </aside>
@@ -136,7 +190,7 @@ const StudentsPage: React.FC = () => {
             <div className="mb-4 flex justify-center">
               <div className="w-full md:w-3/4">
                 <Input
-                  placeholder="Search students by name, skill, or course..."
+                  placeholder="Search students by name, skill, or field..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -147,33 +201,49 @@ const StudentsPage: React.FC = () => {
             <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
               <Button
                 size="sm"
-                variant={openToFilter === null ? 'secondary' : 'ghost'}
-                onClick={() => setOpenToFilter(null)}
+                variant={openToFilter === null && fieldFilter === null ? 'secondary' : 'ghost'}
+                onClick={() => {
+                  setOpenToFilter(null);
+                  setFieldFilter(null);
+                }}
               >
                 All
               </Button>
+
               <Button
                 size="sm"
                 variant={openToFilter === 'Internship' ? 'secondary' : 'ghost'}
                 onClick={() => setOpenToFilter((v) => (v === 'Internship' ? null : 'Internship'))}
               >
-                Internship/Placement
+                Internship
               </Button>
+
               <Button
                 size="sm"
-                variant={fieldFilter === null ? 'secondary' : 'ghost'}
-                onClick={() => setFieldFilter(null)}
+                variant={openToFilter === 'Placement' ? 'secondary' : 'ghost'}
+                onClick={() => setOpenToFilter((v) => (v === 'Placement' ? null : 'Placement'))}
               >
-                Preferred Field
+                Placement
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => {}}>
-                Experience
+
+              <Button
+                size="sm"
+                variant={fieldFilter === 'Software Developer' ? 'secondary' : 'ghost'}
+                onClick={() =>
+                  setFieldFilter((v) => (v === 'Software Developer' ? null : 'Software Developer'))
+                }
+              >
+                Software Developer
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => {}}>
-                Avg. GPA
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => {}}>
-                Course
+
+              <Button
+                size="sm"
+                variant={fieldFilter === 'Data Scientist' ? 'secondary' : 'ghost'}
+                onClick={() =>
+                  setFieldFilter((v) => (v === 'Data Scientist' ? null : 'Data Scientist'))
+                }
+              >
+                Data Scientist
               </Button>
             </div>
 
@@ -197,13 +267,15 @@ const StudentsPage: React.FC = () => {
               ))}
 
               {filteredStudents.length === 0 && (
-                <div className="text-muted-foreground text-center text-sm">No students found</div>
+                <div className="text-muted-foreground text-center text-sm">
+                  No students found. Try changing filters or search text.
+                </div>
               )}
             </div>
           </main>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
