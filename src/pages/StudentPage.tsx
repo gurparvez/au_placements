@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import StudentCard from '@/components/StudentCard'; // adjust path if needed
+import StudentCard from '@/components/StudentCard';
 
 export type Student = {
   id: string;
@@ -31,7 +31,6 @@ const MOCK_SKILLS = [
   'React',
   'Node',
 ];
-
 const MOCK_STUDENTS: Student[] = [
   {
     id: 's1',
@@ -85,7 +84,6 @@ const StudentsPage: React.FC = () => {
 
   const filteredStudents = useMemo(() => {
     return MOCK_STUDENTS.filter((st) => {
-      // search across name, headline and skills
       const q = query.trim().toLowerCase();
       if (q) {
         const matchesQuery =
@@ -96,117 +94,114 @@ const StudentsPage: React.FC = () => {
         if (!matchesQuery) return false;
       }
 
-      // skills filter: student must have all selected skill chips
       if (selectedSkills.length > 0) {
         const hasAll = selectedSkills.every((sk) => st.skills.includes(sk));
         if (!hasAll) return false;
       }
-
-      // openTo filter
       if (openToFilter && st.open_to !== openToFilter) return false;
-
-      // field filter
       if (fieldFilter && st.feild_preference !== fieldFilter) return false;
-
       return true;
     });
   }, [query, selectedSkills, openToFilter, fieldFilter]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-8">
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left: skills filter */}
-        <aside className="col-span-12 md:col-span-3">
-          <div className="sticky top-8">
-            <h3 className="mb-4 text-sm font-medium">Skills</h3>
-            <div className="flex max-h-[60vh] flex-col gap-3 overflow-auto pr-2">
-              {MOCK_SKILLS.map((skill) => (
-                <Button
-                  key={skill}
-                  variant={selectedSkills.includes(skill) ? undefined : 'ghost'}
-                  onClick={() => toggleSkill(skill)}
-                  className={`w-full justify-start rounded-full px-3 py-1 text-sm ${
-                    selectedSkills.includes(skill) ? '' : ''
-                  }`}
-                >
-                  {skill}
-                </Button>
+    // Use the semantic tokens from shadcn / tailwind: bg-background & text-foreground toggle with theme
+    <div className="bg-background text-foreground min-h-screen">
+      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Left: skills filter */}
+          <aside className="col-span-12 md:col-span-3">
+            <div className="sticky top-8">
+              <div className="bg-card rounded-md border p-4">
+                <h3 className="mb-4 text-sm font-medium">Skills</h3>
+                <div className="flex max-h-[60vh] flex-col gap-3 overflow-auto pr-2">
+                  {MOCK_SKILLS.map((skill) => (
+                    <Button
+                      key={skill}
+                      variant={selectedSkills.includes(skill) ? undefined : 'ghost'}
+                      onClick={() => toggleSkill(skill)}
+                      className="w-full justify-start rounded-full px-3 py-1 text-sm"
+                    >
+                      {skill}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main: search + filters + list */}
+          <main className="col-span-12 md:col-span-9">
+            {/* Search */}
+            <div className="mb-4 flex justify-center">
+              <div className="w-full md:w-3/4">
+                <Input
+                  placeholder="Search students by name, skill, or course..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                size="sm"
+                variant={openToFilter === null ? 'secondary' : 'ghost'}
+                onClick={() => setOpenToFilter(null)}
+              >
+                All
+              </Button>
+              <Button
+                size="sm"
+                variant={openToFilter === 'Internship' ? 'secondary' : 'ghost'}
+                onClick={() => setOpenToFilter((v) => (v === 'Internship' ? null : 'Internship'))}
+              >
+                Internship/Placement
+              </Button>
+              <Button
+                size="sm"
+                variant={fieldFilter === null ? 'secondary' : 'ghost'}
+                onClick={() => setFieldFilter(null)}
+              >
+                Preferred Field
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => {}}>
+                Experience
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => {}}>
+                Avg. GPA
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => {}}>
+                Course
+              </Button>
+            </div>
+
+            <Separator className="mb-6" />
+
+            {/* Students list */}
+            <div className="max-h-[60vh] space-y-6 overflow-auto pr-2">
+              {filteredStudents.map((st) => (
+                <StudentCard
+                  key={st.id}
+                  image_url={st.image_url}
+                  name={st.name}
+                  class={st.class}
+                  location={st.location}
+                  headline={st.headline}
+                  feild_preference={st.feild_preference}
+                  open_to={st.open_to}
+                  exprience={st.exprience}
+                  skills={st.skills}
+                />
               ))}
+
+              {filteredStudents.length === 0 && (
+                <div className="text-muted-foreground text-center text-sm">No students found</div>
+              )}
             </div>
-          </div>
-        </aside>
-
-        {/* Main: search + filters + list */}
-        <main className="col-span-12 md:col-span-9">
-          {/* Search centered */}
-          <div className="mb-4 flex justify-center">
-            <div className="w-full md:w-3/4">
-              <Input
-                placeholder="Search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Filters below search */}
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-            <Button
-              size="sm"
-              variant={openToFilter === null ? 'secondary' : 'ghost'}
-              onClick={() => setOpenToFilter(null)}
-            >
-              All
-            </Button>
-            <Button
-              size="sm"
-              variant={openToFilter === 'Internship' ? 'secondary' : 'ghost'}
-              onClick={() => setOpenToFilter((v) => (v === 'Internship' ? null : 'Internship'))}
-            >
-              Internship/Placement
-            </Button>
-            <Button
-              size="sm"
-              variant={fieldFilter === null ? 'secondary' : 'ghost'}
-              onClick={() => setFieldFilter(null)}
-            >
-              Preferred Field
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => {}}>
-              Experience
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => {}}>
-              Avg. GPA
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => {}}>
-              Course
-            </Button>
-          </div>
-
-          <Separator className="mb-6" />
-
-          {/* Students list (scrollable) */}
-          <div className="max-h-[60vh] space-y-6 overflow-auto pr-2">
-            {filteredStudents.map((st) => (
-              <StudentCard
-                key={st.id}
-                image_url={st.image_url}
-                name={st.name}
-                class={st.class}
-                location={st.location}
-                headline={st.headline}
-                feild_preference={st.feild_preference}
-                open_to={st.open_to}
-                exprience={st.exprience}
-                skills={st.skills}
-              />
-            ))}
-
-            {filteredStudents.length === 0 && (
-              <div className="text-muted-foreground text-center text-sm">No students found</div>
-            )}
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );
