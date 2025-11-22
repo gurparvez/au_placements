@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const LandingPage: React.FC = () => {
   return (
-    <main className="from-background via-background to-muted/40 relative min-h-screen bg-gradient-to-b">
+    <main className="from-background via-background to-muted/40 relative min-h-screen bg-linear-to-b">
       {/* Decorative blurred glow behind hero */}
       <div className="pointer-events-none absolute inset-x-0 top-16 flex justify-center">
         <div className="bg-primary/10 h-64 w-64 rounded-full blur-3xl" />
