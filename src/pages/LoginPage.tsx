@@ -17,7 +17,7 @@ type RegisterForm = {
 };
 
 type LoginForm = {
-  email: string;
+  auid: string;
   password: string;
 };
 
@@ -25,7 +25,7 @@ const LoginPage: React.FC = () => {
   const [mode, setMode] = useState<AuthMode>('login');
 
   const [loginForm, setLoginForm] = useState<LoginForm>({
-    email: '',
+    auid: '',
     password: '',
   });
 
@@ -185,15 +185,15 @@ const LoginPage: React.FC = () => {
             {mode === 'login' && (
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="login-email">
-                    Email
+                  <label className="text-sm font-medium" htmlFor="auid">
+                    AUID
                   </label>
                   <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="you@au.ac.in"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm((f) => ({ ...f, email: e.target.value }))}
+                    id="auid"
+                    type="text"
+                    placeholder="227106009"
+                    value={loginForm.auid}
+                    onChange={(e) => setLoginForm((f) => ({ ...f, auid: e.target.value }))}
                     required
                   />
                 </div>
