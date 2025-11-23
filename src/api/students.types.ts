@@ -58,9 +58,7 @@ export interface CreateStudentProfilePayload {
   profile_image?: File | null;                 // optional
 }
 
-export interface UpdateStudentProfilePayload extends Partial<CreateStudentProfilePayload> {
-  profile_image?: File | null;
-}
+export type UpdateStudentProfilePayload = Partial<CreateStudentProfilePayload>;
 
 /* -------------------------------------------------------------------------- */
 /*                             RESPONSE INTERFACES                             */
@@ -100,6 +98,7 @@ export interface StudentProfileResponse {
   location: string;
   about: string;
   linkedin_url: string;
+  preferred_field: String,
   github_url: string;
   resume_link: string;
   looking_for: string[];
@@ -120,5 +119,16 @@ export interface GetAnyStudentProfileRequest {
 
 export interface GetAnyStudentProfileResponse {
   success: boolean;
+  user: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    roles: string[];
+    verified: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
   profile: StudentProfileResponse;
 }

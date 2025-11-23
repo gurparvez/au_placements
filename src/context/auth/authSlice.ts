@@ -30,7 +30,7 @@ export const fetchCurrentUser = createAsyncThunk<MeResponse>('auth/me', async ()
 export const logoutUser = createAsyncThunk<void, void>('auth/logout', async () => {
   await authApi.logout(); // no return
 });
-
+``
 // ------------------------------ slice stays same ------------------------------
 const authSlice = createSlice({
   name: 'auth',

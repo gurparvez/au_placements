@@ -48,21 +48,21 @@ class StudentApi {
   }
 
   /* ------------------------------ Update Profile ----------------------------- */
-  async updateStudentProfile(data: UpdateStudentProfilePayload): Promise<StudentProfileResponse> {
+  async updateStudentProfile(
+    payload: UpdateStudentProfilePayload
+  ): Promise<StudentProfileResponse> {
     const form = new FormData();
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === 'profile_image') return;
-      if (Array.isArray(value) || typeof value === 'object') {
+    // Convert ALL fields in payload to FormData dynamically
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value instanceof File) {
+        form.append(key, value);
+      } else if (typeof value === 'object') {
         form.append(key, JSON.stringify(value));
       } else {
-        value !== undefined && form.append(key, value as any);
+        form.append(key, value as any);
       }
     });
-
-    if (data.profile_image) {
-      form.append('profile_image', data.profile_image);
-    }
 
     const res = await this.instance.put('/api/student', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -90,7 +90,10 @@ class StudentApi {
   async getAnyStudentProfile(
     req: GetAnyStudentProfileRequest
   ): Promise<GetAnyStudentProfileResponse> {
-    const res = await this.instance.post('/api/student/profile', req);
+    const res = await this.instance.get('/api/student/profile', {
+      params: { userId: req.userId },
+    });
+
     return res.data;
   }
 }

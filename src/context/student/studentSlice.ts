@@ -24,7 +24,7 @@ export const fetchStudentProfile = createAsyncThunk<StudentProfileResponse>(
 export const createStudentProfile = createAsyncThunk<
   { success: boolean; profile: StudentProfileResponse },
   CreateStudentProfilePayload
->("student/createProfile", async (payload) => {
+>('student/createProfile', async (payload) => {
   return await studentApi.createStudentProfile(payload);
 });
 
@@ -36,7 +36,7 @@ export const updateStudentProfile = createAsyncThunk<
 });
 
 export const fetchAnyStudentProfile = createAsyncThunk<
-  GetAnyStudentProfileResponse,
+  { user: any; profile: StudentProfileResponse }, // return BOTH
   GetAnyStudentProfileRequest
 >('student/fetchAnyProfile', async (payload) => {
   return await studentApi.getAnyStudentProfile(payload);
@@ -126,7 +126,10 @@ const studentSlice = createSlice({
       .addCase(fetchAnyStudentProfile.rejected, rejected)
       .addCase(fetchAnyStudentProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.publicProfile = action.payload.profile;
+        state.publicProfile = {
+          ...action.payload.profile,
+          user: action.payload.user, // inject full user
+        };
       });
 
     // ALL STUDENTS

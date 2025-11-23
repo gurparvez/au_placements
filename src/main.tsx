@@ -9,6 +9,7 @@ import StudentProfile from './pages/StudentProfile.tsx';
 import LoginPage from './pages/LoginPage.tsx';
 import { Provider } from 'react-redux';
 import { store } from './context/store.ts';
+import StudentProfilePage from './pages/StudentPage/StudentProfilePage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -18,7 +19,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<App />}>
             <Route index element={<LandingPage />} />
             <Route path="students" element={<StudentPage />} />
-            <Route path="profiles" element={<StudentProfile />} />
+            <Route path="profiles" element={<StudentProfilePage />} />
+            <Route path="profiles/:userId" element={<StudentProfile />} />
             <Route path="login" element={<LoginPage />} />
           </Route>
         </Routes>

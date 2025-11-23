@@ -1,9 +1,10 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MapPin } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface StudentCardProps {
+  userId: string; // <-- NEW
   image_url: string;
   name: string;
   class: string;
@@ -16,6 +17,7 @@ interface StudentCardProps {
 }
 
 export default function StudentCard({
+  userId,
   image_url,
   name,
   class: className,
@@ -26,10 +28,22 @@ export default function StudentCard({
   exprience,
   skills,
 }: StudentCardProps) {
+  const navigate = useNavigate();
+
   return (
-    <Card className="rounded-2xl shadow-sm">
+    <Card
+      className="
+        rounded-2xl shadow-sm transition 
+        cursor-pointer hover:shadow-md hover:-translate-y-0.5
+      "
+      onClick={() => navigate(`/profiles/${userId}`)}
+    >
       <CardContent className="flex items-start gap-4 p-4">
-        <img src={image_url} alt={name} className="bg-muted h-14 w-14 rounded-full object-cover" />
+        <img
+          src={image_url}
+          alt={name}
+          className="bg-muted h-14 w-14 rounded-full object-cover"
+        />
 
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3">
@@ -44,13 +58,16 @@ export default function StudentCard({
           <p className="text-muted-foreground mt-1 text-sm">{headline}</p>
 
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-medium">
-            <span className="text-muted-foreground text-sm">{feild_preference}</span>
+            <span className="text-muted-foreground">{feild_preference}</span>
             <Badge className="rounded-full px-3 py-0.5">{open_to}</Badge>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
             {skills.map((skill, index) => (
-              <span key={index} className="bg-muted rounded-full px-3 py-1 text-sm">
+              <span
+                key={index}
+                className="bg-muted rounded-full px-3 py-1 text-sm"
+              >
                 {skill}
               </span>
             ))}
