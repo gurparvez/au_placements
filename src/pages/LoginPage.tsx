@@ -1,11 +1,15 @@
-import React, { useState, type FormEvent } from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Upload } from 'lucide-react';
+import React, { useState, type FormEvent } from "react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Upload } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { type AppDispatch, type RootState } from "@/context/store";
+import { loginUser, registerUser } from "@/context/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
-type AuthMode = 'login' | 'register';
+type AuthMode = "login" | "register";
 
 type RegisterForm = {
   auid: string;
@@ -22,46 +26,54 @@ type LoginForm = {
 };
 
 const LoginPage: React.FC = () => {
-  const [mode, setMode] = useState<AuthMode>('login');
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
+  // Redux auth state
+  const authLoading = useSelector((s: RootState) => s.auth.loading);
+  const authError = useSelector((s: RootState) => s.auth.error);
+  const user = useSelector((s: RootState) => s.auth.user);
+
+  const [mode, setMode] = useState<AuthMode>("login");
 
   const [loginForm, setLoginForm] = useState<LoginForm>({
-    auid: '',
-    password: '',
+    auid: "",
+    password: "",
   });
 
   const [registerForm, setRegisterForm] = useState<RegisterForm>({
-    auid: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
+    auid: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
   });
 
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
-  const [submitting, setSubmitting] = useState(false);
 
+  /* ----------------------- ID Card Validation ----------------------- */
   const handleIdCardChange = (file?: File) => {
-    setErrors((prev) => ({ ...prev, idCard: '' }));
+    setErrors((prev) => ({ ...prev, idCard: "" }));
+
     if (!file) {
       setIdCardFile(null);
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       setErrors((prev) => ({
         ...prev,
-        idCard: 'Only image files are allowed (JPG, PNG, etc.)',
+        idCard: "Only image files are allowed (JPG, PNG, etc.)",
       }));
       return;
     }
 
-    const MAX_BYTES = 5 * 1024 * 1024;
-    if (file.size > MAX_BYTES) {
+    if (file.size > 5 * 1024 * 1024) {
       setErrors((prev) => ({
         ...prev,
-        idCard: 'File must be 5MB or smaller',
+        idCard: "File must be 5MB or smaller",
       }));
       return;
     }
@@ -69,68 +81,64 @@ const LoginPage: React.FC = () => {
     setIdCardFile(file);
   };
 
+  /* ----------------------- Register Validation ----------------------- */
   const validateRegister = () => {
     const e: { [k: string]: string } = {};
 
-    if (!registerForm.auid.trim()) e.auid = 'AU ID is required';
-    if (!registerForm.firstName.trim()) e.firstName = 'First name is required';
-    if (!registerForm.lastName.trim()) e.lastName = 'Last name is required';
+    if (!registerForm.auid.trim()) e.auid = "AU ID is required";
+    if (!registerForm.firstName.trim()) e.firstName = "First name is required";
+    if (!registerForm.lastName.trim()) e.lastName = "Last name is required";
 
-    if (!registerForm.email.trim()) {
-      e.email = 'Email is required';
-    } else {
-      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRe.test(registerForm.email.trim())) e.email = 'Enter a valid email';
-    }
+    if (!registerForm.email.trim()) e.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email.trim()))
+      e.email = "Enter a valid email";
 
-    if (!registerForm.phone.trim()) {
-      e.phone = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(registerForm.phone.trim())) {
-      e.phone = 'Enter a valid 10-digit phone number';
-    }
+    if (!registerForm.phone.trim()) e.phone = "Phone number is required";
+    else if (!/^\d{10}$/.test(registerForm.phone.trim()))
+      e.phone = "Enter a valid 10-digit phone number";
 
-    if (!registerForm.password.trim()) e.password = 'Password is required';
-
-    if (!idCardFile) e.idCard = 'ID card image is required';
+    if (!registerForm.password.trim()) e.password = "Password is required";
+    if (!idCardFile) e.idCard = "ID card image is required";
 
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
+  /* --------------------------- LOGIN --------------------------- */
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
-    try {
-      console.log('Login form:', loginForm);
-      alert('Login submit (hook to backend)');
-    } catch (err) {
-      console.error(err);
-      alert('Login failed (wire to backend)');
-    } finally {
-      setSubmitting(false);
+
+    const res = await dispatch(
+      loginUser({
+        auid: loginForm.auid.trim(),
+        password: loginForm.password.trim(),
+      })
+    );
+
+    if (loginUser.fulfilled.match(res)) {
+      navigate("/profiles");
     }
   };
 
+  /* -------------------------- REGISTER -------------------------- */
   const handleRegisterSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!validateRegister()) {
-      return;
-    }
-    setSubmitting(true);
-    try {
-      console.log('Register form:', registerForm, 'ID card:', idCardFile);
-      alert('Register submit (hook to backend)');
-    } catch (err) {
-      console.error(err);
-      alert('Registration failed (wire to backend)');
-    } finally {
-      setSubmitting(false);
+    if (!validateRegister()) return;
+
+    const res = await dispatch(
+      registerUser({
+        ...registerForm,
+        idCard: idCardFile!,
+      })
+    );
+
+    if (registerUser.fulfilled.match(res)) {
+      navigate("/profiles");
     }
   };
 
   return (
     <main className="bg-background text-foreground min-h-screen">
-      {/* account for fixed navbar height */}
       <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pt-28 pb-10">
         <div className="mb-6 text-center">
           <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
@@ -141,12 +149,13 @@ const LoginPage: React.FC = () => {
         <Card className="shadow-sm">
           <CardHeader className="space-y-2 text-center">
             <h1 className="text-2xl font-semibold">
-              {mode === 'login' ? 'Student Login' : 'Student Registration'}
+              {mode === "login" ? "Student Login" : "Student Registration"}
             </h1>
+
             <p className="text-muted-foreground text-sm">
-              {mode === 'login'
-                ? 'Login with your registered email and password'
-                : 'Create your AU Placement account'}
+              {mode === "login"
+                ? "Login with your AU ID and password"
+                : "Create your AU Placement account"}
             </p>
           </CardHeader>
 
@@ -155,23 +164,22 @@ const LoginPage: React.FC = () => {
             <div className="bg-muted flex rounded-lg border p-1">
               <Button
                 type="button"
-                variant={mode === 'login' ? 'default' : 'ghost'}
+                variant={mode === "login" ? "default" : "ghost"}
                 className="flex-1"
-                aria-pressed={mode === 'login'}
                 onClick={() => {
-                  setMode('login');
+                  setMode("login");
                   setErrors({});
                 }}
               >
                 Login
               </Button>
+
               <Button
                 type="button"
-                variant={mode === 'register' ? 'default' : 'ghost'}
+                variant={mode === "register" ? "default" : "ghost"}
                 className="flex-1"
-                aria-pressed={mode === 'register'}
                 onClick={() => {
-                  setMode('register');
+                  setMode("register");
                   setErrors({});
                 }}
               >
@@ -182,77 +190,70 @@ const LoginPage: React.FC = () => {
             <Separator />
 
             {/* LOGIN FORM */}
-            {mode === 'login' && (
+            {mode === "login" && (
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
+                {authError && (
+                  <p className="text-red-600 text-sm">{authError}</p>
+                )}
+
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="auid">
-                    AUID
-                  </label>
+                  <label className="text-sm font-medium">AUID</label>
                   <Input
-                    id="auid"
-                    type="text"
                     placeholder="227106009"
                     value={loginForm.auid}
-                    onChange={(e) => setLoginForm((f) => ({ ...f, auid: e.target.value }))}
-                    required
+                    onChange={(e) =>
+                      setLoginForm((f) => ({ ...f, auid: e.target.value }))
+                    }
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="login-password">
-                    Password
-                  </label>
+                  <label className="text-sm font-medium">Password</label>
                   <Input
-                    id="login-password"
                     type="password"
-                    placeholder="Enter your password"
                     value={loginForm.password}
-                    onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
-                    required
+                    onChange={(e) =>
+                      setLoginForm((f) => ({ ...f, password: e.target.value }))
+                    }
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs">
-                    Use your AU-registered email
-                  </span>
-                  <button
-                    type="button"
-                    className="text-primary text-xs font-medium hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting && mode === 'login' ? 'Logging in...' : 'Login'}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={authLoading}
+                >
+                  {authLoading ? "Logging in…" : "Login"}
                 </Button>
               </form>
             )}
 
             {/* REGISTER FORM */}
-            {mode === 'register' && (
+            {mode === "register" && (
               <form className="space-y-4" onSubmit={handleRegisterSubmit}>
+                {authError && (
+                  <p className="text-red-600 text-sm">{authError}</p>
+                )}
+
+                {/* AU ID */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="auid">
-                    AU ID
-                  </label>
+                  <label className="text-sm font-medium">AU ID</label>
                   <Input
-                    id="auid"
-                    placeholder="AU2021XXX"
                     value={registerForm.auid}
-                    onChange={(e) => setRegisterForm((f) => ({ ...f, auid: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterForm((f) => ({ ...f, auid: e.target.value }))
+                    }
                   />
-                  {errors.auid && <p className="text-xs text-red-600">{errors.auid}</p>}
+                  {errors.auid && (
+                    <p className="text-xs text-red-600">{errors.auid}</p>
+                  )}
                 </div>
 
+                {/* Name Fields */}
                 <div className="flex gap-2">
                   <div className="flex-1 space-y-1">
-                    <label className="text-sm font-medium" htmlFor="firstName">
-                      First name
-                    </label>
+                    <label className="text-sm font-medium">First Name</label>
                     <Input
-                      id="firstName"
                       value={registerForm.firstName}
                       onChange={(e) =>
                         setRegisterForm((f) => ({
@@ -261,14 +262,16 @@ const LoginPage: React.FC = () => {
                         }))
                       }
                     />
-                    {errors.firstName && <p className="text-xs text-red-600">{errors.firstName}</p>}
+                    {errors.firstName && (
+                      <p className="text-xs text-red-600">
+                        {errors.firstName}
+                      </p>
+                    )}
                   </div>
+
                   <div className="flex-1 space-y-1">
-                    <label className="text-sm font-medium" htmlFor="lastName">
-                      Last name
-                    </label>
+                    <label className="text-sm font-medium">Last Name</label>
                     <Input
-                      id="lastName"
                       value={registerForm.lastName}
                       onChange={(e) =>
                         setRegisterForm((f) => ({
@@ -277,46 +280,47 @@ const LoginPage: React.FC = () => {
                         }))
                       }
                     />
-                    {errors.lastName && <p className="text-xs text-red-600">{errors.lastName}</p>}
+                    {errors.lastName && (
+                      <p className="text-xs text-red-600">
+                        {errors.lastName}
+                      </p>
+                    )}
                   </div>
                 </div>
 
+                {/* Email */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="reg-email">
-                    Email
-                  </label>
+                  <label className="text-sm font-medium">Email</label>
                   <Input
-                    id="reg-email"
-                    type="email"
-                    placeholder="you@au.ac.in"
                     value={registerForm.email}
-                    onChange={(e) => setRegisterForm((f) => ({ ...f, email: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterForm((f) => ({ ...f, email: e.target.value }))
+                    }
                   />
-                  {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-xs text-red-600">{errors.email}</p>
+                  )}
                 </div>
 
+                {/* Phone */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="phone">
-                    Phone number
-                  </label>
+                  <label className="text-sm font-medium">Phone Number</label>
                   <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="10-digit mobile number"
                     value={registerForm.phone}
-                    onChange={(e) => setRegisterForm((f) => ({ ...f, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterForm((f) => ({ ...f, phone: e.target.value }))
+                    }
                   />
-                  {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
+                  {errors.phone && (
+                    <p className="text-xs text-red-600">{errors.phone}</p>
+                  )}
                 </div>
 
+                {/* Password */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium" htmlFor="reg-password">
-                    Password
-                  </label>
+                  <label className="text-sm font-medium">Password</label>
                   <Input
-                    id="reg-password"
                     type="password"
-                    placeholder="Create a password"
                     value={registerForm.password}
                     onChange={(e) =>
                       setRegisterForm((f) => ({
@@ -325,39 +329,51 @@ const LoginPage: React.FC = () => {
                       }))
                     }
                   />
-                  {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
+                  {errors.password && (
+                    <p className="text-xs text-red-600">{errors.password}</p>
+                  )}
                 </div>
 
-                {/* ID Card upload */}
+                {/* ID Card Upload */}
                 <div className="space-y-1">
                   <span className="text-sm font-medium">ID Card (Photo)</span>
+
                   <div className="flex items-center gap-2">
                     <input
                       id="id-card-upload"
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => handleIdCardChange(e.target.files?.[0])}
+                      onChange={(e) =>
+                        handleIdCardChange(e.target.files?.[0])
+                      }
                     />
+
                     <label htmlFor="id-card-upload">
-                      <Button type="button" variant="outline" asChild>
-                        <span className="flex items-center gap-2">
-                          <Upload className="h-4 w-4" />
-                          Upload ID card
-                        </span>
+                      <Button variant="outline" type="button">
+                        <Upload className="h-4 w-4" />
+                        Upload
                       </Button>
                     </label>
+
                     {idCardFile && (
-                      <span className="text-muted-foreground max-w-[150px] truncate text-xs">
+                      <span className="text-xs max-w-[150px] truncate text-muted-foreground">
                         {idCardFile.name}
                       </span>
                     )}
                   </div>
-                  {errors.idCard && <p className="text-xs text-red-600">{errors.idCard}</p>}
+
+                  {errors.idCard && (
+                    <p className="text-xs text-red-600">{errors.idCard}</p>
+                  )}
                 </div>
 
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting && mode === 'register' ? 'Registering...' : 'Register'}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={authLoading}
+                >
+                  {authLoading ? "Registering…" : "Register"}
                 </Button>
               </form>
             )}

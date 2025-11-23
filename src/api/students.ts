@@ -1,0 +1,101 @@
+// src/api/student.ts
+import axios, { type AxiosInstance } from 'axios';
+import { URL } from '../constants';
+import {
+  type CreateStudentProfilePayload,
+  type UpdateStudentProfilePayload,
+  type StudentProfileResponse,
+  type GetAnyStudentProfileRequest,
+  type GetAnyStudentProfileResponse,
+} from './students.types';
+
+class StudentApi {
+  private instance: AxiosInstance;
+
+  constructor() {
+    this.instance = axios.create({
+      baseURL: URL,
+      withCredentials: true, // cookie-based auth
+    });
+  }
+
+  /* ------------------------------ Create Profile ----------------------------- */
+  async createStudentProfile(
+    data: CreateStudentProfilePayload
+  ): Promise<{ success: boolean; profile: StudentProfileResponse }> {
+    const form = new FormData();
+
+    // Append primitive fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'profile_image') return;
+      if (Array.isArray(value) || typeof value === 'object') {
+        form.append(key, JSON.stringify(value));
+      } else {
+        form.append(key, value as any);
+      }
+    });
+
+    // Append image
+    if (data.profile_image) {
+      form.append('profile_image', data.profile_image);
+    }
+
+    const res = await this.instance.post('/api/student', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    return res.data;
+  }
+
+  /* ------------------------------ Update Profile ----------------------------- */
+  async updateStudentProfile(data: UpdateStudentProfilePayload): Promise<StudentProfileResponse> {
+    const form = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'profile_image') return;
+      if (Array.isArray(value) || typeof value === 'object') {
+        form.append(key, JSON.stringify(value));
+      } else {
+        value !== undefined && form.append(key, value as any);
+      }
+    });
+
+    if (data.profile_image) {
+      form.append('profile_image', data.profile_image);
+    }
+
+    const res = await this.instance.put('/api/student', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    return res.data;
+  }
+
+  /* ----------------------------- Get Logged Profile ---------------------------- */
+  async getStudentProfile(): Promise<StudentProfileResponse> {
+    const res = await this.instance.get('/api/student');
+    return res.data;
+  }
+
+  /* ----------------------------- Get All Students ------------------------------ */
+  async getAllStudents(): Promise<{
+    success: boolean;
+    students: StudentProfileResponse[];
+  }> {
+    const res = await this.instance.get('/api/student/all');
+    return res.data;
+  }
+
+  /* ----------------------------- Get Any Student's profile ------------------------------ */
+  async getAnyStudentProfile(
+    req: GetAnyStudentProfileRequest
+  ): Promise<GetAnyStudentProfileResponse> {
+    const res = await this.instance.post('/api/student/profile', req);
+    return res.data;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+
+export const studentApi = new StudentApi();
+export default studentApi;

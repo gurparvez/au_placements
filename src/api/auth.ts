@@ -101,11 +101,14 @@ class Auth {
 
   /* -------------------------------- GET USER ----------------------------- */
   async getUser(): Promise<MeResponse> {
+    console.log('%c[Auth API] getUser() called', 'color: blue');
+
     try {
       const response = await this.instance.get<MeResponse>('/api/auth/user');
-
+      console.log('%c[Auth API] GET /user/me response:', 'color: green', response.data);
       return response.data;
     } catch (error) {
+      console.log('%c[Auth API] GET /user/me error:', 'color: red', error);
       throw error;
     }
   }

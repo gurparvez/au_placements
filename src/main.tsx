@@ -7,18 +7,22 @@ import LandingPage from './pages/LandingPage.tsx';
 import StudentPage from './pages/StudentPage.tsx';
 import StudentProfile from './pages/StudentProfile.tsx';
 import LoginPage from './pages/LoginPage.tsx';
+import { Provider } from 'react-redux';
+import { store } from './context/store.ts';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<LandingPage />} />
-          <Route path="students" element={<StudentPage />} />
-          <Route path="profiles" element={<StudentProfile />} />
-          <Route path="login" element={<LoginPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <Provider store={store}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />}>
+            <Route index element={<LandingPage />} />
+            <Route path="students" element={<StudentPage />} />
+            <Route path="profiles" element={<StudentProfile />} />
+            <Route path="login" element={<LoginPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </Provider>
   </StrictMode>
 );

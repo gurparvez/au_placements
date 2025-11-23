@@ -1,4 +1,3 @@
-// StudentProfilePageEditable.validated.tsx
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

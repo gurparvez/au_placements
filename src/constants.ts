@@ -1,1 +1,1 @@
-export const URL = ""
+export const URL = "https://au-placements-backend.onrender.com"
