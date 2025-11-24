@@ -1,6 +1,6 @@
 // src/pages/CreateProfile.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -13,6 +13,9 @@ import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { createStudentProfile } from '@/context/student/studentSlice';
 import type { CreateStudentProfilePayload } from '@/api/students.types';
 
+import type { Course } from '@/api/courses';
+
+import CoursePicker from '@/components/CoursePicker';
 import SkillPicker from '@/components/SkillPicker';
 
 const CreateProfile: React.FC = () => {
@@ -27,14 +30,19 @@ const CreateProfile: React.FC = () => {
   const [about, setAbout] = useState('');
   const [preferredField, setPreferredField] = useState('');
 
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [profileImageError, setProfileImageError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // ---------------- LINKS ----------------
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
   const [resumeLink, setResumeLink] = useState('');
 
   // ---------------- LOOKING FOR ----------------
-  const [lookingForInternship, setLookingForInternship] = useState(false);
-  const [lookingForJob, setLookingForJob] = useState(false);
+  const [lookingFor, setLookingFor] = useState<string>('internship');
 
   // ---------------- SKILLS ----------------
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
@@ -45,7 +53,9 @@ const CreateProfile: React.FC = () => {
       institute: '',
       from_date: '',
       to_date: '',
-      course: '',
+      courseId: '', // Stores the ID (for backend)
+      courseName: '', // Stores the Name (for picker display)
+      category: '', // Stores category (ug/pg)
       specialization: '',
     },
   ]);
@@ -80,6 +90,31 @@ const CreateProfile: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
+  const handleProfileImageChange = (file?: File) => {
+    setProfileImageError(null);
+
+    if (!file) {
+      setProfileImage(null);
+      setProfileImagePreview(null);
+      return;
+    }
+
+    // Validate image type
+    if (!file.type.startsWith('image/')) {
+      setProfileImageError('Only image files are allowed.');
+      return;
+    }
+
+    // Max size 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileImageError('Image must be 5MB or smaller.');
+      return;
+    }
+
+    setProfileImage(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  };
+
   /* ----------------------------------------------------------------------------------
      RENDER START
   ---------------------------------------------------------------------------------- */
@@ -106,6 +141,49 @@ const CreateProfile: React.FC = () => {
             </CardHeader>
 
             <CardContent className="space-y-4">
+              {/* PROFILE IMAGE */}
+              {/* PROFILE IMAGE */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Profile Image <span className="text-red-500">*</span>
+                </label>
+
+                {/* 1. Add ref here */}
+                <input
+                  ref={fileInputRef}
+                  id="profile-image-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden" // You can use hidden or absolute left-[-9999px]
+                  onChange={(e) => handleProfileImageChange(e.target.files?.[0])}
+                />
+
+                <div className="flex items-center gap-4">
+                  {profileImagePreview ? (
+                    <img
+                      src={profileImagePreview}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-full border object-cover"
+                    />
+                  ) : (
+                    <div className="bg-muted text-muted-foreground flex h-20 w-20 items-center justify-center rounded-full border text-xs">
+                      No Image
+                    </div>
+                  )}
+
+                  {/* 2. Remove the <label> wrapper, add onClick to Button directly */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Upload Image
+                  </Button>
+                </div>
+
+                {profileImageError && <p className="text-xs text-red-500">{profileImageError}</p>}
+              </div>
+
               <div>
                 <label className="text-sm font-medium">Headline (optional)</label>
                 <Input
@@ -147,7 +225,6 @@ const CreateProfile: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-
           {/* LINKS & OPEN TO */}
           <Card>
             <CardHeader>
@@ -187,31 +264,40 @@ const CreateProfile: React.FC = () => {
               <Separator />
 
               <div>
-                <label className="text-sm font-medium">Open To</label>
+                <label className="text-sm font-medium">
+                  Open To <span className="text-red-500">*</span>
+                </label>
 
-                <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                  <label className="flex items-center gap-2">
+                <div className="mt-2 flex flex-wrap gap-6 text-sm">
+                  {/* Option 1: Internship */}
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
-                      type="checkbox"
-                      checked={lookingForInternship}
-                      onChange={(e) => setLookingForInternship(e.target.checked)}
+                      type="radio"
+                      name="lookingFor"
+                      value="internship"
+                      checked={lookingFor === 'internship'}
+                      onChange={() => setLookingFor('internship')}
+                      className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
                     />
                     <span>Internship</span>
                   </label>
 
-                  <label className="flex items-center gap-2">
+                  {/* Option 2: Job */}
+                  <label className="flex cursor-pointer items-center gap-2">
                     <input
-                      type="checkbox"
-                      checked={lookingForJob}
-                      onChange={(e) => setLookingForJob(e.target.checked)}
+                      type="radio"
+                      name="lookingFor"
+                      value="job"
+                      checked={lookingFor === 'job'}
+                      onChange={() => setLookingFor('job')}
+                      className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
                     />
-                    <span>Job</span>
+                    <span>Job / Placement</span>
                   </label>
                 </div>
               </div>
             </CardContent>
           </Card>
-
           {/* ---------------------- SKILLS (updated with SkillPicker) ---------------------- */}
           <Card>
             <CardHeader>
@@ -226,7 +312,6 @@ const CreateProfile: React.FC = () => {
               />
             </CardContent>
           </Card>
-
           {/* ---------------------- EDUCATION ---------------------- */}
           <Card>
             <CardHeader>
@@ -271,7 +356,7 @@ const CreateProfile: React.FC = () => {
                       <label className="text-sm font-medium">
                         Institute <span className="text-red-500">*</span>
                       </label>
-                      <Input
+                      <select
                         value={edu.institute}
                         onChange={(e) =>
                           setEducationList((prev) =>
@@ -280,21 +365,50 @@ const CreateProfile: React.FC = () => {
                             )
                           )
                         }
-                      />
+                        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="" disabled>
+                          Select Institute
+                        </option>
+                        <option value="Akal University">Akal University</option>
+                        <option value="Eternal University">Eternal University</option>
+                      </select>
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium">
-                        Course ID <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        value={edu.course}
-                        onChange={(e) =>
-                          setEducationList((prev) =>
-                            prev.map((r, i) => (i === index ? { ...r, course: e.target.value } : r))
-                          )
-                        }
-                      />
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="text-sm font-medium">
+                          Course <span className="text-red-500">*</span>
+                        </label>
+                        <CoursePicker
+                          value={edu.courseName}
+                          onSelect={(selectedCourse: Course) => {
+                            setEducationList((prev) =>
+                              prev.map((r, i) =>
+                                i === index
+                                  ? {
+                                      ...r,
+                                      courseId: selectedCourse._id,
+                                      courseName: selectedCourse.name,
+                                      category: selectedCourse.category,
+                                    }
+                                  : r
+                              )
+                            );
+                          }}
+                        />
+                      </div>
+
+                      {/* CATEGORY (Auto-filled) */}
+                      <div className="w-24">
+                        <label className="text-sm font-medium">Category</label>
+                        <Input
+                          readOnly
+                          value={edu.category}
+                          className="bg-muted text-muted-foreground cursor-not-allowed"
+                          placeholder="UG/PG"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -351,7 +465,6 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
-
           {/* ---------------------- EXPERIENCE ---------------------- */}
           <Card>
             <CardHeader>
@@ -471,7 +584,6 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
-
           {/* ---------------------- PROJECTS ---------------------- */}
           <Card>
             <CardHeader>
@@ -641,7 +753,6 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
-
           {/* ---------------------- CERTIFICATES ---------------------- */}
           <Card>
             <CardHeader>
@@ -761,7 +872,6 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
-
           {/* ---------------------- SUBMIT ---------------------- */}
           <div className="flex justify-end">
             <Button
@@ -771,25 +881,35 @@ const CreateProfile: React.FC = () => {
                 e.preventDefault();
                 if (!validate()) return;
 
-                const looking_for = [];
-                if (lookingForInternship) looking_for.push('internship');
-                if (lookingForJob) looking_for.push('job');
+                if (!profileImage) {
+                  setProfileImageError('Profile image is required');
+                  return;
+                }
 
-                const payload: CreateStudentProfilePayload = {
+                // 1. Prepare the Plain Object Payload
+                // Note: We cast to 'any' momentarily to attach the profile_image
+                // because strict types might not have profile_image in the Payload type yet.
+                const payload: any = {
                   headline,
                   location,
                   about,
                   preferred_field: preferredField || undefined,
+                  looking_for: [lookingFor],
                   linkedin_url: linkedinUrl || undefined,
                   github_url: githubUrl || undefined,
                   resume_link: resumeLink || undefined,
-                  looking_for: looking_for.length ? looking_for : undefined,
                   skills: selectedSkillIds.length ? selectedSkillIds : undefined,
 
+                  // Attach the file here
+                  profile_image: profileImage,
+
                   education: educationList
-                    .filter((e) => e.institute && e.course && e.from_date && e.to_date)
+                    .filter((e) => e.institute && e.courseId && e.from_date && e.to_date)
                     .map((edu) => ({
-                      ...edu,
+                      institute: edu.institute,
+                      from_date: edu.from_date,
+                      to_date: edu.to_date,
+                      course: edu.courseId, // Send ID
                       specialization: edu.specialization || undefined,
                     })),
 
@@ -820,7 +940,10 @@ const CreateProfile: React.FC = () => {
                     })),
                 };
 
+                // 2. Pass the OBJECT to the redux action/API.
+                // DO NOT use new FormData() here.
                 const res = await dispatch(createStudentProfile(payload));
+
                 if (createStudentProfile.fulfilled.match(res)) {
                   navigate('/profiles');
                 }

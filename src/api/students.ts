@@ -25,26 +25,39 @@ class StudentApi {
   ): Promise<{ success: boolean; profile: StudentProfileResponse }> {
     const form = new FormData();
 
-    // Append primitive fields
     Object.entries(data).forEach(([key, value]) => {
+      // 1. SKIP undefined or null values entirely
+      if (value === undefined || value === null) return;
+
+      // 2. Handle Profile Image separately (skip here, add later)
       if (key === 'profile_image') return;
+
+      // 3. Stringify Arrays/Objects (like education, skills, looking_for)
       if (Array.isArray(value) || typeof value === 'object') {
         form.append(key, JSON.stringify(value));
       } else {
+        // 4. Append primitives (strings/numbers)
+        // Because we checked for undefined/null above, this is safe now.
         form.append(key, value as any);
       }
     });
 
-    // Append image
+    // Append image if it exists
     if (data.profile_image) {
       form.append('profile_image', data.profile_image);
     }
 
-    const res = await this.instance.post('/api/student', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-
-    return res.data;
+    try {
+      console.log(form)
+      const res = await this.instance.post('/api/student', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return res.data;
+    } catch (error: any) {
+      // Optional: Log the specific backend error message to console for debugging
+      console.error('Backend Error Details:', error.response?.data);
+      throw error;
+    }
   }
 
   /* ------------------------------ Update Profile ----------------------------- */

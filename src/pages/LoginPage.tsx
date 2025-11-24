@@ -7,7 +7,7 @@ import { Upload } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '@/context/store';
 import { loginUser, registerUser } from '@/context/auth/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { replace, useNavigate } from 'react-router-dom';
 
 type AuthMode = 'login' | 'register';
 
@@ -116,7 +116,7 @@ const LoginPage: React.FC = () => {
     );
 
     if (loginUser.fulfilled.match(res)) {
-      navigate('/profiles');
+      navigate('/profiles', { replace: true });
     }
   };
 
@@ -133,7 +133,7 @@ const LoginPage: React.FC = () => {
     );
 
     if (registerUser.fulfilled.match(res)) {
-      navigate('/profiles/create');
+      navigate('/profiles/create', { replace: true });
     }
   };
 

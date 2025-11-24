@@ -22,11 +22,12 @@ export interface RegisterPayload {
 
 export interface LoginResponse {
   message: string;
-  token: string; // Still part of response, but we DO NOT store it
+  token: string;
   user: {
     _id: string;
     auid: string;
     firstName: string;
+    lastName?: string;
     roles: string[];
   };
 }
@@ -45,6 +46,7 @@ export interface MeResponse {
   _id: string;
   auid: string;
   firstName: string;
+  lastName?: string;
   roles: string[];
 }
 
@@ -101,14 +103,11 @@ class Auth {
 
   /* -------------------------------- GET USER ----------------------------- */
   async getUser(): Promise<MeResponse> {
-    console.log('%c[Auth API] getUser() called', 'color: blue');
-
     try {
-      const response = await this.instance.get<MeResponse>('/api/auth/user');
-      console.log('%c[Auth API] GET /user/me response:', 'color: green', response.data);
-      return response.data;
+      const response = await this.instance.get('/api/auth/user');
+
+      return response.data.user; // <-- FIXED
     } catch (error) {
-      console.log('%c[Auth API] GET /user/me error:', 'color: red', error);
       throw error;
     }
   }

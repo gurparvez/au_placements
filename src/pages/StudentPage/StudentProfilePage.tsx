@@ -13,38 +13,76 @@ const StudentProfilePage: React.FC = () => {
   const navigate = useNavigate();
 
   const { profile, loading, error } = useAppSelector((s) => s.student);
+  const authUser = useAppSelector((s) => s.auth.user);
 
   useEffect(() => {
-    dispatch(fetchStudentProfile());
-  }, [dispatch]);
+    // Only fetch profile if user is logged in
+    if (authUser) {
+      dispatch(fetchStudentProfile());
+    }
+  }, [dispatch, authUser]);
 
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
 
-      // Clear both slices
       dispatch(clearAuth());
       dispatch(clearStudentState());
 
-      // Redirect
       navigate("/");
     } catch (err) {
       console.error("Logout error:", err);
     }
   };
 
-  if (loading) return <div className="mt-10 p-10 text-center text-lg">Loading…</div>;
-
-  if (error)
-    return <div className="mt-10 p-10 text-center text-lg text-red-500">⚠️ Error: {error}</div>;
-
-  if (!profile)
+  // ⛔ If NOT logged in
+  if (!authUser) {
     return (
-      <div className="mt-10 p-10 text-center text-lg text-red-500">
-        No profile found. Create your profile first.
+      <div className="mt-10 p-10 text-center text-lg">
+        <div className="text-red-500 mb-4">No user found. Please log in first.</div>
+
+        <div className="mt-4 flex gap-4 justify-center">
+          <Button onClick={() => navigate("/login")}>Login</Button>
+          <Button variant="secondary" onClick={() => navigate("/")}>
+            Home
+          </Button>
+        </div>
       </div>
     );
+  }
 
+  // ⏳ Loading
+  if (loading) {
+    return <div className="mt-10 p-10 text-center text-lg">Loading…</div>;
+  }
+
+  // ❌ API error (user exists but API failed)
+  if (error) {
+    return (
+      <div className="mt-10 p-10 text-center text-lg text-red-500">
+        ⚠️ Error: {error}
+      </div>
+    );
+  }
+
+  // ⚠️ Logged-in user but NO profile exists
+  if (!profile) {
+    return (
+      <div className="mt-10 p-10 text-center text-lg">
+        <div className="text-red-500 mb-4">No profile found. Create your profile first.</div>
+
+        <div className="mt-4 flex gap-4 justify-center">
+          <Button onClick={() => navigate("/profiles/create")}>Create Profile</Button>
+
+          <Button variant="secondary" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 🎉 Profile exists
   return (
     <div className="mx-auto mt-10 w-full max-w-4xl space-y-6 px-4 py-8">
       <ProfileHero />
