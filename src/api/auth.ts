@@ -15,7 +15,7 @@ export interface RegisterPayload {
   email: string;
   phone: string;
   password: string;
-  idCard: File;
+  id_card: File;
 }
 
 /* ----------------------------- RESPONSE TYPES ---------------------------- */

@@ -52,6 +52,8 @@ export interface CreateStudentProfilePayload {
   projects?: ProjectPayload[];                 // 🔵 optional
   certificates?: CertificatePayload[];         // 🔵 optional
 
+  preferred_field?: string;
+
   skills?: string[];                           // optional
   education?: EducationPayload[];
 

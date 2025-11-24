@@ -1,15 +1,17 @@
 // src/api/skills.ts
-import axios, { type AxiosInstance } from "axios";
-import { URL } from "../constants";
+import axios, { type AxiosInstance } from 'axios';
+import { URL } from '../constants';
+
+export interface Skill {
+  _id: string;
+  name: string;
+  displayName?: string;
+  __v?: number;
+}
 
 export interface SkillResponse {
   success: boolean;
-  skill: {
-    _id: string;
-    name: string;
-    displayName?: string;
-    __v?: number;
-  };
+  skill: Skill;
 }
 
 export interface AllSkillsResponse {
@@ -38,6 +40,17 @@ export class SkillsApi {
   async getAllSkills(): Promise<AllSkillsResponse> {
     const res = await this.instance.get(`/api/skills`);
     return res.data;
+  }
+
+  async searchSkills(query: string): Promise<Skill[]> {
+    const { data } = await this.instance.get(`/api/skills/search?q=${query}`);
+    return Array.isArray(data) ? data : [];
+  }
+
+  // ➕ ADD new skill
+  async addSkill(name: string) {
+    const { data } = await this.instance.post(`/api/skills`, { name });
+    return data; // Created SkillResponse
   }
 }
 
