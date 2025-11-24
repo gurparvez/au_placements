@@ -93,10 +93,11 @@ const PublicStudentProfile: React.FC = () => {
       <div className="bg-muted h-48 w-full rounded-md"></div>
 
       {/* Profile Hero */}
-      <Card className="relative z-10 -mt-20">
+      <Card className="relative z-10">
         <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end">
-            <div className="-mt-12">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start">
+            {/* Avatar */}
+            <div>
               <Avatar className="border-background h-28 w-28 overflow-hidden border-4">
                 <AvatarImage
                   src={profile.profile_image || '/avatar-placeholder.png'}
@@ -106,6 +107,7 @@ const PublicStudentProfile: React.FC = () => {
               </Avatar>
             </div>
 
+            {/* Info */}
             <div className="flex-1">
               <h1 className="text-2xl font-semibold">{profile.user.firstName}</h1>
 
