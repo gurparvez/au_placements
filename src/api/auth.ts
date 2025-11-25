@@ -18,6 +18,18 @@ export interface RegisterPayload {
   id_card: File;
 }
 
+export interface UpdateDetailsPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
+export interface UpdatePasswordPayload {
+  oldPassword: string;
+  newPassword: string;
+}
+
 /* ----------------------------- RESPONSE TYPES ---------------------------- */
 
 export interface LoginResponse {
@@ -48,6 +60,27 @@ export interface MeResponse {
   firstName: string;
   lastName?: string;
   roles: string[];
+  email?: string;
+  phone?: string; 
+}
+
+export interface UpdateDetailsResponse {
+  success: boolean;
+  message: string;
+  user: {
+    _id: string;
+    auid: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    roles: string[];
+  };
+}
+
+export interface UpdatePasswordResponse {
+  success: boolean;
+  message: string;
 }
 
 /* ------------------------------- AUTH CLASS ------------------------------ */
@@ -106,7 +139,28 @@ class Auth {
     try {
       const response = await this.instance.get('/api/auth/user');
 
-      return response.data.user; // <-- FIXED
+      console.log(response);
+      return response.data.user; 
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /* --------------------------- UPDATE USER DETAILS ----------------------- */
+  async updateUserDetails(data: UpdateDetailsPayload): Promise<UpdateDetailsResponse> {
+    try {
+      const response = await this.instance.put<UpdateDetailsResponse>('/api/auth/update', data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /* ----------------------------- UPDATE PASSWORD ------------------------- */
+  async updatePassword(data: UpdatePasswordPayload): Promise<UpdatePasswordResponse> {
+    try {
+      const response = await this.instance.put<UpdatePasswordResponse>('/api/auth/update-password', data);
+      return response.data;
     } catch (error) {
       throw error;
     }

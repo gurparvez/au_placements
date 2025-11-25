@@ -84,7 +84,8 @@ const StudentProfilePage: React.FC = () => {
 
   // 🎉 Profile exists
   return (
-    <div className="mx-auto mt-10 w-full max-w-4xl space-y-6 px-4 py-8">
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
+      <div className="bg-muted h-48 w-full rounded-md"></div>
       <ProfileHero />
       <Button onClick={handleLogout} variant="destructive">
         Logout
