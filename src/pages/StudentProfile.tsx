@@ -195,7 +195,7 @@ const PublicStudentProfile: React.FC = () => {
               <h3 className="font-medium">{exp.role}</h3>
               <p className="text-muted-foreground text-sm">{exp.company}</p>
               <p className="text-muted-foreground text-sm">
-                {new Date(exp.start_date).getFullYear()} –{' '}
+                {new Date(exp.start_date).getFullYear()} -{' '}
                 {exp.end_date ? new Date(exp.end_date).getFullYear() : 'Present'}
               </p>
 

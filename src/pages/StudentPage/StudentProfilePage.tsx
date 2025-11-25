@@ -7,6 +7,11 @@ import { logoutUser, clearAuth } from "@/context/auth/authSlice";
 
 import ProfileHero from "./components/ProfileHero";
 import { Button } from "@/components/ui/button";
+import ContactSection from "./components/ContactSection";
+import ExperienceSection from "./components/ExperienceSection";
+import ProjectsSection from "./components/ProjectSection";
+import SkillsSection from "./components/SkillsSection";
+import EducationSection from "./components/EducationSection";
 
 const StudentProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -87,6 +92,11 @@ const StudentProfilePage: React.FC = () => {
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
       <div className="bg-muted h-48 w-full rounded-md"></div>
       <ProfileHero />
+      <ContactSection />
+      <ExperienceSection />
+      <ProjectsSection />
+      <SkillsSection />
+      <EducationSection />
       <Button onClick={handleLogout} variant="destructive">
         Logout
       </Button>

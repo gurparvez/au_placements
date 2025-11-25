@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '@/context/store';
 import { loginUser, registerUser } from '@/context/auth/authSlice';
 import { replace, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 
 type AuthMode = 'login' | 'register';
 
@@ -52,6 +53,9 @@ const LoginPage: React.FC = () => {
 
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<{ [k: string]: string }>({});
+
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   /* ----------------------- ID Card Validation ----------------------- */
   const handleIdCardChange = (file?: File) => {
@@ -205,11 +209,27 @@ const LoginPage: React.FC = () => {
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Password</label>
-                  <Input
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
-                  />
+
+                  <div className="relative">
+                    <Input
+                      type={showLoginPassword ? 'text' : 'password'}
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
+                      className="pr-10"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword((s) => !s)}
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                    >
+                      {showLoginPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <Button type="submit" className="w-full" disabled={authLoading}>
@@ -287,16 +307,28 @@ const LoginPage: React.FC = () => {
                 {/* Password */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Password</label>
-                  <Input
-                    type="password"
-                    value={registerForm.password}
-                    onChange={(e) =>
-                      setRegisterForm((f) => ({
-                        ...f,
-                        password: e.target.value,
-                      }))
-                    }
-                  />
+
+                  <div className="relative">
+                    <Input
+                      type={showRegisterPassword ? 'text' : 'password'}
+                      value={registerForm.password}
+                      onChange={(e) => setRegisterForm((f) => ({ ...f, password: e.target.value }))}
+                      className="pr-10"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisterPassword((s) => !s)}
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                    >
+                      {showRegisterPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+
                   {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
                 </div>
 

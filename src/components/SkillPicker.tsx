@@ -1,17 +1,18 @@
-// src/components/SkillPicker.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { skillsApi } from '@/api/skills';
 import type { Skill } from '@/api/skills';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X, Check } from 'lucide-react';
 
 interface SkillPickerProps {
   selected: string[];
   setSelected: (skills: string[]) => void;
+  // NEW: Pass the full objects of existing skills so we can show their names immediately
+  initialData?: Skill[]; 
   label?: string;
 }
 
-const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label }) => {
+const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initialData = [], label }) => {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,8 +21,19 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  /* ------------ 1. Initialize Map with Initial Data ------------ */
+  useEffect(() => {
+    if (initialData.length > 0) {
+      setSkillMap((prev) => {
+        const copy = { ...prev };
+        initialData.forEach((s) => (copy[s._id] = s));
+        return copy;
+      });
+    }
+  }, [initialData]);
+
   /* ------------ Select / Unselect skill ------------ */
-  const safeSelected = selected ?? []; // ALWAYS an array
+  const safeSelected = selected ?? [];
 
   const toggleSkill = (skillId: string) => {
     if (safeSelected.includes(skillId)) {
@@ -29,7 +41,8 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
     } else {
       setSelected([...safeSelected, skillId]);
     }
-    setOpen(false);
+    // Keep dropdown open for multi-select convenience, or close it:
+    // setOpen(false); 
   };
 
   /* ------------ Debounced search ------------ */
@@ -56,7 +69,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
   }, [query]);
 
   useEffect(() => {
-    return debouncedSearch();
+    debouncedSearch();
   }, [query, debouncedSearch]);
 
   useEffect(() => {
@@ -75,10 +88,14 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
 
     try {
       setLoading(true);
-      const res = await skillsApi.addSkill(query.trim());
-      const newSkill: Skill = res;
+      const res: any = await skillsApi.addSkill(query.trim());
+      // Handle response structure (adjust if your API returns { success: true, skill: ... })
+      const newSkill: Skill = res.skill || res; 
 
-      setSelected([...selected, newSkill._id]);
+      // Select it
+      setSelected([...safeSelected, newSkill._id]);
+      
+      // Add to map so it displays correctly
       setSkillMap((prev) => ({
         ...prev,
         [newSkill._id]: newSkill,
@@ -107,10 +124,10 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {label && <label className="mb-1 block text-sm font-medium">{label}</label>}
+      {label && <label className="mb-1 block text-xs font-medium">{label}</label>}
 
       <Input
-        placeholder="Search or add skills…"
+        placeholder="Search skills (e.g. React)..."
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -121,7 +138,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
 
       {/* Dropdown */}
       {open && (searchResults.length > 0 || query.trim()) && (
-        <div className="bg-card absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-md border shadow-sm">
+        <div className="bg-popover text-popover-foreground absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border shadow-md">
           {loading && (
             <div className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm">
               <Loader2 className="h-4 w-4 animate-spin" /> Searching...
@@ -135,41 +152,47 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, label 
                 key={skill._id}
                 type="button"
                 onClick={() => toggleSkill(skill._id)}
-                className="hover:bg-muted flex w-full items-center justify-between px-3 py-2 text-sm"
+                className="hover:bg-accent hover:text-accent-foreground flex w-full items-center justify-between px-3 py-2 text-sm"
               >
                 <span>{skill.displayName || skill.name}</span>
-                {(selected ?? []).includes(skill._id) && (
-                  <span className="text-primary font-bold">✓</span>
+                {(safeSelected).includes(skill._id) && (
+                  <Check className="h-4 w-4 text-green-500" />
                 )}
               </button>
             ))}
 
           {/* ADD NEW SKILL */}
-          {!loading && (
+          {!loading && query.trim() && !searchResults.some(s => s.name.toLowerCase() === query.trim().toLowerCase()) && (
             <button
               type="button"
-              className="hover:bg-muted w-full px-3 py-2 text-left text-sm text-blue-600"
+              className="hover:bg-accent hover:text-accent-foreground w-full px-3 py-2 text-left text-sm text-blue-500 font-medium"
               onClick={handleAddSkill}
             >
-              Add “{query.trim()}” as new skill
+              <span className="flex items-center gap-2">
+                 + Add “{query.trim()}” as new skill
+              </span>
             </button>
           )}
         </div>
       )}
 
-      {/* SELECTED SKILLS */}
-      {selected?.length > 0 && (
+      {/* SELECTED SKILLS CHIPS */}
+      {safeSelected.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
-          {selected.map((id) => (
+          {safeSelected.map((id) => (
             <span
               key={id}
-              className="bg-muted flex items-center gap-2 rounded-full px-3 py-1 text-xs"
+              className="bg-secondary text-secondary-foreground flex items-center gap-1 rounded-full px-3 py-1 text-xs"
             >
-              {/** Display lookup from searchResults OR ID */}
-              {skillMap[id]?.displayName || skillMap[id]?.name || 'Skill'}
+              {/* Display lookup from map OR fallback */}
+              {skillMap[id]?.displayName || skillMap[id]?.name || 'Loading...'}
 
-              <button onClick={() => toggleSkill(id)} className="text-red-500">
-                ✕
+              <button 
+                type="button" 
+                onClick={() => toggleSkill(id)} 
+                className="hover:bg-destructive/20 ml-1 rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
               </button>
             </span>
           ))}
