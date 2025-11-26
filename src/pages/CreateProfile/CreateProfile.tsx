@@ -11,7 +11,12 @@ import { Separator } from '@/components/ui/separator';
 
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { createStudentProfile } from '@/context/student/studentSlice';
-import type { CreateStudentProfilePayload } from '@/api/students.types';
+import {
+  type CertificatePayload,
+  type CreateStudentProfilePayload,
+  type ExperiencePayload,
+  type ProjectPayload,
+} from '@/api/students.types';
 
 import type { Course } from '@/api/courses';
 
@@ -61,13 +66,13 @@ const CreateProfile: React.FC = () => {
   ]);
 
   // ---------------- EXPERIENCE ----------------
-  const [experiences, setExperiences] = useState([]);
+  const [experiences, setExperiences] = useState<ExperiencePayload[]>([]);
 
   // ---------------- PROJECTS ----------------
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<ProjectPayload[]>([]);
 
   // ---------------- CERTIFICATES ----------------
-  const [certificates, setCertificates] = useState([]);
+  const [certificates, setCertificates] = useState<CertificatePayload[]>([]);
 
   // ---------------- ERRORS ----------------
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -324,7 +329,15 @@ const CreateProfile: React.FC = () => {
                   onClick={() =>
                     setEducationList((prev) => [
                       ...prev,
-                      { institute: '', from_date: '', to_date: '', course: '', specialization: '' },
+                      {
+                        institute: '',
+                        from_date: '',
+                        to_date: '',
+                        courseId: '', // <-- changed
+                        courseName: '', // <-- changed
+                        category: '', // <-- changed
+                        specialization: '',
+                      },
                     ])
                   }
                 >
