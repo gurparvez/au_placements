@@ -7,6 +7,7 @@ import StudentCard from '@/components/StudentCard';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAllStudents } from '@/context/student/studentSlice';
 import { skillsApi } from '@/api/skills';
+import { Search } from 'lucide-react'; // Optional: specific icon if you have lucide-react, otherwise standard input is fine
 
 const StudentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,21 +23,21 @@ const StudentsPage: React.FC = () => {
   const [openToFilter, setOpenToFilter] = useState<'internship' | 'job' | null>(null);
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
 
+  // New state for Skill Search inside Sidebar
+  const [skillSearchQuery, setSkillSearchQuery] = useState(''); 
+
   const [experienceRange, setExperienceRange] = useState<string | null>(null);
   const [preferredField, setPreferredField] = useState<string | null>(null);
 
   /* ---------------------- FETCH DATA ---------------------- */
   useEffect(() => {
-    // fetch students from backend
     dispatch(fetchAllStudents());
 
-    // fetch all skills for the sidebar
     (async () => {
       try {
         setSkillsLoading(true);
         const res = await skillsApi.getAllSkills();
         const names = (res.skills ?? []).map((s) => s.displayName || s.name).filter(Boolean);
-        // de-duplicate
         setSkillsList(Array.from(new Set(names)));
       } catch (e) {
         console.error('Failed to load skills:', e);
@@ -53,7 +54,6 @@ const StudentsPage: React.FC = () => {
     const q = query.trim().toLowerCase();
 
     return allStudents.filter((student) => {
-      // Basic derived fields
       const fullName = `${student.user?.firstName ?? ''} ${student.user?.lastName ?? ''}`.trim();
 
       const studentSkills: string[] = Array.isArray(student.skills)
@@ -63,10 +63,8 @@ const StudentsPage: React.FC = () => {
         : [];
 
       const openTo: string[] = Array.isArray(student.looking_for) ? student.looking_for : [];
-
       const field: string = student.preferred_field ?? '';
 
-      // Text query filter
       if (q) {
         const matchesQuery =
           fullName.toLowerCase().includes(q) ||
@@ -77,26 +75,21 @@ const StudentsPage: React.FC = () => {
         if (!matchesQuery) return false;
       }
 
-      // Skill filter
       if (selectedSkills.length > 0) {
         const hasAll = selectedSkills.every((sk) => studentSkills.includes(sk));
         if (!hasAll) return false;
       }
 
-      // Open-to filter (internship / job)
       if (openToFilter && !openTo.includes(openToFilter)) {
         return false;
       }
 
-      // Field filter (preferred_field)
       if (fieldFilter && field !== fieldFilter) {
         return false;
       }
 
-      // Experience range filter (total_experience is in months)
       if (experienceRange) {
         const exp = student.total_experience ?? 0;
-
         if (experienceRange === '0-6' && !(exp >= 0 && exp <= 6)) return false;
         if (experienceRange === '6-12' && !(exp >= 6 && exp <= 12)) return false;
         if (experienceRange === '12-24' && !(exp >= 12 && exp <= 24)) return false;
@@ -131,13 +124,12 @@ const StudentsPage: React.FC = () => {
     setSelectedSkills([]);
     setOpenToFilter(null);
     setFieldFilter(null);
+    setSkillSearchQuery(''); // Also clear local skill search
   };
 
   const uniquePreferredFields = useMemo(() => {
     if (!allStudents) return [];
-
     const fields = allStudents.map((s: any) => s.preferred_field).filter(Boolean);
-
     return Array.from(new Set(fields));
   }, [allStudents]);
 
@@ -179,7 +171,7 @@ const StudentsPage: React.FC = () => {
           <aside className="col-span-12 md:col-span-3">
             <div className="sticky top-24">
               <div className="bg-card rounded-md border p-4">
-                <div className="mb-2 flex items-center justify-between">
+                <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-medium">Skills</h3>
                   {selectedSkills.length > 0 && (
                     <button
@@ -191,25 +183,46 @@ const StudentsPage: React.FC = () => {
                   )}
                 </div>
 
+                {/* --- NEW: Skill Search Bar --- */}
+                <div className="mb-3">
+                  <Input 
+                    placeholder="Find a skill..." 
+                    value={skillSearchQuery}
+                    onChange={(e) => setSkillSearchQuery(e.target.value)}
+                    className="h-8 text-xs" 
+                  />
+                </div>
+
                 <div className="flex max-h-[60vh] flex-col gap-2 overflow-auto pr-1">
                   {skillsLoading && (
                     <div className="text-muted-foreground text-xs">Loading skills…</div>
                   )}
 
                   {!skillsLoading &&
-                    skillsList.map((skill) => (
-                      <Button
-                        key={skill}
-                        variant={selectedSkills.includes(skill) ? 'default' : 'ghost'}
-                        onClick={() => toggleSkill(skill)}
-                        className="w-full justify-start rounded-full px-3 py-1 text-sm"
-                      >
-                        {skill}
-                      </Button>
-                    ))}
+                    skillsList
+                      // Filter skills based on sidebar search
+                      .filter(skill => 
+                        skill.toLowerCase().includes(skillSearchQuery.trim().toLowerCase())
+                      )
+                      .map((skill) => (
+                        <Button
+                          key={skill}
+                          variant={selectedSkills.includes(skill) ? 'default' : 'ghost'}
+                          onClick={() => toggleSkill(skill)}
+                          className="w-full justify-start rounded-full px-3 py-1 text-sm"
+                        >
+                          {skill}
+                        </Button>
+                      ))}
 
                   {!skillsLoading && skillsList.length === 0 && (
                     <div className="text-muted-foreground text-xs">No skills available.</div>
+                  )}
+                  
+                  {/* Empty state for when search returns no results */}
+                  {!skillsLoading && skillsList.length > 0 && 
+                    skillsList.filter(s => s.toLowerCase().includes(skillSearchQuery.toLowerCase())).length === 0 && (
+                     <div className="text-muted-foreground mt-2 text-xs">No matching skills found.</div>
                   )}
                 </div>
 
