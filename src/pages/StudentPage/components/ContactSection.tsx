@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit2, Github, Linkedin, FileText, ExternalLink } from 'lucide-react';
+import { Edit2, Github, Linkedin, FileText, ExternalLink, Upload, X } from 'lucide-react';
 
 const ContactSection: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -13,7 +13,12 @@ const ContactSection: React.FC = () => {
   // Local state for form fields
   const [linkedin, setLinkedin] = useState('');
   const [github, setGithub] = useState('');
-  const [resume, setResume] = useState('');
+  
+  // Resume State
+  const [resumeLink, setResumeLink] = useState(''); // Stores existing URL
+  const [resumeFile, setResumeFile] = useState<File | null>(null); // Stores new file
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   // Edit mode toggle
   const [isEditing, setIsEditing] = useState(false);
@@ -23,22 +28,62 @@ const ContactSection: React.FC = () => {
     if (profile) {
       setLinkedin(profile.linkedin_url || '');
       setGithub(profile.github_url || '');
-      setResume(profile.resume_link || '');
+      setResumeLink(profile.resume_link || '');
     }
   }, [profile]);
 
   if (!profile) return null;
 
-  const handleSave = () => {
+  // --- File Handler ---
+  const handleResumeChange = (file?: File) => {
+    setResumeError(null);
+
+    if (!file) {
+      setResumeFile(null);
+      return;
+    }
+
+    // Validate type
+    const validTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      setResumeError('Only PDF or Word documents are allowed.');
+      return;
+    }
+
+    // Max size 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setResumeError('Resume must be 5MB or smaller.');
+      return;
+    }
+
+    setResumeFile(file);
+  };
+
+  const handleSave = async () => {
     const payload: any = {};
 
-    // Only add to payload if changed
+    // Only add text fields if changed
     if (linkedin !== profile.linkedin_url) payload.linkedin_url = linkedin;
     if (github !== profile.github_url) payload.github_url = github;
-    if (resume !== profile.resume_link) payload.resume_link = resume;
 
-    // Dispatch if there are changes (optional optimization) or just dispatch
-    dispatch(updateStudentProfile(payload));
+    // Add resume file if a NEW file is selected
+    // Note: The backend expects the key 'resume' for the file object
+    if (resumeFile) {
+        payload.resume = resumeFile;
+    }
+
+    // Dispatch if there are changes
+    if (Object.keys(payload).length > 0) {
+        await dispatch(updateStudentProfile(payload));
+    }
+    
+    // Reset local file state after save
+    setResumeFile(null);
     setIsEditing(false);
   };
 
@@ -46,7 +91,12 @@ const ContactSection: React.FC = () => {
     // Reset fields to original values
     setLinkedin(profile.linkedin_url || '');
     setGithub(profile.github_url || '');
-    setResume(profile.resume_link || '');
+    setResumeLink(profile.resume_link || '');
+    
+    // Clear new file selection
+    setResumeFile(null);
+    setResumeError(null);
+    
     setIsEditing(false);
   };
 
@@ -133,15 +183,55 @@ const ContactSection: React.FC = () => {
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-sm font-medium">
             <FileText className="h-4 w-4 text-orange-500" />
-            Resume Link
+            Resume
           </div>
+
           {isEditing ? (
-            <Input
-              value={resume}
-              onChange={(e) => setResume(e.target.value)}
-              placeholder="https://drive.google.com/..."
-            />
+            <div className="space-y-2">
+                {/* 1. Show existing link if no new file is selected */}
+                {!resumeFile && resumeLink && (
+                     <div className="text-xs text-muted-foreground flex items-center gap-2 mb-2">
+                        <span>Current:</span>
+                        <a href={resumeLink} target="_blank" rel="noreferrer" className="underline truncate max-w-[200px]">
+                            View Resume
+                        </a>
+                     </div>
+                )}
+
+                {/* 2. File Input UI */}
+                <input
+                    ref={resumeInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => handleResumeChange(e.target.files?.[0])}
+                />
+
+                <div className="flex items-center gap-2">
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => resumeInputRef.current?.click()}
+                    >
+                        <Upload className="mr-2 h-3 w-3" />
+                        {resumeLink || resumeFile ? 'Change Resume' : 'Upload Resume'}
+                    </Button>
+
+                    {resumeFile && (
+                        <div className="flex items-center gap-2 text-sm bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200">
+                             <span className="truncate max-w-[120px]">{resumeFile.name}</span>
+                             <button onClick={() => setResumeFile(null)} className="hover:text-green-900">
+                                <X className="h-3 w-3" />
+                             </button>
+                        </div>
+                    )}
+                </div>
+                
+                {resumeError && <p className="text-xs text-red-500">{resumeError}</p>}
+            </div>
           ) : (
+            // READ ONLY VIEW
             <div className="text-muted-foreground truncate text-sm">
               {profile.resume_link ? (
                 <a

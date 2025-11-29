@@ -13,7 +13,6 @@ import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { createStudentProfile } from '@/context/student/studentSlice';
 import {
   type CertificatePayload,
-  type CreateStudentProfilePayload,
   type ExperiencePayload,
   type ProjectPayload,
 } from '@/api/students.types';
@@ -27,7 +26,7 @@ const CreateProfile: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const { loading, error } = useAppSelector((s) => s.student);
+  const { loading } = useAppSelector((s) => s.student);
 
   // ---------------- BASIC INFO ----------------
   const [headline, setHeadline] = useState('');
@@ -41,10 +40,14 @@ const CreateProfile: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ---------------- LINKS ----------------
+  // ---------------- LINKS & RESUME ----------------
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
-  const [resumeLink, setResumeLink] = useState('');
+  
+  // --- CHANGED: Resume File State ---
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   // ---------------- LOOKING FOR ----------------
   const [lookingFor, setLookingFor] = useState<string>('internship');
@@ -52,15 +55,15 @@ const CreateProfile: React.FC = () => {
   // ---------------- SKILLS ----------------
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
 
-  // ---------------- EDUCATION (initial row) ----------------
+  // ---------------- EDUCATION ----------------
   const [educationList, setEducationList] = useState([
     {
       institute: '',
       from_date: '',
       to_date: '',
-      courseId: '', // Stores the ID (for backend)
-      courseName: '', // Stores the Name (for picker display)
-      category: '', // Stores category (ug/pg)
+      courseId: '',
+      courseName: '',
+      category: '',
       specialization: '',
     },
   ]);
@@ -89,12 +92,13 @@ const CreateProfile: React.FC = () => {
 
     if (linkedinUrl && !urlRegex.test(linkedinUrl)) e.linkedin_url = 'Invalid LinkedIn URL';
     if (githubUrl && !urlRegex.test(githubUrl)) e.github_url = 'Invalid GitHub URL';
-    if (resumeLink && !urlRegex.test(resumeLink)) e.resume_link = 'Invalid resume link';
+    // Removed resume_link regex check
 
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
+  // --- Profile Image Handler ---
   const handleProfileImageChange = (file?: File) => {
     setProfileImageError(null);
 
@@ -104,13 +108,11 @@ const CreateProfile: React.FC = () => {
       return;
     }
 
-    // Validate image type
     if (!file.type.startsWith('image/')) {
       setProfileImageError('Only image files are allowed.');
       return;
     }
 
-    // Max size 5MB
     if (file.size > 5 * 1024 * 1024) {
       setProfileImageError('Image must be 5MB or smaller.');
       return;
@@ -120,8 +122,38 @@ const CreateProfile: React.FC = () => {
     setProfileImagePreview(URL.createObjectURL(file));
   };
 
+  // --- ADDED: Resume Handler ---
+  const handleResumeChange = (file?: File) => {
+    setResumeError(null);
+
+    if (!file) {
+      setResumeFile(null);
+      return;
+    }
+
+    // Validate type (PDF or Word)
+    const validTypes = [
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
+    if (!validTypes.includes(file.type)) {
+      setResumeError('Only PDF or Word documents are allowed.');
+      return;
+    }
+
+    // Max size 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setResumeError('Resume must be 5MB or smaller.');
+      return;
+    }
+
+    setResumeFile(file);
+  };
+
   /* ----------------------------------------------------------------------------------
-     RENDER START
+      RENDER START
   ---------------------------------------------------------------------------------- */
 
   return (
@@ -147,19 +179,17 @@ const CreateProfile: React.FC = () => {
 
             <CardContent className="space-y-4">
               {/* PROFILE IMAGE */}
-              {/* PROFILE IMAGE */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Profile Image <span className="text-red-500">*</span>
                 </label>
 
-                {/* 1. Add ref here */}
                 <input
                   ref={fileInputRef}
                   id="profile-image-input"
                   type="file"
                   accept="image/*"
-                  className="hidden" // You can use hidden or absolute left-[-9999px]
+                  className="hidden"
                   onChange={(e) => handleProfileImageChange(e.target.files?.[0])}
                 />
 
@@ -176,7 +206,6 @@ const CreateProfile: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 2. Remove the <label> wrapper, add onClick to Button directly */}
                   <Button
                     type="button"
                     variant="outline"
@@ -230,7 +259,8 @@ const CreateProfile: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          {/* LINKS & OPEN TO */}
+          
+          {/* LINKS & PREFERENCES */}
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold">Links & Preferences</h2>
@@ -245,6 +275,7 @@ const CreateProfile: React.FC = () => {
                     onChange={(e) => setLinkedinUrl(e.target.value)}
                     placeholder="https://linkedin.com/in/username"
                   />
+                  {errors.linkedin_url && <p className="text-xs text-red-500 mt-1">{errors.linkedin_url}</p>}
                 </div>
 
                 <div>
@@ -254,16 +285,52 @@ const CreateProfile: React.FC = () => {
                     onChange={(e) => setGithubUrl(e.target.value)}
                     placeholder="https://github.com/username"
                   />
+                  {errors.github_url && <p className="text-xs text-red-500 mt-1">{errors.github_url}</p>}
                 </div>
               </div>
 
+              {/* --- CHANGED: Resume File Input --- */}
               <div>
-                <label className="text-sm font-medium">Resume Link (optional)</label>
-                <Input
-                  value={resumeLink}
-                  onChange={(e) => setResumeLink(e.target.value)}
-                  placeholder="Google Drive link etc."
+                <label className="text-sm font-medium">Resume (optional)</label>
+                
+                <input
+                    ref={resumeInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    className="hidden"
+                    onChange={(e) => handleResumeChange(e.target.files?.[0])}
                 />
+
+                <div className="flex items-center gap-3 mt-1.5">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => resumeInputRef.current?.click()}
+                    >
+                        Upload Resume
+                    </Button>
+                    
+                    {resumeFile ? (
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                             <span className="font-medium truncate max-w-[200px]">
+                                {resumeFile.name}
+                             </span>
+                             <button 
+                                type="button" 
+                                onClick={() => setResumeFile(null)}
+                                className="text-red-500 hover:text-red-700 font-bold"
+                             >
+                                ✕
+                             </button>
+                        </div>
+                    ) : (
+                        <span className="text-sm text-muted-foreground">No file selected</span>
+                    )}
+                </div>
+                
+                {resumeError && <p className="text-xs text-red-500 mt-1">{resumeError}</p>}
+                {errors.resume_link && <p className="text-xs text-red-500 mt-1">{errors.resume_link}</p>}
+                <p className="text-xs text-muted-foreground mt-1">Accepted formats: PDF, DOC, DOCX. Max size: 5MB.</p>
               </div>
 
               <Separator />
@@ -303,7 +370,8 @@ const CreateProfile: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          {/* ---------------------- SKILLS (updated with SkillPicker) ---------------------- */}
+
+          {/* ---------------------- SKILLS ---------------------- */}
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold">Skills</h2>
@@ -317,6 +385,7 @@ const CreateProfile: React.FC = () => {
               />
             </CardContent>
           </Card>
+
           {/* ---------------------- EDUCATION ---------------------- */}
           <Card>
             <CardHeader>
@@ -333,9 +402,9 @@ const CreateProfile: React.FC = () => {
                         institute: '',
                         from_date: '',
                         to_date: '',
-                        courseId: '', // <-- changed
-                        courseName: '', // <-- changed
-                        category: '', // <-- changed
+                        courseId: '',
+                        courseName: '',
+                        category: '',
                         specialization: '',
                       },
                     ])
@@ -412,7 +481,6 @@ const CreateProfile: React.FC = () => {
                         />
                       </div>
 
-                      {/* CATEGORY (Auto-filled) */}
                       <div className="w-24">
                         <label className="text-sm font-medium">Category</label>
                         <Input
@@ -478,6 +546,7 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
+
           {/* ---------------------- EXPERIENCE ---------------------- */}
           <Card>
             <CardHeader>
@@ -597,6 +666,7 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
+
           {/* ---------------------- PROJECTS ---------------------- */}
           <Card>
             <CardHeader>
@@ -749,10 +819,9 @@ const CreateProfile: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Tech Used (with SkillPicker) */}
+                  {/* Tech Used */}
                   <div>
                     <label className="text-sm font-medium">Technologies Used</label>
-
                     <SkillPicker
                       selected={pr.tech_used}
                       setSelected={(ids) =>
@@ -766,6 +835,7 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
+
           {/* ---------------------- CERTIFICATES ---------------------- */}
           <Card>
             <CardHeader>
@@ -885,6 +955,7 @@ const CreateProfile: React.FC = () => {
               ))}
             </CardContent>
           </Card>
+
           {/* ---------------------- SUBMIT ---------------------- */}
           <div className="flex justify-end">
             <Button
@@ -900,8 +971,6 @@ const CreateProfile: React.FC = () => {
                 }
 
                 // 1. Prepare the Plain Object Payload
-                // Note: We cast to 'any' momentarily to attach the profile_image
-                // because strict types might not have profile_image in the Payload type yet.
                 const payload: any = {
                   headline,
                   location,
@@ -910,10 +979,13 @@ const CreateProfile: React.FC = () => {
                   looking_for: [lookingFor],
                   linkedin_url: linkedinUrl || undefined,
                   github_url: githubUrl || undefined,
-                  resume_link: resumeLink || undefined,
+                  
+                  // --- CHANGED: Passing the file object instead of URL string ---
+                  resume: resumeFile || undefined, 
+                  
                   skills: selectedSkillIds.length ? selectedSkillIds : undefined,
 
-                  // Attach the file here
+                  // Attach the profile image file
                   profile_image: profileImage,
 
                   education: educationList
@@ -922,7 +994,7 @@ const CreateProfile: React.FC = () => {
                       institute: edu.institute,
                       from_date: edu.from_date,
                       to_date: edu.to_date,
-                      course: edu.courseId, // Send ID
+                      course: edu.courseId,
                       specialization: edu.specialization || undefined,
                     })),
 
@@ -953,8 +1025,7 @@ const CreateProfile: React.FC = () => {
                     })),
                 };
 
-                // 2. Pass the OBJECT to the redux action/API.
-                // DO NOT use new FormData() here.
+                // 2. Pass the OBJECT to the redux action
                 const res = await dispatch(createStudentProfile(payload));
 
                 if (createStudentProfile.fulfilled.match(res)) {

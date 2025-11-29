@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAnyStudentProfile } from '@/context/student/studentSlice';
-import skillsApi from '@/api/skills'; // ⬅ new import
+import skillsApi from '@/api/skills';
 
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { MapPin } from 'lucide-react';
+import { MapPin, Mail, Phone, Linkedin, Github, FileText } from 'lucide-react'; // Added icons
 
 const PublicStudentProfile: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -83,6 +83,8 @@ const PublicStudentProfile: React.FC = () => {
     return <div className="mt-10 p-10 text-center text-lg text-red-500">Profile not found.</div>;
 
   const profile = publicProfile;
+  // Access user details safely (assuming your User type has these fields)
+  const user = profile.user as any;
 
   // -------------------------------------------------------------------
   // UI
@@ -103,13 +105,15 @@ const PublicStudentProfile: React.FC = () => {
                   src={profile.profile_image || '/avatar-placeholder.png'}
                   className="h-full w-full object-cover"
                 />
-                <AvatarFallback>{profile.user.firstName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                <AvatarFallback>{user.firstName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
             </div>
 
             {/* Info */}
             <div className="flex-1">
-              <h1 className="text-2xl font-semibold">{profile.user.firstName}</h1>
+              <h1 className="text-2xl font-semibold">
+                {user.firstName} {user.lastName}
+              </h1>
 
               <p className="text-muted-foreground mt-1 text-sm">{profile.headline}</p>
 
@@ -129,15 +133,28 @@ const PublicStudentProfile: React.FC = () => {
         <CardHeader>
           <h2 className="text-lg font-semibold">Contact Info</h2>
         </CardHeader>
-        <CardContent className="text-muted-foreground space-y-2 text-sm">
-          <div>
-            LinkedIn:{' '}
+        <CardContent className="text-muted-foreground grid gap-4 text-sm sm:grid-cols-2">
+          {/* Email */}
+          <div className="flex items-center gap-2">
+            <Mail className="text-primary h-4 w-4" />
+            <span>{user.email || '—'}</span>
+          </div>
+
+          {/* Phone */}
+          <div className="flex items-center gap-2">
+            <Phone className="text-primary h-4 w-4" />
+            <span>{user.phone || '—'}</span>
+          </div>
+
+          {/* LinkedIn */}
+          <div className="flex items-center gap-2">
+            <Linkedin className="h-4 w-4 text-blue-600" />
             {profile.linkedin_url ? (
               <a
                 href={profile.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:underline"
+                className="text-foreground hover:text-primary truncate hover:underline"
               >
                 {profile.linkedin_url}
               </a>
@@ -146,14 +163,15 @@ const PublicStudentProfile: React.FC = () => {
             )}
           </div>
 
-          <div>
-            GitHub:{' '}
+          {/* GitHub */}
+          <div className="flex items-center gap-2">
+            <Github className="h-4 w-4" />
             {profile.github_url ? (
               <a
                 href={profile.github_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:underline"
+                className="text-foreground hover:text-primary truncate hover:underline"
               >
                 {profile.github_url}
               </a>
@@ -162,14 +180,15 @@ const PublicStudentProfile: React.FC = () => {
             )}
           </div>
 
-          <div>
-            Resume:{' '}
+          {/* Resume */}
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <FileText className="h-4 w-4 text-orange-500" />
             {profile.resume_link ? (
               <a
                 href={profile.resume_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:underline"
+                className="text-foreground hover:text-primary hover:underline"
               >
                 View Resume
               </a>
@@ -232,7 +251,7 @@ const PublicStudentProfile: React.FC = () => {
                     (skill: { _id: React.Key | null | undefined; displayName: any; name: any }) => (
                       <div
                         key={skill._id}
-                        className="bg-muted rounded-full border px-3 py-1 text-sm"
+                        className="bg-background border-input rounded-full border px-3 py-1 text-xs"
                       >
                         {skill.displayName || skill.name}
                       </div>
@@ -251,7 +270,10 @@ const PublicStudentProfile: React.FC = () => {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           {profile.skills.map((s) => (
-            <div key={s._id} className="bg-muted rounded-full px-3 py-1 text-sm">
+            <div
+              key={s._id}
+              className="bg-muted text-foreground rounded-full px-3 py-1 text-sm font-medium"
+            >
               {s.displayName || s.name}
             </div>
           ))}
@@ -265,7 +287,7 @@ const PublicStudentProfile: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           {profile.education.map((edu) => (
-            <div key={edu._id}>
+            <div key={edu._id} className="border-primary border-l-2 pl-4">
               <div className="font-medium">{edu.institute}</div>
               <div className="text-muted-foreground text-sm">
                 {edu.course?.name} • {new Date(edu.from_date).getFullYear()}–

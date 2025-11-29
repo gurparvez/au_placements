@@ -44,7 +44,8 @@ export interface CreateStudentProfilePayload {
 
   linkedin_url?: string;
   github_url?: string;
-  resume_link?: string;
+
+  resume?: File | null; 
 
   looking_for?: ("internship" | "job")[];      // 🔵 optional
 
