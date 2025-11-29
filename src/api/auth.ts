@@ -15,6 +15,7 @@ export interface RegisterPayload {
   email: string;
   phone: string;
   password: string;
+  university: 'Akal University' | 'Eternal University';
   id_card: File;
 }
 
@@ -40,6 +41,7 @@ export interface LoginResponse {
     auid: string;
     firstName: string;
     lastName?: string;
+    university: string;
     roles: string[];
   };
 }
@@ -50,6 +52,7 @@ export interface RegisterResponse {
   user: {
     _id: string;
     auid: string;
+    university: string;
     roles: string[];
   };
 }
@@ -59,9 +62,10 @@ export interface MeResponse {
   auid: string;
   firstName: string;
   lastName?: string;
+  university: string;
   roles: string[];
   email?: string;
-  phone?: string; 
+  phone?: string;
 }
 
 export interface UpdateDetailsResponse {
@@ -74,6 +78,7 @@ export interface UpdateDetailsResponse {
     lastName: string;
     email: string;
     phone: string;
+    university: string;
     roles: string[];
   };
 }
@@ -91,7 +96,7 @@ class Auth {
   constructor() {
     this.instance = axios.create({
       baseURL: URL,
-      withCredentials: true, // 🔥 VERY IMPORTANT for cookie-based auth
+      withCredentials: true,
     });
   }
 
@@ -100,6 +105,7 @@ class Auth {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
+      // Append all fields
       formData.append(key, value as any);
     });
 
@@ -120,8 +126,6 @@ class Auth {
   async login(payload: LoginPayload): Promise<LoginResponse> {
     try {
       const response = await this.instance.post<LoginResponse>('/api/auth/login', payload);
-
-      // 🔥 Do NOT store token — backend sets cookie
       return response.data;
     } catch (error) {
       throw error;
@@ -130,7 +134,6 @@ class Auth {
 
   /* -------------------------------- LOGOUT ------------------------------- */
   logout() {
-    // Optional: Call backend logout to clear cookie
     return this.instance.post('/api/auth/logout');
   }
 
@@ -138,9 +141,7 @@ class Auth {
   async getUser(): Promise<MeResponse> {
     try {
       const response = await this.instance.get('/api/auth/user');
-
-      console.log(response);
-      return response.data.user; 
+      return response.data.user;
     } catch (error) {
       throw error;
     }
@@ -159,7 +160,10 @@ class Auth {
   /* ----------------------------- UPDATE PASSWORD ------------------------- */
   async updatePassword(data: UpdatePasswordPayload): Promise<UpdatePasswordResponse> {
     try {
-      const response = await this.instance.put<UpdatePasswordResponse>('/api/auth/update-password', data);
+      const response = await this.instance.put<UpdatePasswordResponse>(
+        '/api/auth/update-password',
+        data
+      );
       return response.data;
     } catch (error) {
       throw error;

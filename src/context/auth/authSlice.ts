@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import authApi from '@/api/auth'; // ✔ use shared instance
+import authApi from '@/api/auth';
+import axios from 'axios';
 
 import type {
   LoginPayload,
@@ -15,41 +16,77 @@ import type {
 
 /* ---------------------------- ASYNC THUNKS ---------------------------- */
 
+// 2. Updated Thunks to use rejectWithValue
 export const loginUser = createAsyncThunk<LoginResponse, LoginPayload>(
   'auth/login',
-  async (payload) => {
-    return await authApi.login(payload); // ✔ using shared instance
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await authApi.login(payload);
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Login failed');
+    }
   }
 );
 
 export const registerUser = createAsyncThunk<RegisterResponse, RegisterPayload>(
   'auth/register',
-  async (payload) => {
-    return await authApi.register(payload);
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await authApi.register(payload);
+    } catch (err: any) {
+      // This specifically catches your 400 error message from the backend
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Registration failed');
+    }
   }
 );
 
-export const fetchCurrentUser = createAsyncThunk<MeResponse>('auth/me', async () => {
-  return await authApi.getUser();
-});
+export const fetchCurrentUser = createAsyncThunk<MeResponse>(
+  'auth/me',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authApi.getUser();
+    } catch (err: any) {
+      // Often for "Me" call we don't want to show an error if just not logged in
+      return rejectWithValue(null);
+    }
+  }
+);
 
 export const logoutUser = createAsyncThunk<void, void>('auth/logout', async () => {
-  await authApi.logout(); // no return
+  await authApi.logout();
 });
 
-// New Thunk: Update User Details
 export const updateUserDetails = createAsyncThunk<UpdateDetailsResponse, UpdateDetailsPayload>(
   'auth/updateUserDetails',
-  async (payload) => {
-    return await authApi.updateUserDetails(payload);
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await authApi.updateUserDetails(payload);
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Update failed');
+    }
   }
 );
 
-// New Thunk: Update Password
 export const updateUserPassword = createAsyncThunk<UpdatePasswordResponse, UpdatePasswordPayload>(
   'auth/updatePassword',
-  async (payload) => {
-    return await authApi.updatePassword(payload);
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await authApi.updatePassword(payload);
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Password update failed');
+    }
   }
 );
 
@@ -76,6 +113,10 @@ const authSlice = createSlice({
       state.error = null;
       state.initialized = false;
     },
+    // Optional: Action to clear error manually (e.g., when switching forms)
+    clearError: (state) => {
+      state.error = null;
+    },
   },
 
   extraReducers: (builder) => {
@@ -83,11 +124,20 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
     };
+
+    // 3. Updated Rejected Handler
     const rejected = (state: any, action: any) => {
       state.loading = false;
-      state.error = action.error?.message || 'Something went wrong';
-      // We don't necessarily set initialized=true on all failures, but keeping consistency with your logic:
-      state.initialized = true; 
+
+      // If we used rejectWithValue, the error string is in action.payload
+      if (action.payload) {
+        state.error = action.payload as string;
+      } else {
+        // Fallback for unexpected errors
+        state.error = action.error?.message || 'Something went wrong';
+      }
+
+      state.initialized = true;
     };
 
     // --- LOGIN ---
@@ -113,10 +163,13 @@ const authSlice = createSlice({
     builder
       .addCase(fetchCurrentUser.pending, (state) => {
         state.error = null;
-        // Note: We often don't want global loading=true for background checks, but keeping consistent:
-        // state.loading = true; 
       })
-      .addCase(fetchCurrentUser.rejected, rejected)
+      .addCase(fetchCurrentUser.rejected, (state) => {
+        // Silent failure for checkAuth usually
+        state.loading = false;
+        state.user = null;
+        state.initialized = true;
+      })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
@@ -136,7 +189,6 @@ const authSlice = createSlice({
       .addCase(updateUserDetails.rejected, rejected)
       .addCase(updateUserDetails.fulfilled, (state, action) => {
         state.loading = false;
-        // Update the local user state with the fresh data returned from the API
         state.user = action.payload.user;
       });
 
@@ -146,10 +198,9 @@ const authSlice = createSlice({
       .addCase(updateUserPassword.rejected, rejected)
       .addCase(updateUserPassword.fulfilled, (state) => {
         state.loading = false;
-        // Password update usually doesn't return user data, just success
       });
   },
 });
 
-export const { clearAuth } = authSlice.actions;
+export const { clearAuth, clearError } = authSlice.actions;
 export default authSlice.reducer;

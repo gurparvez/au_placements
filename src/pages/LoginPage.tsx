@@ -3,12 +3,11 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Upload } from 'lucide-react';
+import { Upload, Eye, EyeOff } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '@/context/store';
 import { loginUser, registerUser } from '@/context/auth/authSlice';
-import { replace, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type AuthMode = 'login' | 'register';
 
@@ -19,6 +18,8 @@ type RegisterForm = {
   email: string;
   phone: string;
   password: string;
+  // 🟢 Added University to state type
+  university: string;
 };
 
 type LoginForm = {
@@ -33,7 +34,6 @@ const LoginPage: React.FC = () => {
   // Redux auth state
   const authLoading = useSelector((s: RootState) => s.auth.loading);
   const authError = useSelector((s: RootState) => s.auth.error);
-  const user = useSelector((s: RootState) => s.auth.user);
 
   const [mode, setMode] = useState<AuthMode>('login');
 
@@ -49,6 +49,7 @@ const LoginPage: React.FC = () => {
     email: '',
     phone: '',
     password: '',
+    university: '', // 🟢 Initial state
   });
 
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
@@ -89,6 +90,7 @@ const LoginPage: React.FC = () => {
   const validateRegister = () => {
     const e: { [k: string]: string } = {};
 
+    if (!registerForm.university) e.university = 'Please select your university'; // 🟢 Validate University
     if (!registerForm.auid.trim()) e.auid = 'AU ID is required';
     if (!registerForm.firstName.trim()) e.firstName = 'First name is required';
     if (!registerForm.lastName.trim()) e.lastName = 'Last name is required';
@@ -129,9 +131,12 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     if (!validateRegister()) return;
 
+    const uni = registerForm.university as 'Akal University' | 'Eternal University';
+
     const res = await dispatch(
       registerUser({
         ...registerForm,
+        university: uni,
         id_card: idCardFile!,
       })
     );
@@ -242,6 +247,22 @@ const LoginPage: React.FC = () => {
             {mode === 'register' && (
               <form className="space-y-4" onSubmit={handleRegisterSubmit}>
                 {authError && <p className="text-sm text-red-600">{authError}</p>}
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">University</label>
+                  <select
+                    className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    value={registerForm.university}
+                    onChange={(e) => setRegisterForm((f) => ({ ...f, university: e.target.value }))}
+                  >
+                    <option value="" disabled>
+                      Select your University
+                    </option>
+                    <option value="Akal University">Akal University</option>
+                    <option value="Eternal University">Eternal University</option>
+                  </select>
+                  {errors.university && <p className="text-xs text-red-600">{errors.university}</p>}
+                </div>
 
                 {/* AU ID */}
                 <div className="space-y-1">
