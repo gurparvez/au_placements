@@ -1,3 +1,5 @@
+// src/pages/PublicStudentProfile.tsx
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
@@ -6,7 +8,7 @@ import skillsApi from '@/api/skills';
 
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge'; // 🟢 Added Badge
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   MapPin,
@@ -16,11 +18,11 @@ import {
   Github,
   FileText,
   Globe,
-  CalendarDays, // 🟢 Added Calendar Icon
+  CalendarDays,
+  School,
 } from 'lucide-react';
-import { capitalizeFirstLetter } from '@/utils/capitalizeFirstLetter';
 
-// 🟢 Helper to format dates
+// Helper to format dates
 const formatDate = (dateString?: string) => {
   if (!dateString) return null;
   return new Date(dateString).toLocaleDateString('en-US', {
@@ -37,11 +39,16 @@ const PublicStudentProfile: React.FC = () => {
 
   const [resolvedProjects, setResolvedProjects] = useState<any[] | null>(null);
 
+  // 🟢 EMAIL TEMPLATE GENERATOR
   const getMailToLink = (email: string, firstName: string, lastName: string) => {
     if (!email) return '#';
 
-    const fullName = `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`;
-    const subject = `Opportunity via AU Placements`;
+    // Basic capitalization for the email body text
+    const formatName = (name: string) =>
+      name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : '';
+
+    const fullName = `${formatName(firstName)} ${formatName(lastName)}`;
+    const subject = `Opportunity via AU Placements: Profile Selection`;
 
     const body = `Hi ${fullName},
 
@@ -58,16 +65,12 @@ Best regards,
     return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
-  // -------------------------------------------------------------------
   // Fetch public profile
-  // -------------------------------------------------------------------
   useEffect(() => {
     if (userId) dispatch(fetchAnyStudentProfile({ userId }));
   }, [userId, dispatch]);
 
-  // -------------------------------------------------------------------
   // Fetch skill names for project.tech_used
-  // -------------------------------------------------------------------
   useEffect(() => {
     if (!publicProfile) return;
 
@@ -105,9 +108,7 @@ Best regards,
     resolveSkills();
   }, [publicProfile]);
 
-  // -------------------------------------------------------------------
   // Render states
-  // -------------------------------------------------------------------
   if (!userId)
     return (
       <div className="mt-10 p-10 text-center text-xl text-red-500">Missing userId in URL.</div>
@@ -129,9 +130,7 @@ Best regards,
   const fromDate = formatDate(lookingFor?.from_date);
   const toDate = formatDate(lookingFor?.to_date);
 
-  // -------------------------------------------------------------------
   // UI
-  // -------------------------------------------------------------------
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8">
       {/* Banner */}
@@ -154,18 +153,29 @@ Best regards,
 
             {/* Info */}
             <div className="flex-1">
+              {/* 🟢 Capitalized Name */}
               <h1 className="text-2xl font-semibold capitalize">
                 {user.firstName} {user.lastName}
               </h1>
 
               <p className="text-muted-foreground mt-1 text-sm">{profile.headline}</p>
 
-              <div className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4" />
-                <span>{profile.location}</span>
+              {/* 🟢 University & Location Block */}
+              <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                {user.university && (
+                  <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                    <School className="h-4 w-4" />
+                    <span>{user.university}</span>
+                  </div>
+                )}
+
+                <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                  <MapPin className="h-4 w-4" />
+                  <span>{profile.location}</span>
+                </div>
               </div>
 
-              {/* 🟢 NEW: Looking For Section */}
+              {/* Looking For Section */}
               {lookingFor && lookingFor.type && (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <Badge variant="secondary" className="px-3 text-sm font-medium capitalize">

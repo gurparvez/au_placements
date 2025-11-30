@@ -204,7 +204,7 @@ const LoginPage: React.FC = () => {
                 {authError && <p className="text-sm text-red-600">{authError}</p>}
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">AUID</label>
+                  <label className="text-sm font-medium">AUID/Roll No.</label>
                   <Input
                     placeholder="227106009"
                     value={loginForm.auid}

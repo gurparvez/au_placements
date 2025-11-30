@@ -10,13 +10,14 @@ const LandingPage: React.FC = () => {
       </div>
 
       <section
-        aria-label="AU Placement Hero"
+        aria-label="Placement Hero"
         className="relative mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 pt-32 pb-20"
       >
         {/* Hero - centered */}
         <div className="flex flex-col items-center text-center">
           <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-            AU Placement Portal
+            {/* 🟢 Updated Branding */}
+            Akal & Eternal Placement Portal
           </p>
 
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
@@ -24,15 +25,18 @@ const LandingPage: React.FC = () => {
           </h1>
 
           <p className="text-muted-foreground mt-4 max-w-2xl text-base md:text-lg">
-            Discover opportunities, showcase your profile, and connect with recruiters through Akal
-            University&apos;s centralized placement platform.
+            {/* 🟢 Updated Copy */}
+            Discover opportunities, showcase your profile, and connect with recruiters through the
+            centralized placement platform for
+            <span className="text-foreground font-medium"> Akal University</span> and
+            <span className="text-foreground font-medium"> Eternal University</span>.
           </p>
 
           {/* Small highlight chips */}
           <div className="text-muted-foreground mt-6 flex flex-wrap justify-center gap-2 text-xs">
-            <span className="rounded-full border px-3 py-1">Curated student profiles</span>
-            <span className="rounded-full border px-3 py-1">Direct campus placements</span>
-            <span className="rounded-full border px-3 py-1">For students & recruiters</span>
+            <span className="rounded-full border px-3 py-1">Unified Student Profiles</span>
+            <span className="rounded-full border px-3 py-1">Dual-Campus Opportunities</span>
+            <span className="rounded-full border px-3 py-1">For Students & Recruiters</span>
           </div>
         </div>
 
@@ -41,17 +45,21 @@ const LandingPage: React.FC = () => {
           {/* About */}
           <Card className="transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
             <CardHeader>
-              <CardTitle className="text-xl">About</CardTitle>
+              <CardTitle className="text-xl">About the Portal</CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground space-y-2 text-sm">
               <p>
-                AU Placements is a centralized portal where students, faculty, and companies
-                collaborate for internships and full-time roles.
+                This portal serves as the bridge between the talented students of the Kalgidhar
+                Trust's universities and leading industry organizations.
               </p>
               <ul className="list-disc space-y-1 pl-4">
-                <li>Centralized student profiles with skills & projects</li>
-                <li>Streamlined shortlisting and tracking for recruiters</li>
-                <li>Guided placement process for every department</li>
+                <li>
+                  Comprehensive profiles for students from{' '}
+                  <strong>Akal University (Talwandi Sabo)</strong> and{' '}
+                  <strong>Eternal University (Baru Sahib)</strong>.
+                </li>
+                <li>Streamlined shortlisting and tracking for recruiters across both campuses.</li>
+                <li>Guided placement process for technical and non-technical departments.</li>
               </ul>
             </CardContent>
           </Card>
@@ -75,8 +83,8 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
               <p className="text-muted-foreground text-xs">
-                Track placement statistics across batches, branches, and companies to see how AU
-                students are performing in the industry.
+                Track placement statistics across batches and branches to see how our students are
+                performing in the industry.
               </p>
             </CardContent>
           </Card>
@@ -101,7 +109,7 @@ const LandingPage: React.FC = () => {
               </div>
               <p className="text-muted-foreground text-xs">
                 From startups to established organizations, companies can discover skilled talent
-                directly from the campus through structured recruitment drives.
+                directly from both campuses through structured recruitment drives.
               </p>
             </CardContent>
           </Card>

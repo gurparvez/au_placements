@@ -18,8 +18,6 @@ const Navbar: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const loading = useSelector((state: RootState) => state.auth.loading);
 
-  console.log(user)
-
   // Add shadow when scrolling
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);

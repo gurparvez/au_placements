@@ -1,3 +1,5 @@
+// src/components/profile/ProfileHero.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
@@ -7,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge'; // Ensure you have this component
+import { Badge } from '@/components/ui/badge';
 import {
   Edit2,
   MapPin,
@@ -19,6 +21,7 @@ import {
   Phone,
   AlertCircle,
   CalendarDays,
+  School, // 🟢 Added School Icon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -131,11 +134,10 @@ const ProfileHero: React.FC = () => {
       if (profileImg) profilePayload.profile_image = profileImg;
 
       // Construct Looking For Object
-      // We always send this object if in edit mode to ensure dates are updated correctly
       profilePayload.looking_for = {
         type: lookingForType,
-        from_date: lookingForFrom, // Backend should handle string -> date
-        to_date: lookingForTo || undefined, // Send undefined if empty
+        from_date: lookingForFrom,
+        to_date: lookingForTo || undefined,
       };
 
       if (Object.keys(profilePayload).length > 0) {
@@ -229,6 +231,7 @@ const ProfileHero: React.FC = () => {
                     </div>
                   </div>
                 ) : (
+                  // 🟢 Capitalized Name
                   <h1 className="text-foreground text-2xl font-bold capitalize">
                     {user.firstName} {user.lastName}
                   </h1>
@@ -311,19 +314,30 @@ const ProfileHero: React.FC = () => {
               )}
             </div>
 
-            {/* Location */}
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 shrink-0" />
-              {isEditing ? (
-                <Input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="h-8 max-w-[200px]"
-                  placeholder="City, Country"
-                />
-              ) : (
-                <span>{profile.location || 'Location not set'}</span>
+            {/* 🟢 University & Location Block - View Only */}
+            <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
+              {/* University (Non-editable) */}
+              {user.university && (
+                <div className="flex items-center gap-2">
+                  <School className="h-4 w-4 shrink-0" />
+                  <span>{user.university}</span>
+                </div>
               )}
+
+              {/* Location */}
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 shrink-0" />
+                {isEditing ? (
+                  <Input
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="h-8 max-w-[200px]"
+                    placeholder="City, Country"
+                  />
+                ) : (
+                  <span>{profile.location || 'Location not set'}</span>
+                )}
+              </div>
             </div>
 
             {/* --- LOOKING FOR SECTION --- */}
