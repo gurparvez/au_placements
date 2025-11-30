@@ -69,9 +69,15 @@ const Navbar: React.FC = () => {
                 Home
               </Link>
 
-              <a href="#about" className="text-sm font-medium hover:underline">
+              <Link
+                to="/about"
+                onClick={closeMobile}
+                className={`text-sm font-medium hover:underline ${
+                  isHome ? 'underline underline-offset-4' : ''
+                }`}
+              >
                 About
-              </a>
+              </Link>
             </nav>
 
             <div className="hidden items-center gap-2 md:flex">

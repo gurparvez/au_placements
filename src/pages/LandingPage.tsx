@@ -1,121 +1,222 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Building2, Search, UserCheck, ArrowRight, Briefcase, GraduationCap } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+
+// Redux Hooks
+import { useAppSelector } from '@/context/hooks';
 
 const LandingPage: React.FC = () => {
+  // Get Auth State
+  const { user, loading } = useAppSelector((state) => state.auth);
+
   return (
-    <main className="from-background via-background to-muted/40 relative min-h-screen bg-linear-to-b">
-      {/* Decorative blurred glow behind hero */}
-      <div className="pointer-events-none absolute inset-x-0 top-16 flex justify-center">
-        <div className="bg-primary/10 h-64 w-64 rounded-full blur-3xl" />
-      </div>
+    <div className="bg-background text-foreground min-h-screen transition-colors duration-300">
+      {/* ------------------- HERO SECTION ------------------- */}
+      <section className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24">
+        {/* Decorative Glow */}
+        <div className="pointer-events-none absolute inset-x-0 top-16 -z-10 flex justify-center">
+          <div className="bg-primary/20 h-96 w-96 rounded-full blur-[100px]" />
+        </div>
 
-      <section
-        aria-label="Placement Hero"
-        className="relative mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 pt-32 pb-20"
-      >
-        {/* Hero - centered */}
-        <div className="flex flex-col items-center text-center">
-          <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-            {/* 🟢 Updated Branding */}
+        <div className="container mx-auto px-6 text-center">
+          <Badge variant="outline" className="mb-6 px-3 py-1 text-sm tracking-widest uppercase">
             Akal & Eternal Placement Portal
-          </p>
+          </Badge>
 
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            Get Placed Through the Campus
+          <h1 className="mb-6 text-4xl font-bold tracking-tight md:text-6xl">
+            Where Talent Meets <br className="hidden md:block" />
+            <span className="text-primary">Opportunity</span>
           </h1>
 
-          <p className="text-muted-foreground mt-4 max-w-2xl text-base md:text-lg">
-            {/* 🟢 Updated Copy */}
-            Discover opportunities, showcase your profile, and connect with recruiters through the
-            centralized placement platform for
-            <span className="text-foreground font-medium"> Akal University</span> and
-            <span className="text-foreground font-medium"> Eternal University</span>.
+          <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg md:text-xl">
+            The official centralized placement platform connecting leading organizations with the
+            bright minds of <span className="text-foreground font-medium">Akal University</span> and{' '}
+            <span className="text-foreground font-medium">Eternal University</span>.
           </p>
 
-          {/* Small highlight chips */}
-          <div className="text-muted-foreground mt-6 flex flex-wrap justify-center gap-2 text-xs">
-            <span className="rounded-full border px-3 py-1">Unified Student Profiles</span>
-            <span className="rounded-full border px-3 py-1">Dual-Campus Opportunities</span>
-            <span className="rounded-full border px-3 py-1">For Students & Recruiters</span>
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            {/* 1. Start Hiring Button */}
+            <Link to="/students">
+              <Button size="lg" className="h-12 px-8 text-base">
+                Start Hiring <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+
+            {/* 2. Login / Profile Button */}
+            {!loading &&
+              (user ? (
+                <Link to="/profiles">
+                  <Button size="lg" variant="outline" className="h-12 px-8 text-base">
+                    View Profile
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/login">
+                  <Button size="lg" variant="outline" className="h-12 px-8 text-base">
+                    Student Login
+                  </Button>
+                </Link>
+              ))}
           </div>
         </div>
+      </section>
 
-        {/* Cards - ONE COLUMN with subtle hover effects */}
-        <div className="flex flex-col gap-6">
-          {/* About */}
-          <Card className="transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">About the Portal</CardTitle>
-            </CardHeader>
-            <CardContent className="text-muted-foreground space-y-2 text-sm">
-              <p>
-                This portal serves as the bridge between the talented students of the Kalgidhar
-                Trust's universities and leading industry organizations.
-              </p>
-              <ul className="list-disc space-y-1 pl-4">
-                <li>
-                  Comprehensive profiles for students from{' '}
-                  <strong>Akal University (Talwandi Sabo)</strong> and{' '}
-                  <strong>Eternal University (Baru Sahib)</strong>.
-                </li>
-                <li>Streamlined shortlisting and tracking for recruiters across both campuses.</li>
-                <li>Guided placement process for technical and non-technical departments.</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Students Placed */}
-          <Card className="transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">Students Placed</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div
-                role="region"
-                aria-label="Students placed content"
-                className="bg-muted flex h-28 items-center justify-center rounded-md border border-dashed transition-transform duration-200 hover:scale-[1.01]"
-              >
-                <div className="text-center">
-                  <div className="text-4xl font-semibold">120+</div>
-                  <div className="text-muted-foreground text-xs">
-                    Students placed in the last session
-                  </div>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                Track placement statistics across batches and branches to see how our students are
-                performing in the industry.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Companies */}
-          <Card className="transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">Companies</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div
-                role="region"
-                aria-label="Companies content"
-                className="bg-muted flex h-28 items-center justify-center rounded-md border border-dashed transition-transform duration-200 hover:scale-[1.01]"
-              >
-                <div className="text-center">
-                  <div className="text-4xl font-semibold">30+</div>
-                  <div className="text-muted-foreground text-xs">
-                    Partner companies & recruiters
-                  </div>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                From startups to established organizations, companies can discover skilled talent
-                directly from both campuses through structured recruitment drives.
-              </p>
-            </CardContent>
-          </Card>
+      {/* ------------------- STATS BAR ------------------- */}
+      <section className="bg-primary text-primary-foreground py-12">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">120+</div>
+              <div className="text-xs font-medium uppercase opacity-80">Students Placed</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">30+</div>
+              <div className="text-xs font-medium uppercase opacity-80">Partner Companies</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">2</div>
+              <div className="text-xs font-medium uppercase opacity-80">Premium Campuses</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">50+</div>
+              <div className="text-xs font-medium uppercase opacity-80">Recruitment Drives</div>
+            </div>
+          </div>
         </div>
       </section>
-    </main>
+
+      {/* ------------------- FOR RECRUITERS & STUDENTS ------------------- */}
+      <section className="py-20 md:py-32">
+        <div className="container mx-auto px-6">
+          <div className="mb-16 text-center">
+            <h2 className="text-3xl font-bold tracking-tight">Streamlining the Process</h2>
+            <p className="text-muted-foreground mt-4">
+              A dedicated ecosystem designed to simplify recruitment for everyone.
+            </p>
+          </div>
+
+          <div className="grid gap-12 md:grid-cols-2">
+            {/* Recruiters Side */}
+            <div className="space-y-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                <Briefcase size={24} />
+              </div>
+              <h3 className="text-2xl font-semibold">For Recruiters</h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Access a unified database of pre-verified students from two prestigious
+                universities. Filter by skills, experience, and academic performance to find your
+                perfect match.
+              </p>
+              <ul className="space-y-3">
+                <li className="text-muted-foreground flex items-center gap-3 text-sm">
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
+                    ✓
+                  </div>
+                  Direct access to student profiles
+                </li>
+                <li className="text-muted-foreground flex items-center gap-3 text-sm">
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
+                    ✓
+                  </div>
+                  Schedule interviews & track applications
+                </li>
+                <li className="text-muted-foreground flex items-center gap-3 text-sm">
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
+                    ✓
+                  </div>
+                  Zero-friction hiring process
+                </li>
+              </ul>
+            </div>
+
+            {/* Students Side */}
+            <div className="space-y-6">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                <GraduationCap size={24} />
+              </div>
+              <h3 className="text-2xl font-semibold">For Students</h3>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Showcase your skills, projects, and achievements to top recruiters. One profile is
+                all you need to apply for internships and full-time placements across the network.
+              </p>
+              <ul className="space-y-3">
+                <li className="text-muted-foreground flex items-center gap-3 text-sm">
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
+                    ✓
+                  </div>
+                  Build a professional portfolio
+                </li>
+                <li className="text-muted-foreground flex items-center gap-3 text-sm">
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
+                    ✓
+                  </div>
+                  Apply to exclusive campus drives
+                </li>
+                <li className="text-muted-foreground flex items-center gap-3 text-sm">
+                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
+                    ✓
+                  </div>
+                  Get discovered by industry leaders
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ------------------- FEATURES GRID ------------------- */}
+      <section className="bg-muted/30 py-20 md:py-32">
+        <div className="container mx-auto px-6">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <Card className="bg-background/60 hover:bg-background border-none shadow-sm transition-all hover:shadow-md">
+              <CardHeader>
+                <div className="bg-muted mb-2 w-fit rounded-md p-2">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <CardTitle>Dual Campus Reach</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm">
+                Tap into talent pools from both the Himalayan serenity of Baru Sahib and the heart
+                of Punjab at Talwandi Sabo.
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background/60 hover:bg-background border-none shadow-sm transition-all hover:shadow-md">
+              <CardHeader>
+                <div className="bg-muted mb-2 w-fit rounded-md p-2">
+                  <UserCheck className="h-5 w-5" />
+                </div>
+                <CardTitle>Verified Profiles</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm">
+                Every student profile is verified by university administration, ensuring authentic
+                data regarding grades and skills.
+              </CardContent>
+            </Card>
+
+            <Card className="bg-background/60 hover:bg-background border-none shadow-sm transition-all hover:shadow-md">
+              <CardHeader>
+                <div className="bg-muted mb-2 w-fit rounded-md p-2">
+                  <Search className="h-5 w-5" />
+                </div>
+                <CardTitle>Smart Filtering</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm">
+                Advanced search capabilities allow recruiters to find candidates based on specific
+                technical stacks and experience.
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
 
