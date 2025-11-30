@@ -56,7 +56,7 @@ export default function StudentCard({
 
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-foreground text-lg font-semibold">{name}</h2>
+            <h2 className="text-foreground text-lg font-semibold capitalize">{name}</h2>
             <span className="text-muted-foreground text-sm">{className}</span>
             <span className="text-muted-foreground flex items-center gap-1 text-sm">
               <MapPin className="h-4 w-4" /> {location}

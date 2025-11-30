@@ -132,7 +132,7 @@ const PublicStudentProfile: React.FC = () => {
 
             {/* Info */}
             <div className="flex-1">
-              <h1 className="text-2xl font-semibold">
+              <h1 className="text-2xl font-semibold capitalize">
                 {user.firstName} {user.lastName}
               </h1>
 

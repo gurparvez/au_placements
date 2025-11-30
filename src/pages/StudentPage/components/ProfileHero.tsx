@@ -229,7 +229,7 @@ const ProfileHero: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <h1 className="text-foreground text-2xl font-bold">
+                  <h1 className="text-foreground text-2xl font-bold capitalize">
                     {user.firstName} {user.lastName}
                   </h1>
                 )}

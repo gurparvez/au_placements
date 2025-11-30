@@ -9,6 +9,11 @@ export interface Course {
   __v?: number;
 }
 
+export interface GetCourseByIdResponse {
+  success: boolean;
+  course: Course;
+}
+
 export class CoursesApi {
   private instance: AxiosInstance;
 
@@ -27,6 +32,11 @@ export class CoursesApi {
   // POST /api/courses
   async createCourse(name: string, category: string): Promise<Course> {
     const { data } = await this.instance.post(`/api/courses`, { name, category });
+    return data;
+  }
+
+  async getCourseById(id: string): Promise<GetCourseByIdResponse> {
+    const { data } = await this.instance.get<GetCourseByIdResponse>(`/api/courses/${id}`);
     return data;
   }
 }
