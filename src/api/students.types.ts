@@ -1,6 +1,12 @@
 /* -------------------------------------------------------------------------- */
-/*                             REQUEST INTERFACES                              */
+/*                             REQUEST INTERFACES                             */
 /* -------------------------------------------------------------------------- */
+
+export interface LookingForPayload {
+  type: 'internship' | 'job';
+  from_date?: string;
+  to_date?: string;
+}
 
 export interface ExperiencePayload {
   company: string;
@@ -33,7 +39,7 @@ export interface CertificatePayload {
   name: string;
   issued_by: string;
   issue_date: string;
-  certificate_url?: string;   // 🔵 now optional
+  certificate_url?: string;
   valid_until?: string;
 }
 
@@ -45,26 +51,27 @@ export interface CreateStudentProfilePayload {
   linkedin_url?: string;
   github_url?: string;
 
-  resume?: File | null; 
+  resume?: File | null;
 
-  looking_for?: ("internship" | "job")[];      // 🔵 optional
+  // 🔵 Updated: Single object payload
+  looking_for?: LookingForPayload;
 
-  experience?: ExperiencePayload[];            // 🔵 optional
-  projects?: ProjectPayload[];                 // 🔵 optional
-  certificates?: CertificatePayload[];         // 🔵 optional
+  experience?: ExperiencePayload[];
+  projects?: ProjectPayload[];
+  certificates?: CertificatePayload[];
 
   preferred_field?: string;
 
-  skills?: string[];                           // optional
+  skills?: string[];
   education?: EducationPayload[];
 
-  profile_image?: File | null;                 // optional
+  profile_image?: File | null;
 }
 
 export type UpdateStudentProfilePayload = Partial<CreateStudentProfilePayload>;
 
 /* -------------------------------------------------------------------------- */
-/*                             RESPONSE INTERFACES                             */
+/*                             RESPONSE INTERFACES                            */
 /* -------------------------------------------------------------------------- */
 
 export interface ProjectResponse {
@@ -101,10 +108,16 @@ export interface StudentProfileResponse {
   location: string;
   about: string;
   linkedin_url: string;
-  preferred_field: String,
+  preferred_field: string;
   github_url: string;
   resume_link: string;
-  looking_for: string[];
+
+  looking_for: {
+    type: 'internship' | 'job';
+    from_date?: string;
+    to_date?: string;
+  };
+
   experience: any[];
   total_experience: number;
   projects: ProjectResponse[];

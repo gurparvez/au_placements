@@ -22,6 +22,13 @@ import type { Course } from '@/api/courses';
 import CoursePicker from '@/components/CoursePicker';
 import SkillPicker from '@/components/SkillPicker';
 
+// 🔵 Interface for local state
+interface LookingForState {
+  type: 'internship' | 'job';
+  from_date: string;
+  to_date: string;
+}
+
 const CreateProfile: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -43,14 +50,16 @@ const CreateProfile: React.FC = () => {
   // ---------------- LINKS & RESUME ----------------
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
-  
-  // --- CHANGED: Resume File State ---
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
 
-  // ---------------- LOOKING FOR ----------------
-  const [lookingFor, setLookingFor] = useState<string>('internship');
+  // ---------------- LOOKING FOR (Updated to Object) ----------------
+  const [lookingFor, setLookingFor] = useState<LookingForState>({
+    type: 'internship',
+    from_date: '',
+    to_date: '',
+  });
 
   // ---------------- SKILLS ----------------
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
@@ -88,11 +97,15 @@ const CreateProfile: React.FC = () => {
       e.location = 'Location is required';
     }
 
+    // 🔵 Validate Looking For Dates
+    if (!lookingFor.from_date) {
+      e.looking_for = 'Availability Start Date is required';
+    }
+
     const urlRegex = /^https?:\/\/.+/i;
 
     if (linkedinUrl && !urlRegex.test(linkedinUrl)) e.linkedin_url = 'Invalid LinkedIn URL';
     if (githubUrl && !urlRegex.test(githubUrl)) e.github_url = 'Invalid GitHub URL';
-    // Removed resume_link regex check
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -122,7 +135,7 @@ const CreateProfile: React.FC = () => {
     setProfileImagePreview(URL.createObjectURL(file));
   };
 
-  // --- ADDED: Resume Handler ---
+  // --- Resume Handler ---
   const handleResumeChange = (file?: File) => {
     setResumeError(null);
 
@@ -131,19 +144,17 @@ const CreateProfile: React.FC = () => {
       return;
     }
 
-    // Validate type (PDF or Word)
     const validTypes = [
-        'application/pdf', 
-        'application/msword', 
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
-    
+
     if (!validTypes.includes(file.type)) {
       setResumeError('Only PDF or Word documents are allowed.');
       return;
     }
 
-    // Max size 5MB
     if (file.size > 5 * 1024 * 1024) {
       setResumeError('Resume must be 5MB or smaller.');
       return;
@@ -259,14 +270,14 @@ const CreateProfile: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* LINKS & PREFERENCES */}
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold">Links & Preferences</h2>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="text-sm font-medium">LinkedIn URL (optional)</label>
@@ -275,7 +286,9 @@ const CreateProfile: React.FC = () => {
                     onChange={(e) => setLinkedinUrl(e.target.value)}
                     placeholder="https://linkedin.com/in/username"
                   />
-                  {errors.linkedin_url && <p className="text-xs text-red-500 mt-1">{errors.linkedin_url}</p>}
+                  {errors.linkedin_url && (
+                    <p className="mt-1 text-xs text-red-500">{errors.linkedin_url}</p>
+                  )}
                 </div>
 
                 <div>
@@ -285,87 +298,124 @@ const CreateProfile: React.FC = () => {
                     onChange={(e) => setGithubUrl(e.target.value)}
                     placeholder="https://github.com/username"
                   />
-                  {errors.github_url && <p className="text-xs text-red-500 mt-1">{errors.github_url}</p>}
+                  {errors.github_url && (
+                    <p className="mt-1 text-xs text-red-500">{errors.github_url}</p>
+                  )}
                 </div>
               </div>
 
-              {/* --- CHANGED: Resume File Input --- */}
+              {/* Resume File Input */}
               <div>
                 <label className="text-sm font-medium">Resume (optional)</label>
-                
+
                 <input
-                    ref={resumeInputRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    className="hidden"
-                    onChange={(e) => handleResumeChange(e.target.files?.[0])}
+                  ref={resumeInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={(e) => handleResumeChange(e.target.files?.[0])}
                 />
 
-                <div className="flex items-center gap-3 mt-1.5">
-                    <Button
+                <div className="mt-1.5 flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => resumeInputRef.current?.click()}
+                  >
+                    Upload Resume
+                  </Button>
+
+                  {resumeFile ? (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <span className="max-w-[200px] truncate font-medium">{resumeFile.name}</span>
+                      <button
                         type="button"
-                        variant="outline"
-                        onClick={() => resumeInputRef.current?.click()}
-                    >
-                        Upload Resume
-                    </Button>
-                    
-                    {resumeFile ? (
-                        <div className="flex items-center gap-2 text-sm text-green-600">
-                             <span className="font-medium truncate max-w-[200px]">
-                                {resumeFile.name}
-                             </span>
-                             <button 
-                                type="button" 
-                                onClick={() => setResumeFile(null)}
-                                className="text-red-500 hover:text-red-700 font-bold"
-                             >
-                                ✕
-                             </button>
-                        </div>
-                    ) : (
-                        <span className="text-sm text-muted-foreground">No file selected</span>
-                    )}
+                        onClick={() => setResumeFile(null)}
+                        className="font-bold text-red-500 hover:text-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">No file selected</span>
+                  )}
                 </div>
-                
-                {resumeError && <p className="text-xs text-red-500 mt-1">{resumeError}</p>}
-                {errors.resume_link && <p className="text-xs text-red-500 mt-1">{errors.resume_link}</p>}
-                <p className="text-xs text-muted-foreground mt-1">Accepted formats: PDF, DOC, DOCX. Max size: 5MB.</p>
+
+                {resumeError && <p className="mt-1 text-xs text-red-500">{resumeError}</p>}
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Accepted formats: PDF, DOC, DOCX. Max size: 5MB.
+                </p>
               </div>
 
               <Separator />
 
+              {/* 🔵 UPDATED LOOKING FOR SECTION */}
               <div>
                 <label className="text-sm font-medium">
-                  Open To <span className="text-red-500">*</span>
+                  What are you looking for? <span className="text-red-500">*</span>
                 </label>
 
-                <div className="mt-2 flex flex-wrap gap-6 text-sm">
-                  {/* Option 1: Internship */}
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="lookingFor"
-                      value="internship"
-                      checked={lookingFor === 'internship'}
-                      onChange={() => setLookingFor('internship')}
-                      className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
-                    />
-                    <span>Internship</span>
-                  </label>
+                <div className="mt-3 space-y-4">
+                  {/* Type Selection */}
+                  <div className="flex flex-wrap gap-6 text-sm">
+                    {/* Option 1: Internship */}
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="radio"
+                        name="lookingForType"
+                        value="internship"
+                        checked={lookingFor.type === 'internship'}
+                        onChange={() => setLookingFor((prev) => ({ ...prev, type: 'internship' }))}
+                        className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
+                      />
+                      <span>Internship</span>
+                    </label>
 
-                  {/* Option 2: Job */}
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="lookingFor"
-                      value="job"
-                      checked={lookingFor === 'job'}
-                      onChange={() => setLookingFor('job')}
-                      className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
-                    />
-                    <span>Job / Placement</span>
-                  </label>
+                    {/* Option 2: Job */}
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="radio"
+                        name="lookingForType"
+                        value="job"
+                        checked={lookingFor.type === 'job'}
+                        onChange={() => setLookingFor((prev) => ({ ...prev, type: 'job' }))}
+                        className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
+                      />
+                      <span>Job / Placement</span>
+                    </label>
+                  </div>
+
+                  {/* Date Range Selection */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-muted-foreground mb-1 block text-xs">
+                        Available From *
+                      </label>
+                      <Input
+                        type="date"
+                        value={lookingFor.from_date}
+                        onChange={(e) =>
+                          setLookingFor((prev) => ({ ...prev, from_date: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-muted-foreground mb-1 block text-xs">
+                        Available Until (Optional)
+                      </label>
+                      <Input
+                        type="date"
+                        value={lookingFor.to_date}
+                        onChange={(e) =>
+                          setLookingFor((prev) => ({ ...prev, to_date: e.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {errors.looking_for && (
+                    <p className="text-xs text-red-500">{errors.looking_for}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -976,17 +1026,18 @@ const CreateProfile: React.FC = () => {
                   location,
                   about,
                   preferred_field: preferredField || undefined,
-                  looking_for: [lookingFor],
                   linkedin_url: linkedinUrl || undefined,
                   github_url: githubUrl || undefined,
-                  
-                  // --- CHANGED: Passing the file object instead of URL string ---
-                  resume: resumeFile || undefined, 
-                  
+                  resume: resumeFile || undefined,
                   skills: selectedSkillIds.length ? selectedSkillIds : undefined,
-
-                  // Attach the profile image file
                   profile_image: profileImage,
+
+                  // 🔵 Pass the SINGLE object directly
+                  looking_for: {
+                    type: lookingFor.type,
+                    from_date: lookingFor.from_date,
+                    to_date: lookingFor.to_date || undefined,
+                  },
 
                   education: educationList
                     .filter((e) => e.institute && e.courseId && e.from_date && e.to_date)

@@ -7,7 +7,6 @@ import StudentCard from '@/components/StudentCard';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAllStudents } from '@/context/student/studentSlice';
 import { skillsApi } from '@/api/skills';
-import { Search } from 'lucide-react'; // Optional: specific icon if you have lucide-react, otherwise standard input is fine
 
 const StudentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -20,12 +19,18 @@ const StudentsPage: React.FC = () => {
   // UI filter state
   const [query, setQuery] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [openToFilter, setOpenToFilter] = useState<'internship' | 'job' | null>(null);
+
+  // 🟢 Updated: Single state for Opportunity Type (dropdown)
+  const [openToFilter, setOpenToFilter] = useState<string>('');
+
+  // 🟢 Added: Date Range Filter
+  const [dateFilter, setDateFilter] = useState<{ from: string; to: string }>({
+    from: '',
+    to: '',
+  });
+
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-
-  // New state for Skill Search inside Sidebar
-  const [skillSearchQuery, setSkillSearchQuery] = useState(''); 
-
+  const [skillSearchQuery, setSkillSearchQuery] = useState('');
   const [experienceRange, setExperienceRange] = useState<string | null>(null);
   const [preferredField, setPreferredField] = useState<string | null>(null);
 
@@ -53,6 +58,10 @@ const StudentsPage: React.FC = () => {
 
     const q = query.trim().toLowerCase();
 
+    // Parse filter dates once for performance
+    const filterFromDate = dateFilter.from ? new Date(dateFilter.from) : null;
+    const filterToDate = dateFilter.to ? new Date(dateFilter.to) : null;
+
     return allStudents.filter((student) => {
       const fullName = `${student.user?.firstName ?? ''} ${student.user?.lastName ?? ''}`.trim();
 
@@ -62,9 +71,16 @@ const StudentsPage: React.FC = () => {
             .filter((x: string) => x.length > 0)
         : [];
 
-      const openTo: string[] = Array.isArray(student.looking_for) ? student.looking_for : [];
+      // Get Looking For Details
+      const openToType = student.looking_for?.type || '';
+      const studentFrom = student.looking_for?.from_date
+        ? new Date(student.looking_for.from_date)
+        : null;
+      const studentTo = student.looking_for?.to_date ? new Date(student.looking_for.to_date) : null;
+
       const field: string = student.preferred_field ?? '';
 
+      // 1. Search Query
       if (q) {
         const matchesQuery =
           fullName.toLowerCase().includes(q) ||
@@ -75,29 +91,47 @@ const StudentsPage: React.FC = () => {
         if (!matchesQuery) return false;
       }
 
+      // 2. Skills
       if (selectedSkills.length > 0) {
         const hasAll = selectedSkills.every((sk) => studentSkills.includes(sk));
         if (!hasAll) return false;
       }
 
-      if (openToFilter && !openTo.includes(openToFilter)) {
+      // 3. Opportunity Type (Internship | Placement)
+      if (openToFilter && openToType !== openToFilter) {
         return false;
       }
 
-      if (fieldFilter && field !== fieldFilter) {
+      // 4. 🟢 Date Range Logic
+      if (filterFromDate || filterToDate) {
+        // If student has no availability set, they don't match specific date filters
+        if (!studentFrom) return false;
+
+        // Check Start Date: Student must be available ON or BEFORE the requested start date
+        if (filterFromDate && studentFrom > filterFromDate) {
+          return false;
+        }
+
+        // Check End Date:
+        // If recruiter needs someone until X date, student must be available until at least X date.
+        // NOTE: If studentTo is null/undefined, we assume they are "Ongoing" or "Open ended", so they match.
+        if (filterToDate && studentTo && studentTo < filterToDate) {
+          return false;
+        }
+      }
+
+      // 5. Preferred Field
+      if (preferredField && student.preferred_field !== preferredField) {
         return false;
       }
 
+      // 6. Experience
       if (experienceRange) {
         const exp = student.total_experience ?? 0;
         if (experienceRange === '0-6' && !(exp >= 0 && exp <= 6)) return false;
         if (experienceRange === '6-12' && !(exp >= 6 && exp <= 12)) return false;
         if (experienceRange === '12-24' && !(exp >= 12 && exp <= 24)) return false;
         if (experienceRange === '24+' && exp < 24) return false;
-      }
-
-      if (preferredField && student.preferred_field !== preferredField) {
-        return false;
       }
 
       return true;
@@ -107,7 +141,7 @@ const StudentsPage: React.FC = () => {
     query,
     selectedSkills,
     openToFilter,
-    fieldFilter,
+    dateFilter, // 🟢 Added to dependency
     experienceRange,
     preferredField,
   ]);
@@ -122,9 +156,12 @@ const StudentsPage: React.FC = () => {
   const clearAllFilters = () => {
     setQuery('');
     setSelectedSkills([]);
-    setOpenToFilter(null);
+    setOpenToFilter('');
+    setDateFilter({ from: '', to: '' }); // 🟢 Clear dates
     setFieldFilter(null);
-    setSkillSearchQuery(''); // Also clear local skill search
+    setExperienceRange(null);
+    setPreferredField(null);
+    setSkillSearchQuery('');
   };
 
   const uniquePreferredFields = useMemo(() => {
@@ -136,25 +173,28 @@ const StudentsPage: React.FC = () => {
   const filtersActive =
     query.trim() !== '' ||
     selectedSkills.length > 0 ||
-    openToFilter !== null ||
-    fieldFilter !== null;
+    openToFilter !== '' ||
+    dateFilter.from !== '' || // 🟢 Check dates
+    dateFilter.to !== '' ||
+    fieldFilter !== null ||
+    experienceRange !== null ||
+    preferredField !== null;
 
   /* ---------------------- RENDER ---------------------- */
   return (
     <main className="bg-background text-foreground min-h-screen">
       <div className="mx-auto w-full max-w-6xl px-6 pt-28 pb-10">
-        {/* Page header */}
+        {/* Header */}
         <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Students</h1>
             <p className="text-muted-foreground text-sm">
-              Browse students by skills, field preferences, and interests.
+              Browse students by skills, availability, and interests.
             </p>
           </div>
 
           <div className="text-muted-foreground text-right text-xs">
             <div>{filteredStudents.length} students shown</div>
-
             {filtersActive && (
               <button
                 onClick={clearAllFilters}
@@ -167,7 +207,7 @@ const StudentsPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-12 gap-6">
-          {/* LEFT: Skills filter */}
+          {/* LEFT SIDEBAR: Skills */}
           <aside className="col-span-12 md:col-span-3">
             <div className="sticky top-24">
               <div className="bg-card rounded-md border p-4">
@@ -183,13 +223,12 @@ const StudentsPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* --- NEW: Skill Search Bar --- */}
                 <div className="mb-3">
-                  <Input 
-                    placeholder="Find a skill..." 
+                  <Input
+                    placeholder="Find a skill..."
                     value={skillSearchQuery}
                     onChange={(e) => setSkillSearchQuery(e.target.value)}
-                    className="h-8 text-xs" 
+                    className="h-8 text-xs"
                   />
                 </div>
 
@@ -200,8 +239,7 @@ const StudentsPage: React.FC = () => {
 
                   {!skillsLoading &&
                     skillsList
-                      // Filter skills based on sidebar search
-                      .filter(skill => 
+                      .filter((skill) =>
                         skill.toLowerCase().includes(skillSearchQuery.trim().toLowerCase())
                       )
                       .map((skill) => (
@@ -215,15 +253,15 @@ const StudentsPage: React.FC = () => {
                         </Button>
                       ))}
 
-                  {!skillsLoading && skillsList.length === 0 && (
-                    <div className="text-muted-foreground text-xs">No skills available.</div>
-                  )}
-                  
-                  {/* Empty state for when search returns no results */}
-                  {!skillsLoading && skillsList.length > 0 && 
-                    skillsList.filter(s => s.toLowerCase().includes(skillSearchQuery.toLowerCase())).length === 0 && (
-                     <div className="text-muted-foreground mt-2 text-xs">No matching skills found.</div>
-                  )}
+                  {!skillsLoading &&
+                    skillsList.length > 0 &&
+                    skillsList.filter((s) =>
+                      s.toLowerCase().includes(skillSearchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <div className="text-muted-foreground mt-2 text-xs">
+                        No matching skills found.
+                      </div>
+                    )}
                 </div>
 
                 {selectedSkills.length > 0 && (
@@ -235,7 +273,7 @@ const StudentsPage: React.FC = () => {
             </div>
           </aside>
 
-          {/* RIGHT: search, filters, list */}
+          {/* MAIN CONTENT */}
           <main className="col-span-12 md:col-span-9">
             {/* Search */}
             <div className="mb-4 flex justify-center">
@@ -248,46 +286,45 @@ const StudentsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Filters */}
+            {/* 🟢 Updated Filters Section */}
             <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-              {/* All Button */}
-              <Button
-                size="sm"
-                variant={
-                  !openToFilter && !experienceRange && !preferredField ? 'secondary' : 'ghost'
-                }
-                onClick={() => {
-                  setOpenToFilter(null);
-                  setExperienceRange(null);
-                  setPreferredField(null);
-                }}
+              {/* 1. Opportunity Type Dropdown (Merged) */}
+              <select
+                value={openToFilter}
+                onChange={(e) => setOpenToFilter(e.target.value)}
+                className="bg-card rounded-md border px-3 py-1.5 text-sm"
               >
-                All
-              </Button>
+                <option value="">Opportunity (Any)</option>
+                <option value="internship">Internship</option>
+                <option value="job">Placement / Job</option>
+              </select>
 
-              {/* Internship */}
-              <Button
-                size="sm"
-                variant={openToFilter === 'internship' ? 'secondary' : 'ghost'}
-                onClick={() => setOpenToFilter((v) => (v === 'internship' ? null : 'internship'))}
-              >
-                Internship
-              </Button>
+              {/* 2. Date Range Filters (New) */}
+              <div className="bg-card flex items-center gap-2 rounded-md border px-2 py-1">
+                <span className="text-muted-foreground text-xs">From:</span>
+                <input
+                  type="date"
+                  className="bg-transparent text-sm focus:outline-none"
+                  value={dateFilter.from}
+                  onChange={(e) => setDateFilter((prev) => ({ ...prev, from: e.target.value }))}
+                />
+              </div>
 
-              {/* Placement */}
-              <Button
-                size="sm"
-                variant={openToFilter === 'job' ? 'secondary' : 'ghost'}
-                onClick={() => setOpenToFilter((v) => (v === 'job' ? null : 'job'))}
-              >
-                Placement
-              </Button>
+              <div className="bg-card flex items-center gap-2 rounded-md border px-2 py-1">
+                <span className="text-muted-foreground text-xs">To:</span>
+                <input
+                  type="date"
+                  className="bg-transparent text-sm focus:outline-none"
+                  value={dateFilter.to}
+                  onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
+                />
+              </div>
 
-              {/* Experience Range Dropdown */}
+              {/* 3. Experience Range */}
               <select
                 value={experienceRange ?? ''}
                 onChange={(e) => setExperienceRange(e.target.value || null)}
-                className="bg-card rounded-md border px-3 py-1 text-sm"
+                className="bg-card rounded-md border px-3 py-1.5 text-sm"
               >
                 <option value="">Experience (any)</option>
                 <option value="0-6">0-6 months</option>
@@ -296,14 +333,13 @@ const StudentsPage: React.FC = () => {
                 <option value="24+">2+ years</option>
               </select>
 
-              {/* Preferred Field Dropdown */}
+              {/* 4. Preferred Field */}
               <select
                 value={preferredField ?? ''}
                 onChange={(e) => setPreferredField(e.target.value || null)}
-                className="bg-card rounded-md border px-3 py-1 text-sm"
+                className="bg-card rounded-md border px-3 py-1.5 text-sm"
               >
                 <option value="">Preferred Field (any)</option>
-
                 {uniquePreferredFields.map((field) => (
                   <option key={field} value={field}>
                     {field}
@@ -314,7 +350,7 @@ const StudentsPage: React.FC = () => {
 
             <Separator className="mb-6" />
 
-            {/* Students list */}
+            {/* Students List */}
             <div className="max-h-[60vh] space-y-6 overflow-auto pr-2">
               {loading && <div className="text-muted-foreground text-center text-sm">Loading…</div>}
 
@@ -328,7 +364,6 @@ const StudentsPage: React.FC = () => {
                 !error &&
                 filteredStudents.map((st: any) => {
                   const name = `${st.user?.firstName ?? ''} ${st.user?.lastName ?? ''}`.trim();
-
                   const courseName = st.education?.[0]?.course?.name ?? '—';
 
                   const skillsNames: string[] = Array.isArray(st.skills)
@@ -337,10 +372,10 @@ const StudentsPage: React.FC = () => {
                         .filter((x: string) => x.length > 0)
                     : [];
 
-                  const openToLabel =
-                    Array.isArray(st.looking_for) && st.looking_for.length > 0
-                      ? st.looking_for.join(', ')
-                      : '—';
+                  const rawType = st.looking_for?.type;
+                  const openToLabel = rawType
+                    ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
+                    : '—';
 
                   const experienceLabel = `${
                     typeof st.total_experience === 'number' ? st.total_experience : 0
@@ -359,6 +394,9 @@ const StudentsPage: React.FC = () => {
                       open_to={openToLabel}
                       exprience={experienceLabel}
                       skills={skillsNames}
+                      // Pass dates to card
+                      looking_for_start={st.looking_for?.from_date}
+                      looking_for_end={st.looking_for?.to_date}
                     />
                   );
                 })}

@@ -6,8 +6,27 @@ import skillsApi from '@/api/skills';
 
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge'; // 🟢 Added Badge
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Mail, Phone, Linkedin, Github, FileText } from 'lucide-react'; // Added icons
+import {
+  MapPin,
+  Mail,
+  Phone,
+  Linkedin,
+  Github,
+  FileText,
+  Globe,
+  CalendarDays, // 🟢 Added Calendar Icon
+} from 'lucide-react';
+
+// 🟢 Helper to format dates
+const formatDate = (dateString?: string) => {
+  if (!dateString) return null;
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    year: 'numeric',
+  });
+};
 
 const PublicStudentProfile: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -33,14 +52,12 @@ const PublicStudentProfile: React.FC = () => {
     async function resolveSkills() {
       const projects = publicProfile?.projects || [];
 
-      // For each project, fetch all skills by ID
       const enhancedProjects = await Promise.all(
         projects.map(async (project) => {
           if (!project.tech_used || project.tech_used.length === 0) {
             return { ...project, tech_used_resolved: [] };
           }
 
-          // Fetch skill details in parallel
           const resolvedSkills = await Promise.all(
             project.tech_used.map(async (id: string) => {
               try {
@@ -83,8 +100,12 @@ const PublicStudentProfile: React.FC = () => {
     return <div className="mt-10 p-10 text-center text-lg text-red-500">Profile not found.</div>;
 
   const profile = publicProfile;
-  // Access user details safely (assuming your User type has these fields)
   const user = profile.user as any;
+
+  // Prepare Looking For Data
+  const lookingFor = profile.looking_for;
+  const fromDate = formatDate(lookingFor?.from_date);
+  const toDate = formatDate(lookingFor?.to_date);
 
   // -------------------------------------------------------------------
   // UI
@@ -122,7 +143,28 @@ const PublicStudentProfile: React.FC = () => {
                 <span>{profile.location}</span>
               </div>
 
-              <div className="text-muted-foreground mt-3 text-sm">{profile.about}</div>
+              {/* 🟢 NEW: Looking For Section */}
+              {lookingFor && lookingFor.type && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Badge variant="secondary" className="px-3 text-sm font-medium capitalize">
+                    Open to {lookingFor.type}
+                  </Badge>
+
+                  {fromDate && (
+                    <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                      <CalendarDays className="h-4 w-4" />
+                      <span>
+                        Available: {fromDate}
+                        {toDate ? ` - ${toDate}` : ' onwards'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="text-muted-foreground mt-4 text-sm whitespace-pre-wrap">
+                {profile.about}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -238,11 +280,45 @@ const PublicStudentProfile: React.FC = () => {
 
           {resolvedProjects &&
             resolvedProjects.map((pr) => (
-              <div key={pr._id} className="bg-muted space-y-2 rounded-md p-3">
-                <div className="font-medium">{pr.title}</div>
+              <div
+                key={pr._id}
+                className="bg-muted border-border/50 space-y-2 rounded-md border p-4"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-medium">{pr.title}</div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {pr.code_url && (
+                      <a
+                        href={pr.code_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        title="View Code"
+                      >
+                        <Github className="h-4 w-4" />
+                      </a>
+                    )}
+                    {pr.live_url && (
+                      <a
+                        href={pr.live_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        title="View Live Site"
+                      >
+                        <Globe className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
 
                 {pr.description && (
-                  <div className="text-muted-foreground text-sm">{pr.description}</div>
+                  <div className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                    {pr.description}
+                  </div>
                 )}
 
                 {/* Resolved Skills */}
