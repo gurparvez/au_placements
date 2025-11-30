@@ -18,6 +18,7 @@ import {
   Globe,
   CalendarDays, // 🟢 Added Calendar Icon
 } from 'lucide-react';
+import { capitalizeFirstLetter } from '@/utils/capitalizeFirstLetter';
 
 // 🟢 Helper to format dates
 const formatDate = (dateString?: string) => {
@@ -35,6 +36,27 @@ const PublicStudentProfile: React.FC = () => {
   const { publicProfile, loading, error } = useAppSelector((s) => s.student);
 
   const [resolvedProjects, setResolvedProjects] = useState<any[] | null>(null);
+
+  const getMailToLink = (email: string, firstName: string, lastName: string) => {
+    if (!email) return '#';
+
+    const fullName = `${capitalizeFirstLetter(firstName)} ${capitalizeFirstLetter(lastName)}`;
+    const subject = `Opportunity via AU Placements`;
+
+    const body = `Hi ${fullName},
+
+I reviewed your profile on AU Placements and was impressed by your skills and projects.
+
+We would like to move forward with your profile for a role at [Insert Company Name]. 
+
+Please let us know your availability for an initial discussion.
+
+Best regards,
+[Recruiter Name]
+[Company Name]`;
+
+    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
 
   // -------------------------------------------------------------------
   // Fetch public profile
@@ -179,7 +201,17 @@ const PublicStudentProfile: React.FC = () => {
           {/* Email */}
           <div className="flex items-center gap-2">
             <Mail className="text-primary h-4 w-4" />
-            <span>{user.email || '—'}</span>
+            {user.email ? (
+              <a
+                href={getMailToLink(user.email, user.firstName, user.lastName)}
+                className="text-foreground hover:text-primary truncate hover:underline"
+                title="Send email with template"
+              >
+                {user.email}
+              </a>
+            ) : (
+              <span>—</span>
+            )}
           </div>
 
           {/* Phone */}
