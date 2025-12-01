@@ -18,7 +18,6 @@ type RegisterForm = {
   email: string;
   phone: string;
   password: string;
-  // 🟢 Added University to state type
   university: string;
 };
 
@@ -31,7 +30,6 @@ const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  // Redux auth state
   const authLoading = useSelector((s: RootState) => s.auth.loading);
   const authError = useSelector((s: RootState) => s.auth.error);
 
@@ -49,7 +47,7 @@ const LoginPage: React.FC = () => {
     email: '',
     phone: '',
     password: '',
-    university: '', // 🟢 Initial state
+    university: '',
   });
 
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
@@ -58,7 +56,6 @@ const LoginPage: React.FC = () => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
-  /* ----------------------- ID Card Validation ----------------------- */
   const handleIdCardChange = (file?: File) => {
     setErrors((prev) => ({ ...prev, idCard: '' }));
 
@@ -86,12 +83,11 @@ const LoginPage: React.FC = () => {
     setIdCardFile(file);
   };
 
-  /* ----------------------- Register Validation ----------------------- */
   const validateRegister = () => {
     const e: { [k: string]: string } = {};
 
-    if (!registerForm.university) e.university = 'Please select your university'; // 🟢 Validate University
-    if (!registerForm.auid.trim()) e.auid = 'AU ID is required';
+    if (!registerForm.university) e.university = 'Please select your university';
+    if (!registerForm.auid.trim()) e.auid = 'AUID / Roll No. is required';
     if (!registerForm.firstName.trim()) e.firstName = 'First name is required';
     if (!registerForm.lastName.trim()) e.lastName = 'Last name is required';
 
@@ -110,7 +106,6 @@ const LoginPage: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
-  /* --------------------------- LOGIN --------------------------- */
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -126,7 +121,6 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  /* -------------------------- REGISTER -------------------------- */
   const handleRegisterSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validateRegister()) return;
@@ -163,7 +157,7 @@ const LoginPage: React.FC = () => {
 
             <p className="text-muted-foreground text-sm">
               {mode === 'login'
-                ? 'Login with your AU ID and password'
+                ? 'Login with your AUID / Roll No. and password'
                 : 'Create your AU Placement account'}
             </p>
           </CardHeader>
@@ -204,7 +198,7 @@ const LoginPage: React.FC = () => {
                 {authError && <p className="text-sm text-red-600">{authError}</p>}
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">AUID/Roll No.</label>
+                  <label className="text-sm font-medium">AUID / Roll No.</label>
                   <Input
                     placeholder="227106009"
                     value={loginForm.auid}
@@ -264,9 +258,8 @@ const LoginPage: React.FC = () => {
                   {errors.university && <p className="text-xs text-red-600">{errors.university}</p>}
                 </div>
 
-                {/* AU ID */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">AU ID</label>
+                  <label className="text-sm font-medium">AUID / Roll No.</label>
                   <Input
                     value={registerForm.auid}
                     onChange={(e) => setRegisterForm((f) => ({ ...f, auid: e.target.value }))}
@@ -274,7 +267,6 @@ const LoginPage: React.FC = () => {
                   {errors.auid && <p className="text-xs text-red-600">{errors.auid}</p>}
                 </div>
 
-                {/* Name Fields */}
                 <div className="flex gap-2">
                   <div className="flex-1 space-y-1">
                     <label className="text-sm font-medium">First Name</label>
@@ -305,7 +297,6 @@ const LoginPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Email */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Email</label>
                   <Input
@@ -315,7 +306,6 @@ const LoginPage: React.FC = () => {
                   {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
                 </div>
 
-                {/* Phone */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Phone Number</label>
                   <Input
@@ -325,7 +315,6 @@ const LoginPage: React.FC = () => {
                   {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
                 </div>
 
-                {/* Password */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Password</label>
 
@@ -353,7 +342,6 @@ const LoginPage: React.FC = () => {
                   {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
                 </div>
 
-                {/* ID Card Upload */}
                 <div className="space-y-1">
                   <span className="text-sm font-medium">ID Card (Photo)</span>
 
