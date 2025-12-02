@@ -47,12 +47,13 @@ const Navbar: React.FC = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3" onClick={closeMobile}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-600">
-              <span className="text-sm font-semibold">AU</span>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-600">
+              <img src="/logo2.png" alt="AU Logo" className="h-full w-full object-cover" />
             </div>
+
             <div className="hidden md:block">
-              <span className="text-lg leading-none font-semibold">AU Placements</span>
-              <div className="text-muted-foreground text-xs">Akal University</div>
+              <span className="text-lg leading-none font-semibold">Kalgidhar Trust Placements</span>
+              <div className="text-muted-foreground text-xs">Akal University | Eternal University</div>
             </div>
           </Link>
 

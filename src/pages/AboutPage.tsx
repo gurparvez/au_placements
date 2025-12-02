@@ -61,13 +61,18 @@ const AboutPage: React.FC = () => {
 
             {/* Visual/Image Placeholder */}
             <div className="bg-muted relative aspect-video overflow-hidden rounded-xl border shadow-sm">
-              <div className="text-muted-foreground absolute inset-0 flex items-center justify-center">
-                {/* Replace with actual image of Baru Sahib Gurdwara/Campus */}
-                <span className="flex flex-col items-center gap-2">
+              <img
+                src="/baruSahib.jpg"
+                alt="Baru Sahib"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+
+              {/* <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <span className="flex flex-col items-center gap-2 text-white">
                   <MapPin size={32} />
                   <span className="text-sm">Baru Sahib: The Valley of Divine Peace</span>
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

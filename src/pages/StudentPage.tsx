@@ -69,7 +69,7 @@ const SkillsFilterContent: React.FC<SkillsFilterContentProps> = ({
                 key={skill}
                 variant={selectedSkills.includes(skill) ? 'default' : 'ghost'}
                 onClick={() => toggleSkill(skill)}
-                className="h-auto min-h-[32px] w-full justify-start rounded-full px-3 py-1 text-sm"
+                className="h-auto min-h-8 w-full justify-start rounded-full px-3 py-1 text-sm"
               >
                 {skill}
               </Button>
