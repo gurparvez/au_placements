@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Filter } from 'lucide-react'; // Import Icon
+import { Filter } from 'lucide-react';
 
 // UI Components
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'; // Import Sheet components
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import StudentCard from '@/components/StudentCard';
 
 // State/API
@@ -15,8 +15,6 @@ import { skillsApi } from '@/api/skills';
 
 // ----------------------------------------------------------------------
 // 1. REUSABLE COMPONENT: Skills Filter List
-//    We extract this so we can use it inside the Sidebar (Desktop)
-//    AND inside the Sheet (Mobile).
 // ----------------------------------------------------------------------
 interface SkillsFilterContentProps {
   skillsList: string[];
@@ -60,7 +58,7 @@ const SkillsFilterContent: React.FC<SkillsFilterContentProps> = ({
         />
       </div>
 
-      <div className="flex max-h-[60vh] flex-1 flex-col gap-2 overflow-y-auto pr-1 md:max-h-[calc(100vh-300px)]">
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {skillsLoading && <div className="text-muted-foreground text-xs">Loading skills…</div>}
 
         {!skillsLoading &&
@@ -120,6 +118,9 @@ const StudentsPage: React.FC = () => {
   const [experienceRange, setExperienceRange] = useState<string | null>(null);
   const [preferredField, setPreferredField] = useState<string | null>(null);
 
+  // University Filter State
+  const [universityFilter, setUniversityFilter] = useState<string>('');
+
   /* ---------------------- FETCH DATA ---------------------- */
   useEffect(() => {
     dispatch(fetchAllStudents());
@@ -162,6 +163,9 @@ const StudentsPage: React.FC = () => {
       const studentTo = student.looking_for?.to_date ? new Date(student.looking_for.to_date) : null;
 
       const field: string = student.preferred_field ?? '';
+
+      // 🟢 FIX: Access university from the nested 'user' object
+      const uni = student.user?.university || '';
 
       // 1. Search Query
       if (q) {
@@ -206,6 +210,11 @@ const StudentsPage: React.FC = () => {
         if (experienceRange === '24+' && exp < 24) return false;
       }
 
+      // 7. University Filter
+      if (universityFilter && uni !== universityFilter) {
+        return false;
+      }
+
       return true;
     });
   }, [
@@ -216,6 +225,7 @@ const StudentsPage: React.FC = () => {
     dateFilter,
     experienceRange,
     preferredField,
+    universityFilter,
   ]);
 
   /* ---------------------- UI HELPERS ---------------------- */
@@ -233,6 +243,7 @@ const StudentsPage: React.FC = () => {
     setFieldFilter(null);
     setExperienceRange(null);
     setPreferredField(null);
+    setUniversityFilter('');
     setSkillSearchQuery('');
   };
 
@@ -250,14 +261,16 @@ const StudentsPage: React.FC = () => {
     dateFilter.to !== '' ||
     fieldFilter !== null ||
     experienceRange !== null ||
-    preferredField !== null;
+    preferredField !== null ||
+    universityFilter !== '';
 
   /* ---------------------- RENDER ---------------------- */
   return (
-    <main className="bg-background text-foreground min-h-screen">
-      <div className="mx-auto w-full max-w-6xl px-4 pt-24 pb-10 md:px-6 md:pt-28">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+    <main className="bg-background text-foreground flex min-h-screen flex-col md:h-screen md:overflow-hidden">
+      {/* Header Container */}
+      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pt-24 pb-4 md:h-full md:px-6 md:pt-20 md:pb-0">
+        {/* Page Title */}
+        <div className="mb-6 flex shrink-0 flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Students</h1>
             <p className="text-muted-foreground text-sm">
@@ -278,7 +291,7 @@ const StudentsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 🟢 MOBILE ONLY: Filter Button (Sheet Trigger) */}
+        {/* MOBILE ONLY: Filter Button (Sheet Trigger) */}
         <div className="mb-4 md:hidden">
           <Sheet>
             <SheetTrigger asChild>
@@ -292,7 +305,6 @@ const StudentsPage: React.FC = () => {
                 <SheetTitle>Filter Skills</SheetTitle>
               </SheetHeader>
               <div className="mt-4 h-full">
-                {/* Reusing the Logic */}
                 <SkillsFilterContent
                   skillsList={skillsList}
                   skillsLoading={skillsLoading}
@@ -307,29 +319,28 @@ const StudentsPage: React.FC = () => {
           </Sheet>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          {/* 🟢 DESKTOP SIDEBAR: Skills (Hidden on Mobile) */}
-          <aside className="col-span-3 hidden md:block">
-            <div className="sticky top-24">
-              <div className="bg-card rounded-md border p-4">
-                {/* Reusing the Logic */}
-                <SkillsFilterContent
-                  skillsList={skillsList}
-                  skillsLoading={skillsLoading}
-                  selectedSkills={selectedSkills}
-                  toggleSkill={toggleSkill}
-                  skillSearchQuery={skillSearchQuery}
-                  setSkillSearchQuery={setSkillSearchQuery}
-                  clearSkills={() => setSelectedSkills([])}
-                />
-              </div>
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 gap-6 md:h-full md:min-h-0 md:grid-cols-12 md:pb-6">
+          {/* DESKTOP SIDEBAR: Independent Scroll */}
+          <aside className="hidden md:col-span-3 md:flex md:h-full md:min-h-0 md:flex-col">
+            <div className="bg-card flex h-full flex-col rounded-md border p-4">
+              <SkillsFilterContent
+                skillsList={skillsList}
+                skillsLoading={skillsLoading}
+                selectedSkills={selectedSkills}
+                toggleSkill={toggleSkill}
+                skillSearchQuery={skillSearchQuery}
+                setSkillSearchQuery={setSkillSearchQuery}
+                clearSkills={() => setSelectedSkills([])}
+              />
             </div>
           </aside>
 
-          {/* MAIN CONTENT (Spans full width on mobile) */}
-          <main className="col-span-12 md:col-span-9">
-            {/* Search */}
-            <div className="mb-4 flex justify-center">
+          {/* MAIN CONTENT AREA */}
+          <main className="flex flex-col md:col-span-9 md:h-full md:min-h-0">
+            {/* Search & Filters Bar */}
+            <div className="mb-4 shrink-0 space-y-4">
+              {/* Search */}
               <div className="w-full">
                 <Input
                   placeholder="Search students by name, skill, or field..."
@@ -337,72 +348,81 @@ const StudentsPage: React.FC = () => {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
-            </div>
 
-            {/* Other Filters (Dropdowns) */}
-            <div className="mb-6 flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-center">
-              <select
-                value={openToFilter}
-                onChange={(e) => setOpenToFilter(e.target.value)}
-                className="bg-card w-full rounded-md border px-3 py-1.5 text-sm sm:w-auto"
-              >
-                <option value="">Opportunity (Any)</option>
-                <option value="internship">Internship</option>
-                <option value="job">Placement / Job</option>
-              </select>
+              {/* Filter Chips */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* University Filter */}
+                <select
+                  value={universityFilter}
+                  onChange={(e) => setUniversityFilter(e.target.value)}
+                  className="bg-card rounded-md border px-3 py-1.5 text-sm"
+                >
+                  <option value="">University (Any)</option>
+                  <option value="Akal University">Akal University</option>
+                  <option value="Eternal University">Eternal University</option>
+                </select>
 
-              {/* Date Filters */}
-              <div className="flex w-full gap-2 sm:w-auto">
-                <div className="bg-card flex flex-1 items-center gap-2 rounded-md border px-2 py-1">
+                <select
+                  value={openToFilter}
+                  onChange={(e) => setOpenToFilter(e.target.value)}
+                  className="bg-card rounded-md border px-3 py-1.5 text-sm"
+                >
+                  <option value="">Opportunity (Any)</option>
+                  <option value="internship">Internship</option>
+                  <option value="job">Placement / Job</option>
+                </select>
+
+                {/* Date Filters */}
+                <div className="bg-card flex items-center gap-2 rounded-md border px-2 py-1">
                   <span className="text-muted-foreground text-xs">From:</span>
                   <input
                     type="date"
-                    className="w-full bg-transparent text-sm focus:outline-none"
+                    className="bg-transparent text-sm focus:outline-none"
                     value={dateFilter.from}
                     onChange={(e) => setDateFilter((prev) => ({ ...prev, from: e.target.value }))}
                   />
                 </div>
-                <div className="bg-card flex flex-1 items-center gap-2 rounded-md border px-2 py-1">
+
+                <div className="bg-card flex items-center gap-2 rounded-md border px-2 py-1">
                   <span className="text-muted-foreground text-xs">To:</span>
                   <input
                     type="date"
-                    className="w-full bg-transparent text-sm focus:outline-none"
+                    className="bg-transparent text-sm focus:outline-none"
                     value={dateFilter.to}
                     onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
                   />
                 </div>
+
+                <select
+                  value={experienceRange ?? ''}
+                  onChange={(e) => setExperienceRange(e.target.value || null)}
+                  className="bg-card rounded-md border px-3 py-1.5 text-sm"
+                >
+                  <option value="">Experience (any)</option>
+                  <option value="0-6">0-6 months</option>
+                  <option value="6-12">6-12 months</option>
+                  <option value="12-24">1-2 years</option>
+                  <option value="24+">2+ years</option>
+                </select>
+
+                <select
+                  value={preferredField ?? ''}
+                  onChange={(e) => setPreferredField(e.target.value || null)}
+                  className="bg-card max-w-[150px] truncate rounded-md border px-3 py-1.5 text-sm"
+                >
+                  <option value="">Field (any)</option>
+                  {uniquePreferredFields.map((field) => (
+                    <option key={field} value={field}>
+                      {field}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              <select
-                value={experienceRange ?? ''}
-                onChange={(e) => setExperienceRange(e.target.value || null)}
-                className="bg-card w-full rounded-md border px-3 py-1.5 text-sm sm:w-auto"
-              >
-                <option value="">Experience (any)</option>
-                <option value="0-6">0-6 months</option>
-                <option value="6-12">6-12 months</option>
-                <option value="12-24">1-2 years</option>
-                <option value="24+">2+ years</option>
-              </select>
-
-              <select
-                value={preferredField ?? ''}
-                onChange={(e) => setPreferredField(e.target.value || null)}
-                className="bg-card w-full rounded-md border px-3 py-1.5 text-sm sm:w-auto"
-              >
-                <option value="">Preferred Field (any)</option>
-                {uniquePreferredFields.map((field) => (
-                  <option key={field} value={field}>
-                    {field}
-                  </option>
-                ))}
-              </select>
+              <Separator />
             </div>
 
-            <Separator className="mb-6" />
-
             {/* Students List */}
-            <div className="max-h-[60vh] space-y-6 overflow-auto pr-2">
+            <div className="flex-1 pb-10 md:overflow-y-auto md:pr-2">
               {loading && <div className="text-muted-foreground text-center text-sm">Loading…</div>}
 
               {!loading && error && (
@@ -411,48 +431,51 @@ const StudentsPage: React.FC = () => {
                 </div>
               )}
 
-              {!loading &&
-                !error &&
-                filteredStudents.map((st: any) => {
-                  const name = `${st.user?.firstName ?? ''} ${st.user?.lastName ?? ''}`.trim();
-                  const courseName = st.education?.[0]?.course?.name ?? '—';
+              <div className="space-y-4">
+                {!loading &&
+                  !error &&
+                  filteredStudents.map((st: any) => {
+                    const name = `${st.user?.firstName ?? ''} ${st.user?.lastName ?? ''}`.trim();
+                    const courseName = st.education?.[0]?.course?.name ?? '—';
+                    const skillsNames: string[] = Array.isArray(st.skills)
+                      ? st.skills
+                          .map((s: any) => s?.displayName || s?.name || '')
+                          .filter((x: string) => x.length > 0)
+                      : [];
 
-                  const skillsNames: string[] = Array.isArray(st.skills)
-                    ? st.skills
-                        .map((s: any) => s?.displayName || s?.name || '')
-                        .filter((x: string) => x.length > 0)
-                    : [];
+                    const rawType = st.looking_for?.type;
+                    const openToLabel = rawType
+                      ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
+                      : '—';
 
-                  const rawType = st.looking_for?.type;
-                  const openToLabel = rawType
-                    ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
-                    : '—';
+                    const experienceLabel = `${
+                      typeof st.total_experience === 'number' ? st.total_experience : 0
+                    } months`;
 
-                  const experienceLabel = `${
-                    typeof st.total_experience === 'number' ? st.total_experience : 0
-                  } months`;
-
-                  return (
-                    <StudentCard
-                      key={st._id}
-                      userId={st.user._id}
-                      image_url={st.profile_image || '/avatar-placeholder.png'}
-                      name={name}
-                      class={courseName}
-                      location={st.location}
-                      headline={st.headline}
-                      feild_preference={st.preferred_field}
-                      open_to={openToLabel}
-                      exprience={experienceLabel}
-                      skills={skillsNames}
-                      looking_for_start={st.looking_for?.from_date}
-                      looking_for_end={st.looking_for?.to_date}
-                    />
-                  );
-                })}
+                    return (
+                      <StudentCard
+                        key={st._id}
+                        userId={st.user._id}
+                        image_url={st.profile_image || '/avatar-placeholder.png'}
+                        name={name}
+                        // 🟢 FIX: Pass university from the nested user object
+                        university={st.user?.university}
+                        class={courseName}
+                        location={st.location}
+                        headline={st.headline}
+                        feild_preference={st.preferred_field}
+                        open_to={openToLabel}
+                        exprience={experienceLabel}
+                        skills={skillsNames}
+                        looking_for_start={st.looking_for?.from_date}
+                        looking_for_end={st.looking_for?.to_date}
+                      />
+                    );
+                  })}
+              </div>
 
               {!loading && !error && filteredStudents.length === 0 && (
-                <div className="text-muted-foreground text-center text-sm">
+                <div className="text-muted-foreground mt-10 text-center text-sm">
                   No students found. Try changing filters or search text.
                 </div>
               )}

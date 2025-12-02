@@ -48,7 +48,7 @@ class StudentApi {
     }
 
     try {
-      console.log(form)
+      console.log(form);
       const res = await this.instance.post('/api/student', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

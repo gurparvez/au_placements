@@ -1,12 +1,15 @@
+// src/components/StudentCard.tsx
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, CalendarDays } from 'lucide-react';
+import { MapPin, CalendarDays, School } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface StudentCardProps {
   userId: string;
   image_url: string;
   name: string;
+  university?: string;
   class: string;
   location: string;
   headline: string;
@@ -31,6 +34,7 @@ export default function StudentCard({
   userId,
   image_url,
   name,
+  university, // 🟢 Destructure
   class: className,
   location,
   headline,
@@ -58,9 +62,18 @@ export default function StudentCard({
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-foreground text-lg font-semibold capitalize">{name}</h2>
             <span className="text-muted-foreground text-sm">{className}</span>
+
+            {/* 🟢 University Display */}
+            {university && (
+              <span className="text-muted-foreground flex items-center gap-1 text-sm">
+                <School className="h-3.5 w-3.5" /> {university}
+              </span>
+            )}
+
             <span className="text-muted-foreground flex items-center gap-1 text-sm">
-              <MapPin className="h-4 w-4" /> {location}
+              <MapPin className="h-3.5 w-3.5" /> {location}
             </span>
+
             <Badge className="rounded-full px-3 py-0.5">{exprience}</Badge>
           </div>
 
@@ -69,9 +82,9 @@ export default function StudentCard({
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-medium">
             <span className="text-muted-foreground">{feild_preference}</span>
 
-            {/* 🟢 Updated Open To Section */}
+            {/* Updated Open To Section */}
             <div className="flex items-center gap-2">
-              <Badge className="rounded-full px-3 py-0.5">{open_to}</Badge>
+              <Badge className="rounded-full px-3 py-0.5 capitalize">{open_to}</Badge>
 
               {/* Show dates if available */}
               {startDate && (
