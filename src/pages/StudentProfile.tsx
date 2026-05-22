@@ -21,15 +21,7 @@ import {
   CalendarDays,
   School,
 } from 'lucide-react';
-
-// Helper to format dates
-const formatDate = (dateString?: string) => {
-  if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
-};
+import { formatDate } from '@/utils/formatDate';
 
 const PublicStudentProfile: React.FC = () => {
   const dispatch = useAppDispatch();

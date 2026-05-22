@@ -1,6 +1,6 @@
 // src/pages/CreateProfile.tsx
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import type { Course } from '@/api/courses';
 
 import CoursePicker from '@/components/CoursePicker';
 import SkillPicker from '@/components/SkillPicker';
+import { isValidUrl } from '@/utils/validation';
 
 // 🔵 Interface for local state
 interface LookingForState {
@@ -46,6 +47,15 @@ const CreateProfile: React.FC = () => {
   const [profileImageError, setProfileImageError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Revoke object URL on unmount or when preview changes to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (profileImagePreview) {
+        URL.revokeObjectURL(profileImagePreview);
+      }
+    };
+  }, [profileImagePreview]);
 
   // ---------------- LINKS & RESUME ----------------
   const [linkedinUrl, setLinkedinUrl] = useState('');
@@ -102,10 +112,8 @@ const CreateProfile: React.FC = () => {
       e.looking_for = 'Availability Start Date is required';
     }
 
-    const urlRegex = /^https?:\/\/.+/i;
-
-    if (linkedinUrl && !urlRegex.test(linkedinUrl)) e.linkedin_url = 'Invalid LinkedIn URL';
-    if (githubUrl && !urlRegex.test(githubUrl)) e.github_url = 'Invalid GitHub URL';
+    if (linkedinUrl && !isValidUrl(linkedinUrl)) e.linkedin_url = 'Invalid LinkedIn URL';
+    if (githubUrl && !isValidUrl(githubUrl)) e.github_url = 'Invalid GitHub URL';
 
     setErrors(e);
     return Object.keys(e).length === 0;

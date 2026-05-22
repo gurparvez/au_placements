@@ -7,7 +7,7 @@ import type {
   LoginResponse,
   RegisterPayload,
   RegisterResponse,
-  MeResponse,
+  UserData,
   UpdateDetailsPayload,
   UpdateDetailsResponse,
   UpdatePasswordPayload,
@@ -46,7 +46,7 @@ export const registerUser = createAsyncThunk<RegisterResponse, RegisterPayload>(
   }
 );
 
-export const fetchCurrentUser = createAsyncThunk<MeResponse>(
+export const fetchCurrentUser = createAsyncThunk<UserData>(
   'auth/me',
   async (_, { rejectWithValue }) => {
     try {
@@ -100,7 +100,7 @@ const authSlice = createSlice({
     error: null,
     initialized: false,
   } as {
-    user: MeResponse | null;
+    user: UserData | null;
     loading: boolean;
     error: string | null;
     initialized: boolean;
@@ -146,7 +146,7 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, rejected)
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data.user;
         state.initialized = true;
       });
 
@@ -189,7 +189,7 @@ const authSlice = createSlice({
       .addCase(updateUserDetails.rejected, rejected)
       .addCase(updateUserDetails.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data;
       });
 
     // --- UPDATE PASSWORD ---

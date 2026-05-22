@@ -16,6 +16,7 @@ class StudentApi {
     this.instance = axios.create({
       baseURL: URL,
       withCredentials: true, // cookie-based auth
+      timeout: 15000,
     });
   }
 
@@ -26,38 +27,25 @@ class StudentApi {
     const form = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
-      // 1. SKIP undefined or null values entirely
       if (value === undefined || value === null) return;
-
-      // 2. Handle Profile Image separately (skip here, add later)
       if (key === 'profile_image') return;
 
-      // 3. Stringify Arrays/Objects (like education, skills, looking_for)
       if (Array.isArray(value) || typeof value === 'object') {
         form.append(key, JSON.stringify(value));
       } else {
-        // 4. Append primitives (strings/numbers)
-        // Because we checked for undefined/null above, this is safe now.
         form.append(key, value as any);
       }
     });
 
-    // Append image if it exists
     if (data.profile_image) {
       form.append('profile_image', data.profile_image);
     }
 
-    try {
-      console.log(form);
-      const res = await this.instance.post('/api/student', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      return res.data;
-    } catch (error: any) {
-      // Optional: Log the specific backend error message to console for debugging
-      console.error('Backend Error Details:', error.response?.data);
-      throw error;
-    }
+    const res = await this.instance.post('/api/student', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    // Backend returns { success, message, data: profile }
+    return { success: res.data.success, profile: res.data.data };
   }
 
   /* ------------------------------ Update Profile ----------------------------- */
@@ -66,7 +54,6 @@ class StudentApi {
   ): Promise<StudentProfileResponse> {
     const form = new FormData();
 
-    // Convert ALL fields in payload to FormData dynamically
     Object.entries(payload).forEach(([key, value]) => {
       if (value instanceof File) {
         form.append(key, value);
@@ -80,14 +67,14 @@ class StudentApi {
     const res = await this.instance.put('/api/student', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-
-    return res.data;
+    // Backend returns { success, message, data: profile }
+    return res.data.data;
   }
 
   /* ----------------------------- Get Logged Profile ---------------------------- */
   async getStudentProfile(): Promise<StudentProfileResponse> {
     const res = await this.instance.get('/api/student');
-    return res.data;
+    return res.data.data;
   }
 
   /* ----------------------------- Get All Students ------------------------------ */
@@ -96,7 +83,8 @@ class StudentApi {
     students: StudentProfileResponse[];
   }> {
     const res = await this.instance.get('/api/student/all');
-    return res.data;
+    // Backend returns { success, data: [...], pagination }
+    return { success: res.data.success, students: res.data.data };
   }
 
   /* ----------------------------- Get Any Student's profile ------------------------------ */
@@ -106,8 +94,8 @@ class StudentApi {
     const res = await this.instance.get('/api/student/profile', {
       params: { userId: req.userId },
     });
-
-    return res.data;
+    // Backend returns { success, data: { user, profile } }
+    return res.data.data;
   }
 }
 

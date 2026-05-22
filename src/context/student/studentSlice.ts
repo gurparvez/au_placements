@@ -1,5 +1,6 @@
 // src/store/student/studentSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 import { studentApi } from '@/api/students'; // adjust path
 import {
   type CreateStudentProfilePayload,
@@ -16,34 +17,69 @@ import {
 // Get authenticated user's profile
 export const fetchStudentProfile = createAsyncThunk<StudentProfileResponse>(
   'student/fetchProfile',
-  async () => {
-    return await studentApi.getStudentProfile();
+  async (_, { rejectWithValue }) => {
+    try {
+      return await studentApi.getStudentProfile();
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Failed to fetch profile');
+    }
   }
 );
 
 export const createStudentProfile = createAsyncThunk<
   { success: boolean; profile: StudentProfileResponse },
   CreateStudentProfilePayload
->('student/createProfile', async (payload) => {
-  return await studentApi.createStudentProfile(payload);
+>('student/createProfile', async (payload, { rejectWithValue }) => {
+  try {
+    return await studentApi.createStudentProfile(payload);
+  } catch (err: any) {
+    if (axios.isAxiosError(err) && err.response?.data?.message) {
+      return rejectWithValue(err.response.data.message);
+    }
+    return rejectWithValue(err.message || 'Failed to create profile');
+  }
 });
 
 export const updateStudentProfile = createAsyncThunk<
   StudentProfileResponse,
   UpdateStudentProfilePayload
->('student/updateProfile', async (payload) => {
-  return await studentApi.updateStudentProfile(payload);
+>('student/updateProfile', async (payload, { rejectWithValue }) => {
+  try {
+    return await studentApi.updateStudentProfile(payload);
+  } catch (err: any) {
+    if (axios.isAxiosError(err) && err.response?.data?.message) {
+      return rejectWithValue(err.response.data.message);
+    }
+    return rejectWithValue(err.message || 'Failed to update profile');
+  }
 });
 
 export const fetchAnyStudentProfile = createAsyncThunk<
   { user: any; profile: StudentProfileResponse }, // return BOTH
   GetAnyStudentProfileRequest
->('student/fetchAnyProfile', async (payload) => {
-  return await studentApi.getAnyStudentProfile(payload);
+>('student/fetchAnyProfile', async (payload, { rejectWithValue }) => {
+  try {
+    return await studentApi.getAnyStudentProfile(payload);
+  } catch (err: any) {
+    if (axios.isAxiosError(err) && err.response?.data?.message) {
+      return rejectWithValue(err.response.data.message);
+    }
+    return rejectWithValue(err.message || 'Failed to fetch student profile');
+  }
 });
 
-export const fetchAllStudents = createAsyncThunk('student/fetchAll', async () => {
-  return await studentApi.getAllStudents();
+export const fetchAllStudents = createAsyncThunk('student/fetchAll', async (_, { rejectWithValue }) => {
+  try {
+    return await studentApi.getAllStudents();
+  } catch (err: any) {
+    if (axios.isAxiosError(err) && err.response?.data?.message) {
+      return rejectWithValue(err.response.data.message);
+    }
+    return rejectWithValue(err.message || 'Failed to fetch students');
+  }
 });
 
 // -------------------------------
@@ -90,7 +126,12 @@ const studentSlice = createSlice({
     };
     const rejected = (state: StudentState, action: any) => {
       state.loading = false;
-      state.error = action.error?.message || 'Something went wrong';
+      // If we used rejectWithValue, the error string is in action.payload
+      if (action.payload) {
+        state.error = action.payload as string;
+      } else {
+        state.error = action.error?.message || 'Something went wrong';
+      }
     };
 
     // FETCH SELF PROFILE

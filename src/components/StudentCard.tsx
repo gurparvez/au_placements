@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, CalendarDays, School } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '@/utils/formatDate';
 
 interface StudentCardProps {
   userId: string;
@@ -20,15 +21,6 @@ interface StudentCardProps {
   exprience: string;
   skills: string[];
 }
-
-// Helper to format date "2025-01-01" -> "Jan 2025"
-const formatDate = (dateString?: string) => {
-  if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
-};
 
 export default function StudentCard({
   userId,

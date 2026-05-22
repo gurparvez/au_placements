@@ -29,28 +29,31 @@ export class SkillsApi {
   constructor() {
     this.instance = axios.create({
       baseURL: URL,
+      timeout: 15000,
     });
   }
 
   async getSkillById(skillId: string): Promise<SkillResponse> {
     const res = await this.instance.get(`/api/skills/${skillId}`);
-    return res.data;
+    // Backend returns { success, data: skill }
+    return { success: res.data.success, skill: res.data.data };
   }
 
-  async getAllSkills(): Promise<AllSkillsResponse> {
-    const res = await this.instance.get(`/api/skills`);
-    return res.data;
+  async getAllSkills(options?: { signal?: AbortSignal }): Promise<AllSkillsResponse> {
+    const res = await this.instance.get(`/api/skills`, { signal: options?.signal });
+    // Backend returns { success, data: [...], pagination }
+    return { success: res.data.success, skills: res.data.data };
   }
 
   async searchSkills(query: string): Promise<Skill[]> {
     const { data } = await this.instance.get(`/api/skills/search?q=${query}`);
-    return Array.isArray(data) ? data : [];
+    // Backend returns { success, data: [...] }
+    return Array.isArray(data.data) ? data.data : [];
   }
 
-  // ➕ ADD new skill
   async addSkill(name: string) {
     const { data } = await this.instance.post(`/api/skills`, { name });
-    return data; // Created SkillResponse
+    return data.data;
   }
 }
 

@@ -20,24 +20,27 @@ export class CoursesApi {
   constructor() {
     this.instance = axios.create({
       baseURL: URL,
+      timeout: 15000,
     });
   }
 
   // GET /api/courses/search?q={query}
   async searchCourses(query: string): Promise<Course[]> {
     const { data } = await this.instance.get(`/api/courses/search?q=${query}`);
-    return Array.isArray(data) ? data : [];
+    // Backend returns { success, data: [...] }
+    return Array.isArray(data.data) ? data.data : [];
   }
 
   // POST /api/courses
   async createCourse(name: string, category: string): Promise<Course> {
     const { data } = await this.instance.post(`/api/courses`, { name, category });
-    return data;
+    return data.data;
   }
 
   async getCourseById(id: string): Promise<GetCourseByIdResponse> {
-    const { data } = await this.instance.get<GetCourseByIdResponse>(`/api/courses/${id}`);
-    return data;
+    const { data } = await this.instance.get(`/api/courses/${id}`);
+    // Backend returns { success, data: course }
+    return { success: data.success, course: data.data };
   }
 }
 

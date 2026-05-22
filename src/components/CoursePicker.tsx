@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Check, Plus } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { coursesApi, type Course } from '@/api/courses';
 
 interface CoursePickerProps {
@@ -145,15 +145,6 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) =
                 </button>
               ))}
 
-              {/* ADD NEW OPTION */}
-              {/* <button
-                type="button"
-                onClick={handleCreateStep1}
-                className="flex w-full items-center gap-2 px-3 py-3 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 border-t"
-              >
-                <Plus className="h-4 w-4" />
-                Add "{query}" as new course
-              </button> */}
             </div>
           )}
 

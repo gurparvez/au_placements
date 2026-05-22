@@ -124,20 +124,32 @@ const StudentsPage: React.FC = () => {
   /* ---------------------- FETCH DATA ---------------------- */
   useEffect(() => {
     dispatch(fetchAllStudents());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const controller = new AbortController();
 
     (async () => {
       try {
         setSkillsLoading(true);
-        const res = await skillsApi.getAllSkills();
+        const res = await skillsApi.getAllSkills({ signal: controller.signal });
         const names = (res.skills ?? []).map((s) => s.displayName || s.name).filter(Boolean);
         setSkillsList(Array.from(new Set(names)));
       } catch (e) {
-        console.error('Failed to load skills:', e);
+        if (!controller.signal.aborted) {
+          console.error('Failed to load skills:', e);
+        }
       } finally {
-        setSkillsLoading(false);
+        if (!controller.signal.aborted) {
+          setSkillsLoading(false);
+        }
       }
     })();
-  }, [dispatch]);
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   /* ---------------------- FILTER STUDENTS ---------------------- */
   const filteredStudents = useMemo(() => {
@@ -283,6 +295,7 @@ const StudentsPage: React.FC = () => {
             {filtersActive && (
               <button
                 onClick={clearAllFilters}
+                aria-label="Clear all filters"
                 className="text-primary mt-1 text-xs font-medium hover:underline"
               >
                 Clear all filters
@@ -344,6 +357,7 @@ const StudentsPage: React.FC = () => {
               <div className="w-full">
                 <Input
                   placeholder="Search students by name, skill, or field..."
+                  aria-label="Search students"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -355,6 +369,7 @@ const StudentsPage: React.FC = () => {
                 <select
                   value={universityFilter}
                   onChange={(e) => setUniversityFilter(e.target.value)}
+                  aria-label="Filter by university"
                   className="bg-card rounded-md border px-3 py-1.5 text-sm"
                 >
                   <option value="">University (Any)</option>
@@ -365,6 +380,7 @@ const StudentsPage: React.FC = () => {
                 <select
                   value={openToFilter}
                   onChange={(e) => setOpenToFilter(e.target.value)}
+                  aria-label="Filter by opportunity type"
                   className="bg-card rounded-md border px-3 py-1.5 text-sm"
                 >
                   <option value="">Opportunity (Any)</option>
@@ -377,6 +393,7 @@ const StudentsPage: React.FC = () => {
                   <span className="text-muted-foreground text-xs">From:</span>
                   <input
                     type="date"
+                    aria-label="Filter from date"
                     className="bg-transparent text-sm focus:outline-none"
                     value={dateFilter.from}
                     onChange={(e) => setDateFilter((prev) => ({ ...prev, from: e.target.value }))}
@@ -387,6 +404,7 @@ const StudentsPage: React.FC = () => {
                   <span className="text-muted-foreground text-xs">To:</span>
                   <input
                     type="date"
+                    aria-label="Filter to date"
                     className="bg-transparent text-sm focus:outline-none"
                     value={dateFilter.to}
                     onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
@@ -396,6 +414,7 @@ const StudentsPage: React.FC = () => {
                 <select
                   value={experienceRange ?? ''}
                   onChange={(e) => setExperienceRange(e.target.value || null)}
+                  aria-label="Filter by experience"
                   className="bg-card rounded-md border px-3 py-1.5 text-sm"
                 >
                   <option value="">Experience (any)</option>
@@ -408,6 +427,7 @@ const StudentsPage: React.FC = () => {
                 <select
                   value={preferredField ?? ''}
                   onChange={(e) => setPreferredField(e.target.value || null)}
+                  aria-label="Filter by field"
                   className="bg-card max-w-[150px] truncate rounded-md border px-3 py-1.5 text-sm"
                 >
                   <option value="">Field (any)</option>

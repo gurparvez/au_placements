@@ -101,7 +101,10 @@ const Navbar: React.FC = () => {
               ) : user ? (
                 // 🟢 Logged-in: show profile avatar
                 <Link to="/profiles" onClick={closeMobile}>
-                  <button className="focus:ring-ring flex items-center gap-2 rounded-full hover:cursor-pointer focus:ring-2 focus:outline-none">
+                  <button
+                    aria-label="User menu"
+                    className="focus:ring-ring flex items-center gap-2 rounded-full hover:cursor-pointer focus:ring-2 focus:outline-none"
+                  >
                     <Avatar>
                       <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
                       <AvatarFallback>{user.firstName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>

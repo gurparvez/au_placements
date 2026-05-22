@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '@/context/store';
 import { loginUser, registerUser } from '@/context/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
+import { isValidEmail } from '@/utils/validation';
 
 type AuthMode = 'login' | 'register';
 
@@ -92,7 +93,7 @@ const LoginPage: React.FC = () => {
     if (!registerForm.lastName.trim()) e.lastName = 'Last name is required';
 
     if (!registerForm.email.trim()) e.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email.trim()))
+    else if (!isValidEmail(registerForm.email.trim()))
       e.email = 'Enter a valid email';
 
     if (!registerForm.phone.trim()) e.phone = 'Phone number is required';

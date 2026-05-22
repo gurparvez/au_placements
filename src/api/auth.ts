@@ -34,22 +34,25 @@ export interface UpdatePasswordPayload {
 /* ----------------------------- RESPONSE TYPES ---------------------------- */
 
 export interface LoginResponse {
+  success: boolean;
   message: string;
-  token: string;
-  user: {
-    _id: string;
-    auid: string;
-    firstName: string;
-    lastName?: string;
-    university: string;
-    roles: string[];
+  data: {
+    token: string;
+    user: {
+      _id: string;
+      auid: string;
+      firstName: string;
+      lastName?: string;
+      university: string;
+      roles: string[];
+    };
   };
 }
 
 export interface RegisterResponse {
+  success: boolean;
   message: string;
-  verified: boolean;
-  user: {
+  data: {
     _id: string;
     auid: string;
     university: string;
@@ -58,20 +61,25 @@ export interface RegisterResponse {
 }
 
 export interface MeResponse {
-  _id: string;
-  auid: string;
-  firstName: string;
-  lastName?: string;
-  university: string;
-  roles: string[];
-  email?: string;
-  phone?: string;
+  success: boolean;
+  data: {
+    _id: string;
+    auid: string;
+    firstName: string;
+    lastName?: string;
+    university: string;
+    roles: string[];
+    email?: string;
+    phone?: string;
+  };
 }
+
+export type UserData = MeResponse['data'];
 
 export interface UpdateDetailsResponse {
   success: boolean;
   message: string;
-  user: {
+  data: {
     _id: string;
     auid: string;
     firstName: string;
@@ -97,6 +105,7 @@ class Auth {
     this.instance = axios.create({
       baseURL: URL,
       withCredentials: true,
+      timeout: 15000,
     });
   }
 
@@ -138,10 +147,10 @@ class Auth {
   }
 
   /* -------------------------------- GET USER ----------------------------- */
-  async getUser(): Promise<MeResponse> {
+  async getUser(): Promise<UserData> {
     try {
-      const response = await this.instance.get('/api/auth/user');
-      return response.data.user;
+      const response = await this.instance.get<MeResponse>('/api/auth/user');
+      return response.data.data;
     } catch (error) {
       throw error;
     }

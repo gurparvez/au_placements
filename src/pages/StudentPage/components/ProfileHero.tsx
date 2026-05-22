@@ -24,15 +24,7 @@ import {
   School, // 🟢 Added School Icon
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-// Helper to format dates for display
-const formatDate = (dateString?: string) => {
-  if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
-};
+import { formatDate } from '@/utils/formatDate';
 
 // Helper to format ISO date to YYYY-MM-DD for input fields
 const toInputDate = (dateString?: string | Date) => {
@@ -73,6 +65,16 @@ const ProfileHero: React.FC = () => {
   // 5. UI
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [profileImgPreview, setProfileImgPreview] = useState<string | null>(null);
+
+  // Revoke object URL on unmount or when preview changes to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (profileImgPreview) {
+        URL.revokeObjectURL(profileImgPreview);
+      }
+    };
+  }, [profileImgPreview]);
 
   // --- SYNC STATE ---
   useEffect(() => {
@@ -110,6 +112,10 @@ const ProfileHero: React.FC = () => {
       return;
     }
     setProfileImg(file);
+    if (profileImgPreview) {
+      URL.revokeObjectURL(profileImgPreview);
+    }
+    setProfileImgPreview(URL.createObjectURL(file));
   };
 
   const handleSave = async () => {
@@ -177,8 +183,8 @@ const ProfileHero: React.FC = () => {
               <Avatar className="border-background h-32 w-32 overflow-hidden border-4 shadow-sm">
                 <AvatarImage
                   src={
-                    profileImg
-                      ? URL.createObjectURL(profileImg)
+                    profileImgPreview
+                      ? profileImgPreview
                       : profile.profile_image || '/avatar-placeholder.png'
                   }
                   className="h-full w-full object-cover"
