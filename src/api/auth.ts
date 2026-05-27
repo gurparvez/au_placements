@@ -62,13 +62,16 @@ export interface LoginResponse {
     token: string;
     user: {
       _id: string;
-      auid: string;
+      auid?: string;
       firstName: string;
       lastName?: string;
+      email?: string;
+      account_type?: string;
       university: string;
       programme?: string;
       branch_department?: string;
       batch_year?: number;
+      company_name?: string;
       email_verified?: boolean;
       roles: string[];
     };
@@ -80,7 +83,8 @@ export interface RegisterResponse {
   message: string;
   data: {
     _id: string;
-    auid: string;
+    auid?: string;
+    account_type?: string;
     university: string;
     programme?: string;
     branch_department?: string;
@@ -98,13 +102,15 @@ export interface MeResponse {
   success: boolean;
   data: {
     _id: string;
-    auid: string;
+    auid?: string;
     firstName: string;
     lastName?: string;
+    account_type?: string;
     university: string;
     programme?: string;
     branch_department?: string;
     batch_year?: number;
+    company_name?: string;
     email_verified?: boolean;
     roles: string[];
     email?: string;
@@ -119,15 +125,17 @@ export interface UpdateDetailsResponse {
   message: string;
   data: {
     _id: string;
-    auid: string;
+    auid?: string;
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
+    account_type?: string;
     university: string;
     programme?: string;
     branch_department?: string;
     batch_year?: number;
+    company_name?: string;
     email_verified?: boolean;
     roles: string[];
   };

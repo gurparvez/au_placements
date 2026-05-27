@@ -1,6 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
-import jobsApi, { type ApplicationResponse, type JobListing } from '@/api/jobs';
+import jobsApi, {
+  type ApplicationResponse,
+  type CreateJobPayload,
+  type JobListing,
+} from '@/api/jobs';
 
 export const fetchJobs = createAsyncThunk<
   JobListing[],
@@ -44,9 +48,57 @@ export const fetchMyApplications = createAsyncThunk<ApplicationResponse[]>(
   }
 );
 
+export const createJob = createAsyncThunk<JobListing, CreateJobPayload>(
+  'jobs/create',
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await jobsApi.createJob(payload);
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Failed to create job');
+    }
+  }
+);
+
+export const fetchJobApplicants = createAsyncThunk<ApplicationResponse[], string>(
+  'jobs/fetchApplicants',
+  async (jobId, { rejectWithValue }) => {
+    try {
+      return await jobsApi.getApplicants(jobId);
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Failed to fetch applicants');
+    }
+  }
+);
+
+export const updateJobApplicationStatus = createAsyncThunk<
+  ApplicationResponse,
+  { jobId: string; applicationId: string; status: string; note?: string }
+>('jobs/updateApplicationStatus', async (payload, { rejectWithValue }) => {
+  try {
+    return await jobsApi.updateApplicationStatus(
+      payload.jobId,
+      payload.applicationId,
+      payload.status,
+      payload.note
+    );
+  } catch (err: any) {
+    if (axios.isAxiosError(err) && err.response?.data?.message) {
+      return rejectWithValue(err.response.data.message);
+    }
+    return rejectWithValue(err.message || 'Failed to update application status');
+  }
+});
+
 interface JobState {
   jobs: JobListing[];
   applications: ApplicationResponse[];
+  applicants: ApplicationResponse[];
   loading: boolean;
   applyingJobId: string | null;
   error: string | null;
@@ -55,6 +107,7 @@ interface JobState {
 const initialState: JobState = {
   jobs: [],
   applications: [],
+  applicants: [],
   loading: false,
   applyingJobId: null,
   error: null,
@@ -118,6 +171,45 @@ const jobSlice = createSlice({
       })
       .addCase(fetchMyApplications.fulfilled, (state, action) => {
         state.applications = action.payload;
+      });
+
+    builder
+      .addCase(createJob.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createJob.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload || action.error?.message || 'Failed to create job';
+      })
+      .addCase(createJob.fulfilled, (state, action) => {
+        state.loading = false;
+        state.jobs = [action.payload, ...state.jobs];
+      });
+
+    builder
+      .addCase(fetchJobApplicants.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchJobApplicants.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload || action.error?.message || 'Failed to fetch applicants';
+      })
+      .addCase(fetchJobApplicants.fulfilled, (state, action) => {
+        state.loading = false;
+        state.applicants = action.payload;
+      });
+
+    builder
+      .addCase(updateJobApplicationStatus.rejected, (state, action: any) => {
+        state.error =
+          action.payload || action.error?.message || 'Failed to update application status';
+      })
+      .addCase(updateJobApplicationStatus.fulfilled, (state, action) => {
+        state.applicants = state.applicants.map((application) =>
+          application._id === action.payload._id ? action.payload : application
+        );
       });
   },
 });

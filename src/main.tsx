@@ -16,6 +16,11 @@ import VerifyEmailPage from './pages/VerifyEmailPage.tsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.tsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx';
 import JobsPage from './pages/JobsPage.tsx';
+import JobPostPage from './pages/JobPostPage.tsx';
+import ApplicationsPage from './pages/ApplicationsPage.tsx';
+import JobApplicantsPage from './pages/JobApplicantsPage.tsx';
+import RecruiterRequestPage from './pages/RecruiterRequestPage.tsx';
+import AdminRecruiterRequestsPage from './pages/AdminRecruiterRequestsPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -27,6 +32,11 @@ createRoot(document.getElementById('root')!).render(
             <Route path="about" element={<AboutPage />} />
             <Route path="students" element={<StudentPage />} />
             <Route path="jobs" element={<JobsPage />} />
+            <Route path="jobs/new" element={<JobPostPage />} />
+            <Route path="jobs/:jobId/applications" element={<JobApplicantsPage />} />
+            <Route path="applications" element={<ApplicationsPage />} />
+            <Route path="recruiters/request" element={<RecruiterRequestPage />} />
+            <Route path="admin/recruiter-requests" element={<AdminRecruiterRequestsPage />} />
             <Route path="profiles" element={<StudentProfilePage />} />
             <Route path="profiles/:userId" element={<StudentProfile />} />
             <Route path="profiles/create" element={<CreateProfile />} />

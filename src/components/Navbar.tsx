@@ -28,6 +28,12 @@ const Navbar: React.FC = () => {
   const isHome = location.pathname === '/';
   const isStudents = location.pathname.startsWith('/students');
   const isJobs = location.pathname.startsWith('/jobs');
+  const isApplications = location.pathname.startsWith('/applications');
+  const isRecruiterRequest = location.pathname.startsWith('/recruiters/request');
+  const isAdminRecruiterRequests = location.pathname.startsWith('/admin/recruiter-requests');
+  const isStudentUser = user?.roles?.includes('student');
+  const canReviewRecruiters = user?.roles?.some((role) => ['admin', 'tpo'].includes(role));
+  const profileTarget = isStudentUser ? '/profiles' : '/jobs';
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -90,6 +96,42 @@ const Navbar: React.FC = () => {
               >
                 Jobs
               </Link>
+
+              {user && isStudentUser && (
+                <Link
+                  to="/applications"
+                  onClick={closeMobile}
+                  className={`text-sm font-medium hover:underline ${
+                    isApplications ? 'underline underline-offset-4' : ''
+                  }`}
+                >
+                  Applications
+                </Link>
+              )}
+
+              {!user && (
+                <Link
+                  to="/recruiters/request"
+                  onClick={closeMobile}
+                  className={`text-sm font-medium hover:underline ${
+                    isRecruiterRequest ? 'underline underline-offset-4' : ''
+                  }`}
+                >
+                  Recruiters
+                </Link>
+              )}
+
+              {canReviewRecruiters && (
+                <Link
+                  to="/admin/recruiter-requests"
+                  onClick={closeMobile}
+                  className={`text-sm font-medium hover:underline ${
+                    isAdminRecruiterRequests ? 'underline underline-offset-4' : ''
+                  }`}
+                >
+                  Recruiter Requests
+                </Link>
+              )}
             </nav>
 
             <div className="hidden items-center gap-2 md:flex">
@@ -111,7 +153,7 @@ const Navbar: React.FC = () => {
                 </Button>
               ) : user ? (
                 // 🟢 Logged-in: show profile avatar
-                <Link to="/profiles" onClick={closeMobile}>
+                <Link to={profileTarget} onClick={closeMobile}>
                   <button
                     aria-label="User menu"
                     className="focus:ring-ring flex items-center gap-2 rounded-full hover:cursor-pointer focus:ring-2 focus:outline-none"
@@ -170,6 +212,36 @@ const Navbar: React.FC = () => {
                 Jobs
               </Link>
 
+              {user && isStudentUser && (
+                <Link
+                  to="/applications"
+                  onClick={closeMobile}
+                  className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
+                >
+                  Applications
+                </Link>
+              )}
+
+              {!user && (
+                <Link
+                  to="/recruiters/request"
+                  onClick={closeMobile}
+                  className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
+                >
+                  Recruiters
+                </Link>
+              )}
+
+              {canReviewRecruiters && (
+                <Link
+                  to="/admin/recruiter-requests"
+                  onClick={closeMobile}
+                  className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
+                >
+                  Recruiter Requests
+                </Link>
+              )}
+
               <div className="mt-2 flex flex-col gap-2">
                 <Link to="/students" onClick={closeMobile}>
                   <Button className="w-full">View Students</Button>
@@ -181,7 +253,7 @@ const Navbar: React.FC = () => {
                   </Button>
                 ) : user ? (
                   <Link
-                    to="/profiles"
+                    to={profileTarget}
                     onClick={closeMobile}
                     className="flex items-center gap-2 rounded px-3 py-2"
                   >

@@ -151,7 +151,11 @@ const LoginPage: React.FC = () => {
     );
 
     if (loginUser.fulfilled.match(res)) {
-      navigate('/profiles', { replace: true });
+      const roles = res.payload.data.user.roles || [];
+      const isPoster = roles.some((role) =>
+        ['admin', 'tpo', 'internal_poster', 'recruiter'].includes(role)
+      );
+      navigate(isPoster ? '/jobs' : '/profiles', { replace: true });
     }
   };
 
@@ -190,12 +194,12 @@ const LoginPage: React.FC = () => {
         <Card className="shadow-sm">
           <CardHeader className="space-y-2 text-center">
             <h1 className="text-2xl font-semibold">
-              {mode === 'login' ? 'Student Login' : 'Student Registration'}
+              {mode === 'login' ? 'Account Login' : 'Student Registration'}
             </h1>
 
             <p className="text-muted-foreground text-sm">
               {mode === 'login'
-                ? 'Login with your AUID / Roll No. and password'
+                ? 'Login with your AUID / Roll No. or email'
                 : 'Create your AU Placement account'}
             </p>
           </CardHeader>
@@ -236,9 +240,9 @@ const LoginPage: React.FC = () => {
                 {authError && <p className="text-sm text-red-600">{authError}</p>}
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">AUID / Roll No.</label>
+                  <label className="text-sm font-medium">AUID / Roll No. / Email</label>
                   <Input
-                    placeholder="227106009"
+                    placeholder="227106009 or name@company.com"
                     value={loginForm.auid}
                     onChange={(e) => setLoginForm((f) => ({ ...f, auid: e.target.value }))}
                   />
@@ -278,6 +282,13 @@ const LoginPage: React.FC = () => {
                   onClick={() => navigate('/forgot-password')}
                 >
                   Forgot password?
+                </button>
+                <button
+                  type="button"
+                  className="text-primary w-full text-center text-sm hover:underline"
+                  onClick={() => navigate('/recruiters/request')}
+                >
+                  Request recruiter access
                 </button>
               </form>
             )}

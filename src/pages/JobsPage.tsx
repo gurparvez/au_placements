@@ -30,6 +30,10 @@ const JobsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { jobs, loading, applyingJobId, error } = useAppSelector((state) => state.jobs);
   const user = useAppSelector((state) => state.auth.user);
+  const canPost = user?.roles?.some((role) =>
+    ['admin', 'tpo', 'internal_poster', 'recruiter'].includes(role)
+  );
+  const canManageAll = user?.roles?.some((role) => ['admin', 'tpo'].includes(role));
 
   const [query, setQuery] = useState('');
   const [type, setType] = useState('');
@@ -79,7 +83,14 @@ const JobsPage: React.FC = () => {
               Browse campus jobs, internships, projects, and events.
             </p>
           </div>
-          <div className="text-muted-foreground text-sm">{filteredJobs.length} listings shown</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="text-muted-foreground text-sm">{filteredJobs.length} listings shown</div>
+            {canPost && (
+              <Button asChild>
+                <Link to="/jobs/new">Post Job</Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="mb-5 space-y-4">
@@ -185,6 +196,11 @@ const JobsPage: React.FC = () => {
                     )}
 
                     <div className="flex flex-wrap justify-end gap-2">
+                      {(canManageAll || String(job.posted_by) === String(user?._id)) && (
+                        <Button asChild variant="outline">
+                          <Link to={`/jobs/${job._id}/applications`}>Applicants</Link>
+                        </Button>
+                      )}
                       {!user && (
                         <Button asChild variant="outline">
                           <Link to="/login">Login to Apply</Link>

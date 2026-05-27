@@ -14,8 +14,24 @@ export interface EligibilityCriteria {
   max_backlogs?: number;
 }
 
+export interface CreateJobPayload {
+  company_name: string;
+  title: string;
+  role: string;
+  description: string;
+  type: JobType;
+  target_university: 'Akal University' | 'Eternal University' | 'Both';
+  ctc_stipend?: string;
+  location?: string;
+  deadline: string;
+  contact_person?: string;
+  status?: JobStatus;
+  eligibility?: EligibilityCriteria;
+}
+
 export interface JobListing {
   _id: string;
+  posted_by?: string;
   company_name: string;
   title: string;
   role: string;
@@ -31,6 +47,8 @@ export interface JobListing {
   my_eligibility?: {
     eligible: boolean;
     reasons: string[];
+    overridden?: boolean;
+    override_reason?: string;
   };
   my_application?: {
     _id: string;
@@ -43,9 +61,16 @@ export interface JobListing {
 
 export interface ApplicationResponse {
   _id: string;
-  listing: JobListing;
+  listing: JobListing | string;
+  user?: any;
+  student?: any;
   current_status: string;
   applied_at: string;
+  status_history?: {
+    status: string;
+    note?: string;
+    updated_at: string;
+  }[];
 }
 
 class JobsApi {
@@ -77,6 +102,38 @@ class JobsApi {
   async getMyApplications() {
     const res = await this.instance.get('/api/jobs/applications/me');
     return res.data.data as ApplicationResponse[];
+  }
+
+  async createJob(payload: CreateJobPayload) {
+    const res = await this.instance.post('/api/jobs', payload);
+    return res.data.data as JobListing;
+  }
+
+  async updateJob(jobId: string, payload: Partial<CreateJobPayload>) {
+    const res = await this.instance.patch(`/api/jobs/${jobId}`, payload);
+    return res.data.data as JobListing;
+  }
+
+  async getApplicants(jobId: string) {
+    const res = await this.instance.get(`/api/jobs/${jobId}/applications`);
+    return res.data.data as ApplicationResponse[];
+  }
+
+  async updateApplicationStatus(jobId: string, applicationId: string, status: string, note?: string) {
+    const res = await this.instance.patch(`/api/jobs/${jobId}/applications/${applicationId}`, {
+      status,
+      note,
+    });
+    return res.data.data as ApplicationResponse;
+  }
+
+  async overrideEligibility(jobId: string, userId: string, eligible: boolean, reason: string) {
+    const res = await this.instance.post(`/api/jobs/${jobId}/eligibility-overrides`, {
+      userId,
+      eligible,
+      reason,
+    });
+    return res.data.data as JobListing;
   }
 }
 
