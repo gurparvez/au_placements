@@ -57,6 +57,20 @@ export const updateStudentProfile = createAsyncThunk<
   }
 });
 
+export const markStudentProfileReviewed = createAsyncThunk<StudentProfileResponse>(
+  'student/markReviewed',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await studentApi.markProfileReviewed();
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        return rejectWithValue(err.response.data.message);
+      }
+      return rejectWithValue(err.message || 'Failed to mark profile reviewed');
+    }
+  }
+);
+
 export const fetchAnyStudentProfile = createAsyncThunk<
   { user: any; profile: StudentProfileResponse }, // return BOTH
   GetAnyStudentProfileRequest
@@ -157,6 +171,15 @@ const studentSlice = createSlice({
       .addCase(updateStudentProfile.pending, pending)
       .addCase(updateStudentProfile.rejected, rejected)
       .addCase(updateStudentProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      });
+
+    // MARK PROFILE REVIEWED
+    builder
+      .addCase(markStudentProfileReviewed.pending, pending)
+      .addCase(markStudentProfileReviewed.rejected, rejected)
+      .addCase(markStudentProfileReviewed.fulfilled, (state, action) => {
         state.loading = false;
         state.profile = action.payload;
       });

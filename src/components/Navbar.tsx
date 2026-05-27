@@ -27,6 +27,7 @@ const Navbar: React.FC = () => {
 
   const isHome = location.pathname === '/';
   const isStudents = location.pathname.startsWith('/students');
+  const isJobs = location.pathname.startsWith('/jobs');
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -78,6 +79,16 @@ const Navbar: React.FC = () => {
                 }`}
               >
                 About
+              </Link>
+
+              <Link
+                to="/jobs"
+                onClick={closeMobile}
+                className={`text-sm font-medium hover:underline ${
+                  isJobs ? 'underline underline-offset-4' : ''
+                }`}
+              >
+                Jobs
               </Link>
             </nav>
 
@@ -149,6 +160,14 @@ const Navbar: React.FC = () => {
                 className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
               >
                 About
+              </Link>
+
+              <Link
+                to="/jobs"
+                onClick={closeMobile}
+                className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
+              >
+                Jobs
               </Link>
 
               <div className="mt-2 flex flex-col gap-2">

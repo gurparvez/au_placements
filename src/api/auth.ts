@@ -16,6 +16,9 @@ export interface RegisterPayload {
   phone: string;
   password: string;
   university: 'Akal University' | 'Eternal University';
+  programme: string;
+  branch_department: string;
+  batch_year: number;
   id_card: File;
 }
 
@@ -28,6 +31,25 @@ export interface UpdateDetailsPayload {
 
 export interface UpdatePasswordPayload {
   oldPassword: string;
+  newPassword: string;
+}
+
+export interface VerifyEmailPayload {
+  token: string;
+}
+
+export interface ResendVerificationPayload {
+  email?: string;
+  auid?: string;
+}
+
+export interface ForgotPasswordPayload {
+  email?: string;
+  auid?: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
   newPassword: string;
 }
 
@@ -44,6 +66,10 @@ export interface LoginResponse {
       firstName: string;
       lastName?: string;
       university: string;
+      programme?: string;
+      branch_department?: string;
+      batch_year?: number;
+      email_verified?: boolean;
       roles: string[];
     };
   };
@@ -56,6 +82,14 @@ export interface RegisterResponse {
     _id: string;
     auid: string;
     university: string;
+    programme?: string;
+    branch_department?: string;
+    batch_year?: number;
+    email_verified?: boolean;
+    email_verification?: {
+      token?: string;
+      verificationUrl?: string;
+    };
     roles: string[];
   };
 }
@@ -68,6 +102,10 @@ export interface MeResponse {
     firstName: string;
     lastName?: string;
     university: string;
+    programme?: string;
+    branch_department?: string;
+    batch_year?: number;
+    email_verified?: boolean;
     roles: string[];
     email?: string;
     phone?: string;
@@ -87,6 +125,10 @@ export interface UpdateDetailsResponse {
     email: string;
     phone: string;
     university: string;
+    programme?: string;
+    branch_department?: string;
+    batch_year?: number;
+    email_verified?: boolean;
     roles: string[];
   };
 }
@@ -94,6 +136,23 @@ export interface UpdateDetailsResponse {
 export interface UpdatePasswordResponse {
   success: boolean;
   message: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface LinkPreparedResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    token?: string;
+    verificationUrl?: string;
+    resetUrl?: string;
+    alreadyVerified?: boolean;
+    sent?: boolean;
+  };
 }
 
 /* ------------------------------- AUTH CLASS ------------------------------ */
@@ -177,6 +236,29 @@ class Auth {
     } catch (error) {
       throw error;
     }
+  }
+
+  async verifyEmail(data: VerifyEmailPayload): Promise<VerifyEmailResponse> {
+    const response = await this.instance.post<VerifyEmailResponse>('/api/auth/verify-email', data);
+    return response.data;
+  }
+
+  async resendVerification(data: ResendVerificationPayload): Promise<LinkPreparedResponse> {
+    const response = await this.instance.post<LinkPreparedResponse>(
+      '/api/auth/resend-verification',
+      data
+    );
+    return response.data;
+  }
+
+  async forgotPassword(data: ForgotPasswordPayload): Promise<LinkPreparedResponse> {
+    const response = await this.instance.post<LinkPreparedResponse>('/api/auth/forgot-password', data);
+    return response.data;
+  }
+
+  async resetPassword(data: ResetPasswordPayload): Promise<VerifyEmailResponse> {
+    const response = await this.instance.post<VerifyEmailResponse>('/api/auth/reset-password', data);
+    return response.data;
   }
 }
 

@@ -20,11 +20,25 @@ type RegisterForm = {
   phone: string;
   password: string;
   university: string;
+  programme: string;
+  branch_department: string;
+  batch_year: string;
 };
 
 type LoginForm = {
   auid: string;
   password: string;
+};
+
+const OFFICIAL_EMAIL_DOMAINS: Record<string, string[]> = {
+  'Akal University': ['akaluniversity.ac.in'],
+  'Eternal University': ['eternaluniversity.edu.in'],
+};
+
+const isOfficialEmailForUniversity = (email: string, university: string) => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain || !university) return false;
+  return (OFFICIAL_EMAIL_DOMAINS[university] || []).includes(domain);
 };
 
 const LoginPage: React.FC = () => {
@@ -49,6 +63,9 @@ const LoginPage: React.FC = () => {
     phone: '',
     password: '',
     university: '',
+    programme: '',
+    branch_department: '',
+    batch_year: '',
   });
 
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
@@ -87,14 +104,30 @@ const LoginPage: React.FC = () => {
   const validateRegister = () => {
     const e: { [k: string]: string } = {};
 
+    const currentYear = new Date().getFullYear();
+    const batchYear = Number(registerForm.batch_year);
+
     if (!registerForm.university) e.university = 'Please select your university';
     if (!registerForm.auid.trim()) e.auid = 'AUID / Roll No. is required';
     if (!registerForm.firstName.trim()) e.firstName = 'First name is required';
     if (!registerForm.lastName.trim()) e.lastName = 'Last name is required';
+    if (!registerForm.programme.trim()) e.programme = 'Programme is required';
+    if (!registerForm.branch_department.trim())
+      e.branch_department = 'Branch / Department is required';
+    if (!registerForm.batch_year.trim()) e.batch_year = 'Batch year is required';
+    else if (!Number.isInteger(batchYear) || batchYear < currentYear - 10 || batchYear > currentYear + 10)
+      e.batch_year = 'Enter a valid batch year';
 
     if (!registerForm.email.trim()) e.email = 'Email is required';
     else if (!isValidEmail(registerForm.email.trim()))
       e.email = 'Enter a valid email';
+    else if (
+      registerForm.university &&
+      !isOfficialEmailForUniversity(registerForm.email.trim(), registerForm.university)
+    ) {
+      const domains = OFFICIAL_EMAIL_DOMAINS[registerForm.university]?.join(', ');
+      e.email = `Use your official university email${domains ? ` (${domains})` : ''}`;
+    }
 
     if (!registerForm.phone.trim()) e.phone = 'Phone number is required';
     else if (!/^\d{10}$/.test(registerForm.phone.trim()))
@@ -132,18 +165,22 @@ const LoginPage: React.FC = () => {
       registerUser({
         ...registerForm,
         university: uni,
+        batch_year: Number(registerForm.batch_year),
         id_card: idCardFile!,
       })
     );
 
     if (registerUser.fulfilled.match(res)) {
-      navigate('/profiles/create', { replace: true });
+      const verificationToken = res.payload.data.email_verification?.token;
+      navigate(verificationToken ? `/verify-email?token=${verificationToken}` : '/verify-email', {
+        replace: true,
+      });
     }
   };
 
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <div className="mx-auto flex min-h-screen max-w-md flex-col px-4 pt-28 pb-10">
+      <div className="mx-auto flex min-h-screen max-w-lg flex-col px-4 pt-28 pb-10">
         <div className="mb-6 text-center">
           <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
             AU Placements
@@ -235,6 +272,13 @@ const LoginPage: React.FC = () => {
                 <Button type="submit" className="w-full" disabled={authLoading}>
                   {authLoading ? 'Logging in…' : 'Login'}
                 </Button>
+                <button
+                  type="button"
+                  className="text-primary w-full text-center text-sm hover:underline"
+                  onClick={() => navigate('/forgot-password')}
+                >
+                  Forgot password?
+                </button>
               </form>
             )}
 
@@ -266,6 +310,54 @@ const LoginPage: React.FC = () => {
                     onChange={(e) => setRegisterForm((f) => ({ ...f, auid: e.target.value }))}
                   />
                   {errors.auid && <p className="text-xs text-red-600">{errors.auid}</p>}
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Programme</label>
+                    <Input
+                      placeholder="B.Tech, MBA, B.Sc..."
+                      value={registerForm.programme}
+                      onChange={(e) =>
+                        setRegisterForm((f) => ({ ...f, programme: e.target.value }))
+                      }
+                    />
+                    {errors.programme && (
+                      <p className="text-xs text-red-600">{errors.programme}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Batch Year</label>
+                    <Input
+                      inputMode="numeric"
+                      placeholder="2027"
+                      value={registerForm.batch_year}
+                      onChange={(e) =>
+                        setRegisterForm((f) => ({ ...f, batch_year: e.target.value }))
+                      }
+                    />
+                    {errors.batch_year && (
+                      <p className="text-xs text-red-600">{errors.batch_year}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Branch / Department</label>
+                  <Input
+                    placeholder="Computer Science, Commerce..."
+                    value={registerForm.branch_department}
+                    onChange={(e) =>
+                      setRegisterForm((f) => ({
+                        ...f,
+                        branch_department: e.target.value,
+                      }))
+                    }
+                  />
+                  {errors.branch_department && (
+                    <p className="text-xs text-red-600">{errors.branch_department}</p>
+                  )}
                 </div>
 
                 <div className="flex gap-2">

@@ -29,8 +29,11 @@ class StudentApi {
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
       if (key === 'profile_image') return;
+      if (key === 'supporting_documents') return;
 
-      if (Array.isArray(value) || typeof value === 'object') {
+      if (value instanceof File) {
+        form.append(key, value);
+      } else if (Array.isArray(value) || typeof value === 'object') {
         form.append(key, JSON.stringify(value));
       } else {
         form.append(key, value as any);
@@ -40,6 +43,10 @@ class StudentApi {
     if (data.profile_image) {
       form.append('profile_image', data.profile_image);
     }
+
+    data.supporting_documents?.forEach((file) => {
+      form.append('supporting_documents', file);
+    });
 
     const res = await this.instance.post('/api/student', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -55,6 +62,9 @@ class StudentApi {
     const form = new FormData();
 
     Object.entries(payload).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (key === 'supporting_documents') return;
+
       if (value instanceof File) {
         form.append(key, value);
       } else if (typeof value === 'object') {
@@ -64,10 +74,24 @@ class StudentApi {
       }
     });
 
+    payload.supporting_documents?.forEach((file) => {
+      form.append('supporting_documents', file);
+    });
+
     const res = await this.instance.put('/api/student', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     // Backend returns { success, message, data: profile }
+    return res.data.data;
+  }
+
+  async markProfileReviewed(): Promise<StudentProfileResponse> {
+    const res = await this.instance.post('/api/student/review');
+    return res.data.data;
+  }
+
+  async getProfileHistory(): Promise<any[]> {
+    const res = await this.instance.get('/api/student/history');
     return res.data.data;
   }
 

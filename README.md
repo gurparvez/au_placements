@@ -8,7 +8,7 @@ A centralized recruitment and placement platform designed for **Akal University*
 
 ### 🔐 AI-Powered Identity Verification
 
-  * **Automated Verification:** Integrates **Google Gemini 1.5 Flash** to perform OCR and semantic analysis on uploaded Student ID cards.
+  * **Automated Verification:** Uses backend-hosted Python OCR for uploaded Student ID cards.
   * **Smart Matching:** Automatically extracts University Name (handling variations like "Baru Sahib" vs "Eternal University") and Student IDs (AUID vs Roll No).
   * **Fraud Prevention:** Cross-references extracted data with user inputs to ensure only valid students can register.
 
@@ -17,7 +17,7 @@ A centralized recruitment and placement platform designed for **Akal University*
   * **Dual-University Support:** Seamlessly handles students from both Akal University and Eternal University.
   * **Comprehensive Profiles:** Students can showcase skills, education, experience, and projects.
   * **Availability Status:** Students can toggle "Open to Work" status with specific date ranges for Internships or Full-time roles.
-  * **Resume & Portfolio:** Integration with **Cloudinary** for secure document and image hosting.
+  * **Resume & Portfolio:** Backend local media storage for profile images and resume documents.
 
 ### 🔍 Recruitment & Filtering
 
@@ -49,8 +49,8 @@ A centralized recruitment and placement platform designed for **Akal University*
 
 ### Services & Tools
 
-  * **AI/LLM:** Google Gemini API (Generative AI SDK)
-  * **Storage:** Cloudinary (Images/PDFs)
+  * **OCR:** Python + Tesseract OCR for ID-card verification
+  * **Storage:** Local backend media folder for images and documents
   * **Validation:** Zod (Frontend) / Mongoose (Backend)
 
 -----
@@ -60,8 +60,8 @@ A centralized recruitment and placement platform designed for **Akal University*
 ### 1\. The Verification Flow
 
 1.  User uploads ID Card image during registration.
-2.  Image is passed to Google Gemini with a specialized prompt.
-3.  Gemini extracts the **University Name** (converting to Title Case) and **ID Number**.
+2.  Image is passed to the backend Python OCR script.
+3.  OCR text is parsed for **University Name** and **ID Number**.
 4.  Backend compares extracted data against user form inputs.
 5.  If verified, the user is created in MongoDB with `verified: true`.
 
@@ -79,8 +79,7 @@ A centralized recruitment and placement platform designed for **Akal University*
 
   * Node.js (v18+)
   * MongoDB Instance
-  * Cloudinary Account
-  * Google Gemini API Key
+  * Python 3 with Pillow, pytesseract, and the Tesseract OCR binary for ID-card verification
 
 ### 1\. Clone the Repository
 
@@ -102,14 +101,18 @@ cd au_placements_backend
 npm install
 
 # Create a .env file in /server
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
+PORT=8000
+PUBLIC_BASE_URL=http://localhost:8000
+FRONTEND_BASE_URL=http://localhost:5173
+MONGO_URI=mongodb://127.0.0.1:27017/au_placements
 ACCESS_TOKEN_SECRET=your_jwt_secret
-ACCESS_TOKEN_EXPIRY=1d
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-GEMINI_API_KEY=your_gemini_api_key
+ACCESS_TOKEN_EXPIRY=864000
+MEDIA_ROOT=media
+MEDIA_URL_PATH=/media
+OCR_PYTHON_BIN=python
+OCR_SCRIPT_PATH=scripts/ocr_id_card.py
+ID_CARD_VERIFICATION_MODE=strict
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
 
 # Run Server
 npm run dev
@@ -119,6 +122,7 @@ npm run dev
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 

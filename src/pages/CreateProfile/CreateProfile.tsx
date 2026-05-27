@@ -12,8 +12,10 @@ import { Separator } from '@/components/ui/separator';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { createStudentProfile } from '@/context/student/studentSlice';
 import {
+  type AcademicRecordPayload,
   type CertificatePayload,
   type ExperiencePayload,
+  type ProfileLinkPayload,
   type ProjectPayload,
 } from '@/api/students.types';
 
@@ -60,9 +62,12 @@ const CreateProfile: React.FC = () => {
   // ---------------- LINKS & RESUME ----------------
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
+  const [additionalLinks, setAdditionalLinks] = useState<ProfileLinkPayload[]>([]);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeError, setResumeError] = useState<string | null>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
+  const [supportingDocuments, setSupportingDocuments] = useState<File[]>([]);
+  const [supportingDocsError, setSupportingDocsError] = useState<string | null>(null);
 
   // ---------------- LOOKING FOR (Updated to Object) ----------------
   const [lookingFor, setLookingFor] = useState<LookingForState>({
@@ -87,6 +92,8 @@ const CreateProfile: React.FC = () => {
     },
   ]);
 
+  const [academicRecords, setAcademicRecords] = useState<AcademicRecordPayload[]>([]);
+
   // ---------------- EXPERIENCE ----------------
   const [experiences, setExperiences] = useState<ExperiencePayload[]>([]);
 
@@ -95,6 +102,10 @@ const CreateProfile: React.FC = () => {
 
   // ---------------- CERTIFICATES ----------------
   const [certificates, setCertificates] = useState<CertificatePayload[]>([]);
+
+  // ---------------- ACHIEVEMENTS & ACTIVITIES ----------------
+  const [achievementsText, setAchievementsText] = useState('');
+  const [extracurricularText, setExtracurricularText] = useState('');
 
   // ---------------- ERRORS ----------------
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -114,6 +125,11 @@ const CreateProfile: React.FC = () => {
 
     if (linkedinUrl && !isValidUrl(linkedinUrl)) e.linkedin_url = 'Invalid LinkedIn URL';
     if (githubUrl && !isValidUrl(githubUrl)) e.github_url = 'Invalid GitHub URL';
+    additionalLinks.forEach((link, index) => {
+      if (link.url && !isValidUrl(link.url)) {
+        e[`link_${index}`] = 'Invalid URL';
+      }
+    });
 
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -170,6 +186,46 @@ const CreateProfile: React.FC = () => {
 
     setResumeFile(file);
   };
+
+  const handleSupportingDocumentsChange = (files?: FileList | null) => {
+    setSupportingDocsError(null);
+
+    if (!files || files.length === 0) {
+      setSupportingDocuments([]);
+      return;
+    }
+
+    const validTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
+
+    const selected = Array.from(files);
+    const invalid = selected.find((file) => !validTypes.includes(file.type));
+    if (invalid) {
+      setSupportingDocsError('Only PDF, Word, JPG, PNG, or WebP files are allowed.');
+      return;
+    }
+
+    const tooLarge = selected.find((file) => file.size > 5 * 1024 * 1024);
+    if (tooLarge) {
+      setSupportingDocsError('Each supporting document must be 5MB or smaller.');
+      return;
+    }
+
+    setSupportingDocuments(selected);
+  };
+
+  const textLinesToNotes = (value: string) =>
+    value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((title) => ({ title }));
 
   /* ----------------------------------------------------------------------------------
       RENDER START
@@ -312,6 +368,62 @@ const CreateProfile: React.FC = () => {
                 </div>
               </div>
 
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Additional Links</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAdditionalLinks((prev) => [...prev, { label: '', url: '' }])}
+                  >
+                    Add Link
+                  </Button>
+                </div>
+
+                {additionalLinks.map((link, index) => (
+                  <div key={index} className="grid gap-2 md:grid-cols-[160px_1fr_auto]">
+                    <Input
+                      value={link.label}
+                      placeholder="Portfolio"
+                      onChange={(e) =>
+                        setAdditionalLinks((prev) =>
+                          prev.map((item, i) =>
+                            i === index ? { ...item, label: e.target.value } : item
+                          )
+                        )
+                      }
+                    />
+                    <div>
+                      <Input
+                        value={link.url}
+                        placeholder="https://..."
+                        onChange={(e) =>
+                          setAdditionalLinks((prev) =>
+                            prev.map((item, i) =>
+                              i === index ? { ...item, url: e.target.value } : item
+                            )
+                          )
+                        }
+                      />
+                      {errors[`link_${index}`] && (
+                        <p className="mt-1 text-xs text-red-500">{errors[`link_${index}`]}</p>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        setAdditionalLinks((prev) => prev.filter((_, i) => i !== index))
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
               {/* Resume File Input */}
               <div>
                 <label className="text-sm font-medium">Resume (optional)</label>
@@ -353,6 +465,34 @@ const CreateProfile: React.FC = () => {
                 <p className="text-muted-foreground mt-1 text-xs">
                   Accepted formats: PDF, DOC, DOCX. Max size: 5MB.
                 </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Supporting Documents (optional)</label>
+                <input
+                  id="supporting-documents-upload"
+                  type="file"
+                  accept=".pdf,.doc,.docx,image/jpeg,image/png,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleSupportingDocumentsChange(e.target.files)}
+                />
+
+                <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                  <Button asChild type="button" variant="outline">
+                    <label htmlFor="supporting-documents-upload" className="cursor-pointer">
+                      Upload Documents
+                    </label>
+                  </Button>
+                  <span className="text-muted-foreground text-sm">
+                    {supportingDocuments.length
+                      ? `${supportingDocuments.length} file(s) selected`
+                      : 'No files selected'}
+                  </span>
+                </div>
+                {supportingDocsError && (
+                  <p className="mt-1 text-xs text-red-500">{supportingDocsError}</p>
+                )}
               </div>
 
               <Separator />
@@ -599,6 +739,152 @@ const CreateProfile: React.FC = () => {
                         )
                       }
                     />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* ---------------------- ACADEMIC RECORDS ---------------------- */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Semester Academic Records</h2>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    setAcademicRecords((prev) => [
+                      ...prev,
+                      {
+                        semester: prev.length + 1,
+                        academic_year: '',
+                        cgpa: undefined,
+                        marks_percentage: undefined,
+                        backlog_count: 0,
+                      },
+                    ])
+                  }
+                >
+                  Add Semester
+                </Button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {academicRecords.length === 0 && (
+                <p className="text-muted-foreground text-sm">
+                  Add semester-wise CGPA or marks to support future eligibility checks.
+                </p>
+              )}
+
+              {academicRecords.map((record, index) => (
+                <div key={index} className="bg-muted/40 space-y-2 rounded-md border p-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Semester {index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAcademicRecords((prev) => prev.filter((_, i) => i !== index))
+                      }
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-5">
+                    <div>
+                      <label className="text-sm font-medium">Semester</label>
+                      <Input
+                        inputMode="numeric"
+                        value={record.semester || ''}
+                        onChange={(e) =>
+                          setAcademicRecords((prev) =>
+                            prev.map((r, i) =>
+                              i === index ? { ...r, semester: Number(e.target.value) } : r
+                            )
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Academic Year</label>
+                      <Input
+                        placeholder="2025-26"
+                        value={record.academic_year || ''}
+                        onChange={(e) =>
+                          setAcademicRecords((prev) =>
+                            prev.map((r, i) =>
+                              i === index ? { ...r, academic_year: e.target.value } : r
+                            )
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">CGPA</label>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="8.50"
+                        value={record.cgpa ?? ''}
+                        onChange={(e) =>
+                          setAcademicRecords((prev) =>
+                            prev.map((r, i) =>
+                              i === index
+                                ? {
+                                    ...r,
+                                    cgpa: e.target.value ? Number(e.target.value) : undefined,
+                                  }
+                                : r
+                            )
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Marks %</label>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="82"
+                        value={record.marks_percentage ?? ''}
+                        onChange={(e) =>
+                          setAcademicRecords((prev) =>
+                            prev.map((r, i) =>
+                              i === index
+                                ? {
+                                    ...r,
+                                    marks_percentage: e.target.value
+                                      ? Number(e.target.value)
+                                      : undefined,
+                                  }
+                                : r
+                            )
+                          )
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Backlogs</label>
+                      <Input
+                        inputMode="numeric"
+                        value={record.backlog_count ?? 0}
+                        onChange={(e) =>
+                          setAcademicRecords((prev) =>
+                            prev.map((r, i) =>
+                              i === index
+                                ? { ...r, backlog_count: Number(e.target.value || 0) }
+                                : r
+                            )
+                          )
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1014,6 +1300,35 @@ const CreateProfile: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* ---------------------- ACHIEVEMENTS & ACTIVITIES ---------------------- */}
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold">Achievements & Activities</h2>
+            </CardHeader>
+
+            <CardContent className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-medium">Achievements</label>
+                <Textarea
+                  value={achievementsText}
+                  onChange={(e) => setAchievementsText(e.target.value)}
+                  rows={5}
+                  placeholder="One achievement per line"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Extra-Curricular Activities</label>
+                <Textarea
+                  value={extracurricularText}
+                  onChange={(e) => setExtracurricularText(e.target.value)}
+                  rows={5}
+                  placeholder="One activity per line"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* ---------------------- SUBMIT ---------------------- */}
           <div className="flex justify-end">
             <Button
@@ -1036,7 +1351,11 @@ const CreateProfile: React.FC = () => {
                   preferred_field: preferredField || undefined,
                   linkedin_url: linkedinUrl || undefined,
                   github_url: githubUrl || undefined,
+                  links: additionalLinks
+                    .filter((link) => link.label.trim() && link.url.trim())
+                    .map((link) => ({ label: link.label.trim(), url: link.url.trim() })),
                   resume: resumeFile || undefined,
+                  supporting_documents: supportingDocuments.length ? supportingDocuments : undefined,
                   skills: selectedSkillIds.length ? selectedSkillIds : undefined,
                   profile_image: profileImage,
 
@@ -1055,6 +1374,16 @@ const CreateProfile: React.FC = () => {
                       to_date: edu.to_date,
                       course: edu.courseId,
                       specialization: edu.specialization || undefined,
+                    })),
+
+                  academic_records: academicRecords
+                    .filter((record) => record.semester && (record.cgpa || record.marks_percentage))
+                    .map((record) => ({
+                      semester: Number(record.semester),
+                      academic_year: record.academic_year || undefined,
+                      cgpa: record.cgpa,
+                      marks_percentage: record.marks_percentage,
+                      backlog_count: record.backlog_count || 0,
                     })),
 
                   experience: experiences
@@ -1082,6 +1411,9 @@ const CreateProfile: React.FC = () => {
                       certificate_url: c.certificate_url || undefined,
                       valid_until: c.valid_until || undefined,
                     })),
+
+                  achievements: textLinesToNotes(achievementsText),
+                  extracurricular_activities: textLinesToNotes(extracurricularText),
                 };
 
                 // 2. Pass the OBJECT to the redux action

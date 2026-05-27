@@ -12,6 +12,10 @@ import { store } from './context/store.ts';
 import StudentProfilePage from './pages/StudentPage/StudentProfilePage.tsx';
 import CreateProfile from './pages/CreateProfile/CreateProfile.tsx';
 import AboutPage from './pages/AboutPage.tsx';
+import VerifyEmailPage from './pages/VerifyEmailPage.tsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.tsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.tsx';
+import JobsPage from './pages/JobsPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -22,10 +26,14 @@ createRoot(document.getElementById('root')!).render(
             <Route index element={<LandingPage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="students" element={<StudentPage />} />
+            <Route path="jobs" element={<JobsPage />} />
             <Route path="profiles" element={<StudentProfilePage />} />
             <Route path="profiles/:userId" element={<StudentProfile />} />
             <Route path="profiles/create" element={<CreateProfile />} />
             <Route path="login" element={<LoginPage />} />
+            <Route path="verify-email" element={<VerifyEmailPage />} />
+            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

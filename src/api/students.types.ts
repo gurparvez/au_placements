@@ -43,6 +43,25 @@ export interface CertificatePayload {
   valid_until?: string;
 }
 
+export interface AcademicRecordPayload {
+  semester: number;
+  academic_year?: string;
+  cgpa?: number;
+  marks_percentage?: number;
+  backlog_count?: number;
+}
+
+export interface ProfileLinkPayload {
+  label: string;
+  url: string;
+}
+
+export interface ProfileNotePayload {
+  title: string;
+  description?: string;
+  date?: string;
+}
+
 export interface CreateStudentProfilePayload {
   headline?: string;
   location: string;
@@ -52,13 +71,18 @@ export interface CreateStudentProfilePayload {
   github_url?: string;
 
   resume?: File | null;
+  supporting_documents?: File[];
 
   // 🔵 Updated: Single object payload
   looking_for?: LookingForPayload;
 
+  academic_records?: AcademicRecordPayload[];
   experience?: ExperiencePayload[];
   projects?: ProjectPayload[];
   certificates?: CertificatePayload[];
+  achievements?: ProfileNotePayload[];
+  extracurricular_activities?: ProfileNotePayload[];
+  links?: ProfileLinkPayload[];
 
   preferred_field?: string;
 
@@ -101,6 +125,37 @@ export interface EducationResponse {
   specialization: string;
 }
 
+export interface AcademicRecordResponse {
+  _id: string;
+  semester: number;
+  academic_year?: string;
+  cgpa?: number;
+  marks_percentage?: number;
+  backlog_count?: number;
+  updated_at?: string;
+}
+
+export interface ProfileLinkResponse {
+  _id: string;
+  label: string;
+  url: string;
+}
+
+export interface ProfileNoteResponse {
+  _id: string;
+  title: string;
+  description?: string;
+  date?: string;
+}
+
+export interface SupportingDocumentResponse {
+  _id: string;
+  name: string;
+  url: string;
+  mime_type: string;
+  uploaded_at: string;
+}
+
 export interface StudentProfileResponse {
   _id: string;
   user: any;
@@ -111,6 +166,8 @@ export interface StudentProfileResponse {
   preferred_field: string;
   github_url: string;
   resume_link: string;
+  links: ProfileLinkResponse[];
+  supporting_documents: SupportingDocumentResponse[];
 
   looking_for: {
     type: 'internship' | 'job';
@@ -118,12 +175,19 @@ export interface StudentProfileResponse {
     to_date?: string;
   };
 
+  academic_records: AcademicRecordResponse[];
+  cgpa_current?: number;
   experience: any[];
   total_experience: number;
   projects: ProjectResponse[];
   certificates: CertificateResponse[];
+  achievements: ProfileNoteResponse[];
+  extracurricular_activities: ProfileNoteResponse[];
   skills: any[];
   education: EducationResponse[];
+  profile_completion: number;
+  profile_version: number;
+  last_profile_reviewed_at?: string;
   createdAt: string;
   updatedAt: string;
   profile_image?: string;
@@ -141,6 +205,10 @@ export interface GetAnyStudentProfileResponse {
     lastName: string;
     email: string;
     phone: string;
+    university: string;
+    programme?: string;
+    branch_department?: string;
+    batch_year?: number;
     roles: string[];
     verified: boolean;
     createdAt: string;

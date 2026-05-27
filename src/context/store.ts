@@ -2,11 +2,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import studentReducer from './student/studentSlice';
 import authReducer from './auth/authSlice';
+import jobReducer from './job/jobSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     student: studentReducer,
+    jobs: jobReducer,
   },
 });
 
