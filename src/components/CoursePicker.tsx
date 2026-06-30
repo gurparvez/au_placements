@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Check } from 'lucide-react';
+import { Loader2, Check, Plus } from 'lucide-react';
 import { coursesApi, type Course } from '@/api/courses';
 
 interface CoursePickerProps {
@@ -108,17 +108,17 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) =
       <Input
         value={query}
         placeholder="Search course (e.g. B.Tech CSE)..."
+        aria-invalid={!!error || undefined}
         onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-            setIsCreating(false); // If user types, reset creation mode
+          setQuery(e.target.value);
+          setOpen(true);
+          setIsCreating(false); // If user types, reset creation mode
         }}
         onFocus={() => setOpen(true)}
-        className={error ? 'border-red-500' : ''}
       />
       
       {open && (query.trim().length > 0) && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95">
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in-0 zoom-in-95">
           
           {/* SEARCH LOADING */}
           {loading && (
@@ -135,16 +135,26 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) =
                   key={course._id}
                   type="button"
                   onClick={() => handleSelectExisting(course)}
-                  className="flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left"
+                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none"
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{course.name}</span>
-                    <span className="text-xs text-muted-foreground uppercase">{course.category}</span>
+                    <span className="text-muted-foreground text-xs uppercase">{course.category}</span>
                   </div>
                   {course.name === value && <Check className="h-4 w-4 opacity-50" />}
                 </button>
               ))}
 
+              {searchResults.length === 0 && (
+                <button
+                  type="button"
+                  onClick={handleCreateStep1}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none"
+                >
+                  <Plus className="h-4 w-4 shrink-0" aria-hidden />
+                  Create &ldquo;{query}&rdquo;
+                </button>
+              )}
             </div>
           )}
 
@@ -161,10 +171,10 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) =
                     key={cat}
                     type="button"
                     onClick={() => setNewCourseCategory(cat)}
-                    className={`rounded-md border px-3 py-2 text-xs uppercase transition-colors ${
-                      newCourseCategory === cat 
-                        ? 'bg-primary text-primary-foreground border-primary' 
-                        : 'hover:bg-accent'
+                    className={`focus-visible:ring-ring/50 rounded-md border px-3 py-2 text-xs uppercase transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                      newCourseCategory === cat
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                     }`}
                   >
                     {cat}
@@ -201,6 +211,8 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) =
 
         </div>
       )}
+
+      {error && <p className="text-destructive mt-1.5 text-xs">{error}</p>}
     </div>
   );
 };

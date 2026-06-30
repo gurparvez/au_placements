@@ -1,283 +1,321 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { GraduationCap, Plus, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
 import { type EducationPayload } from '@/api/students.types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { rangeYears } from '@/utils/dates';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit2, Plus, Trash2, GraduationCap, Loader2 } from 'lucide-react';
 import CoursePicker from '@/components/CoursePicker';
-import type { Course } from '@/api/courses';
-import coursesApi from '@/api/courses'; // 🟢 Assuming you have this, or use axios directly
+import { coursesApi, type Course } from '@/api/courses';
+import SectionCard from './SectionCard';
 
-// Local Interface for UI State
+// Local UI state for an education row.
 interface EducationUI {
   _id?: string;
   institute: string;
   from_date: string;
   to_date: string;
-  course: string; // ID (for API)
-  course_name?: string; // Display Name (for Picker UI & View Mode)
+  course: string; // ID (sent to API)
+  course_name?: string; // Display name (for picker UI & view mode)
   specialization?: string;
 }
 
+const INSTITUTE_OPTIONS = ['Akal University', 'Eternal University'];
+
+const toInputDate = (d?: string) => (d ? new Date(d).toISOString().split('T')[0] : '');
+
 const EducationSection: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { profile, loading } = useAppSelector((state) => state.student);
+  const { profile } = useAppSelector((state) => state.student);
 
-  // Local state
-  const [eduList, setEduList] = useState<EducationUI[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [resolving, setResolving] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState<EducationUI[]>([]);
+  const [hydrating, setHydrating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // 🟢 Sync & Resolve Data
+  // Hydrate the editable list whenever the dialog opens, resolving any
+  // course names we don't already have from a populated object.
   useEffect(() => {
-    const resolveEducationData = async () => {
-      if (!profile?.education) return;
+    if (!open) return;
 
-      setResolving(true);
+    let cancelled = false;
 
-      // Map over the profile education and resolve course names if missing
-      const resolvedData = await Promise.all(
-        profile.education.map(async (edu: any) => {
-          let courseId = '';
-          let courseName = '';
+    const hydrate = async () => {
+      setHydrating(true);
+      try {
+        const resolved = await Promise.all(
+          (profile?.education ?? []).map(async (edu: any) => {
+            let courseId = '';
+            let courseName = '';
 
-          // Check if course is Populated Object or String ID
-          if (edu.course && typeof edu.course === 'object') {
-            courseId = edu.course._id;
-            courseName = edu.course.name;
-          } else if (typeof edu.course === 'string') {
-            courseId = edu.course;
-            // If we only have ID, we try to fetch the name (or fallback)
-            try {
-              // 🟢 Fetch course details if it's just a string ID
-              const res = await coursesApi.getCourseById(courseId);
-              courseName = res.course.name;
-            } catch (e) {
-              console.error('Failed to fetch course name', e);
-              courseName = 'Unknown Course';
+            // course may be a populated object or a bare string ID.
+            if (edu.course && typeof edu.course === 'object') {
+              courseId = edu.course._id;
+              courseName = edu.course.name;
+            } else if (typeof edu.course === 'string') {
+              courseId = edu.course;
+              try {
+                const res = await coursesApi.getCourseById(courseId);
+                courseName = res.course.name;
+              } catch (e) {
+                console.error('Failed to fetch course name', e);
+                courseName = 'Unknown Course';
+              }
             }
-          }
 
-          return {
-            _id: edu._id,
-            institute: edu.institute || '',
-            from_date: edu.from_date ? new Date(edu.from_date).toISOString().split('T')[0] : '',
-            to_date: edu.to_date ? new Date(edu.to_date).toISOString().split('T')[0] : '',
-            course: courseId,
-            course_name: courseName, // 🟢 Now we definitely have a name
-            specialization: edu.specialization || '',
-          };
-        })
-      );
+            return {
+              _id: edu._id,
+              institute: edu.institute || '',
+              from_date: toInputDate(edu.from_date),
+              to_date: toInputDate(edu.to_date),
+              course: courseId,
+              course_name: courseName,
+              specialization: edu.specialization || '',
+            } as EducationUI;
+          })
+        );
 
-      setEduList(resolvedData);
-      setResolving(false);
+        if (!cancelled) setList(resolved);
+      } finally {
+        if (!cancelled) setHydrating(false);
+      }
     };
 
-    resolveEducationData();
-  }, [profile]);
+    hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, profile]);
 
   if (!profile) return null;
 
-  // --- Handlers ---
+  const change = (i: number, field: keyof EducationUI, value: string) =>
+    setList((prev) => prev.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)));
 
-  const handleInputChange = (index: number, field: keyof EducationUI, value: string) => {
-    const updatedList = [...eduList];
-    updatedList[index] = { ...updatedList[index], [field]: value };
-    setEduList(updatedList);
-  };
+  const selectCourse = (i: number, course: Course) =>
+    setList((prev) =>
+      prev.map((row, idx) =>
+        idx === i ? { ...row, course: course._id, course_name: course.name } : row
+      )
+    );
 
-  const handleCourseSelect = (index: number, course: Course) => {
-    const updatedList = [...eduList];
-    updatedList[index] = {
-      ...updatedList[index],
-      course: course._id,
-      course_name: course.name,
-    };
-    setEduList(updatedList);
-  };
-
-  const handleAddNew = () => {
-    setEduList([
-      ...eduList,
-      { institute: '', course: '', course_name: '', from_date: '', to_date: '' },
+  const addRow = () =>
+    setList((prev) => [
+      ...prev,
+      { institute: '', course: '', course_name: '', from_date: '', to_date: '', specialization: '' },
     ]);
-  };
 
-  const handleDelete = (index: number) => {
-    const updatedList = eduList.filter((_, i) => i !== index);
-    setEduList(updatedList);
-  };
+  const removeRow = (i: number) => setList((prev) => prev.filter((_, idx) => idx !== i));
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Data re-syncs automatically via useEffect
-  };
+  const save = async () => {
+    setSaving(true);
+    try {
+      // Keep only rows with the required fields; map course -> id for the API.
+      const payload: EducationPayload[] = list
+        .filter((e) => e.institute.trim() && e.course && e.from_date && e.to_date)
+        .map((e) => ({
+          institute: e.institute,
+          course: e.course, // Send ID
+          from_date: e.from_date,
+          to_date: e.to_date,
+          specialization: e.specialization || undefined,
+        }));
 
-  const handleSave = () => {
-    const isValid = eduList.every((e) => e.institute && e.course && e.from_date && e.to_date);
-    if (!isValid) {
-      alert('Institute, Course, and Dates are required.');
-      return;
+      await dispatch(updateStudentProfile({ education: payload })).unwrap();
+      toast.success('Education updated');
+      setOpen(false);
+    } catch (err: any) {
+      toast.error(typeof err === 'string' ? err : 'Could not save. Please try again.');
+    } finally {
+      setSaving(false);
     }
-
-    const payload: EducationPayload[] = eduList.map((e) => ({
-      institute: e.institute,
-      course: e.course, // Send ID
-      from_date: e.from_date,
-      to_date: e.to_date,
-      specialization: e.specialization || undefined,
-    }));
-
-    dispatch(updateStudentProfile({ education: payload }));
-    setIsEditing(false);
   };
+
+  const items = profile.education ?? [];
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <h2 className="text-lg font-semibold">Education</h2>
-        {!isEditing && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="h-8 w-8 p-0"
-            disabled={resolving}
-          >
-            {resolving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Edit2 className="h-4 w-4" />
-            )}
-          </Button>
-        )}
-      </CardHeader>
-
-      <CardContent className="space-y-4 pt-4">
-        {/* --- VIEW MODE --- */}
-        {/* 🟢 We now read from 'eduList' because it is fully resolved with names */}
-        {!isEditing && (
-          <div className="space-y-4">
-            {resolving && (
-              <div className="text-muted-foreground text-sm">Loading education details...</div>
-            )}
-
-            {!resolving && eduList.length === 0 && (
-              <p className="text-muted-foreground text-sm">No education details added.</p>
-            )}
-
-            {!resolving &&
-              eduList.map((edu) => (
-                <div key={edu._id || Math.random()} className="bg-muted/40 rounded-md border p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2 font-semibold">
-                        <GraduationCap className="h-4 w-4 text-blue-500" />
-                        {edu.institute}
+    <>
+      <SectionCard title="Education" onEdit={() => setOpen(true)} isEmpty={items.length === 0}>
+        {items.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Add your degrees and institutions to complete your academic profile.
+          </p>
+        ) : (
+          <ol className="divide-y divide-border">
+            {items.map((edu: any, index: number) => {
+              const fromYear = edu.from_date ? new Date(edu.from_date).getFullYear() : null;
+              const toYear = edu.to_date ? new Date(edu.to_date).getFullYear() : null;
+              const courseName =
+                edu.course && typeof edu.course === 'object' ? edu.course.name : undefined;
+              return (
+                <li key={edu._id ?? index} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                  <div className="bg-surface-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                    <GraduationCap className="text-muted-foreground h-5 w-5" aria-hidden />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-foreground font-medium">{edu.institute}</h3>
+                        {courseName && (
+                          <p className="text-muted-foreground text-sm">{courseName}</p>
+                        )}
                       </div>
-                      <div className="text-muted-foreground mt-1 text-sm">
-                        {/* 🟢 Display the resolved name */}
-                        {edu.course_name || 'Loading Course...'}
-                        <span className="mx-1">•</span>
-                        {new Date(edu.from_date).getFullYear()} –{' '}
-                        {new Date(edu.to_date).getFullYear()}
-                      </div>
+                      {fromYear && toYear && (
+                        <p className="data text-text-subtle shrink-0 text-xs whitespace-nowrap">
+                          {rangeYears(edu.from_date, edu.to_date)}
+                        </p>
+                      )}
                     </div>
+                    {edu.specialization && (
+                      <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                        {edu.specialization}
+                      </p>
+                    )}
                   </div>
-
-                  {edu.specialization && (
-                    <div className="text-muted-foreground mt-2 text-sm">
-                      <span className="text-foreground/80 font-medium">Specialization:</span>{' '}
-                      {edu.specialization}
-                    </div>
-                  )}
-                </div>
-              ))}
-          </div>
+                </li>
+              );
+            })}
+          </ol>
         )}
+      </SectionCard>
 
-        {/* --- EDIT MODE --- */}
-        {isEditing && (
-          <div className="space-y-6">
-            {eduList.map((edu, index) => (
-              <div key={index} className="border-muted relative rounded-md border p-4 shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => handleDelete(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit education</DialogTitle>
+            <DialogDescription>Add the degrees and institutions you've studied at.</DialogDescription>
+          </DialogHeader>
 
-                <div className="grid gap-4">
-                  <div>
-                    <label className="text-xs font-medium">Institute / College *</label>
-                    <Input
-                      value={edu.institute}
-                      onChange={(e) => handleInputChange(index, 'institute', e.target.value)}
-                      placeholder="e.g. Harvard University"
-                    />
-                  </div>
+          {hydrating ? (
+            <div className="text-muted-foreground flex items-center gap-2 py-8 text-sm">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Loading education details…
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {list.map((edu, i) => (
+                <div key={i} className="bg-bg-2 relative rounded-lg border border-border p-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-danger absolute top-2 right-2 h-8 w-8"
+                    onClick={() => removeRow(i)}
+                    aria-label={`Delete education ${i + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </Button>
 
-                  <div>
-                    <label className="text-xs font-medium">Degree / Course *</label>
-                    <CoursePicker
-                      value={edu.course_name}
-                      onSelect={(course) => handleCourseSelect(index, course)}
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor={`edu-institute-${i}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Institute
+                      </label>
+                      <select
+                        id={`edu-institute-${i}`}
+                        value={edu.institute}
+                        onChange={(e) => change(i, 'institute', e.target.value)}
+                        className="border-border-strong bg-card text-foreground ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-[9px] border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                      >
+                        <option value="">Select an institute</option>
+                        {INSTITUTE_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor={`edu-course-${i}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Course
+                      </label>
+                      <CoursePicker
+                        value={edu.course_name}
+                        onSelect={(course) => selectCourse(i, course)}
+                      />
+                    </div>
+
                     <div>
-                      <label className="text-xs font-medium">From *</label>
+                      <label htmlFor={`edu-from-${i}`} className="mb-1.5 block text-sm font-medium">
+                        From date
+                      </label>
                       <Input
+                        id={`edu-from-${i}`}
                         type="date"
                         value={edu.from_date}
-                        onChange={(e) => handleInputChange(index, 'from_date', e.target.value)}
+                        onChange={(e) => change(i, 'from_date', e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium">To *</label>
+                      <label htmlFor={`edu-to-${i}`} className="mb-1.5 block text-sm font-medium">
+                        To date
+                      </label>
                       <Input
+                        id={`edu-to-${i}`}
                         type="date"
                         value={edu.to_date}
-                        onChange={(e) => handleInputChange(index, 'to_date', e.target.value)}
+                        onChange={(e) => change(i, 'to_date', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor={`edu-specialization-${i}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Specialization <span className="text-muted-foreground">(optional)</span>
+                      </label>
+                      <Input
+                        id={`edu-specialization-${i}`}
+                        value={edu.specialization}
+                        onChange={(e) => change(i, 'specialization', e.target.value)}
+                        placeholder="e.g. Artificial Intelligence"
                       />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="text-xs font-medium">Specialization (Optional)</label>
-                    <Input
-                      value={edu.specialization}
-                      onChange={(e) => handleInputChange(index, 'specialization', e.target.value)}
-                      placeholder="e.g. Artificial Intelligence"
-                    />
-                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            <Button variant="outline" className="w-full border-dashed" onClick={handleAddNew}>
-              <Plus className="mr-2 h-4 w-4" /> Add Education
-            </Button>
-
-            <div className="flex justify-end gap-2 border-t pt-2">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Changes'}
+              <Button variant="outline" className="w-full border-dashed" onClick={addRow}>
+                <Plus className="mr-1 h-4 w-4" aria-hidden /> Add education
               </Button>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={saving || hydrating}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

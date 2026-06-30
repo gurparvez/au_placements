@@ -1,5 +1,7 @@
 import { Outlet } from 'react-router';
+import { Toaster } from 'sonner';
 import { Navbar } from './components';
+import Footer from './components/Footer';
 import { ThemeProvider } from './components/theme-provider';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useEffect } from 'react';
@@ -15,10 +17,20 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <a
+        href="#main"
+        className="focus:bg-card focus:shadow-card sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-[9px] focus:px-4 focus:py-2"
+      >
+        Skip to content
+      </a>
       <Navbar />
       <ErrorBoundary>
-        <Outlet />
+        <main id="main">
+          <Outlet />
+        </main>
       </ErrorBoundary>
+      <Footer />
+      <Toaster position="top-center" />
     </ThemeProvider>
   );
 }

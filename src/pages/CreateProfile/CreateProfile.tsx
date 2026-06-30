@@ -22,8 +22,9 @@ import type { Course } from '@/api/courses';
 import CoursePicker from '@/components/CoursePicker';
 import SkillPicker from '@/components/SkillPicker';
 import { isValidUrl } from '@/utils/validation';
+import { X } from 'lucide-react';
 
-// 🔵 Interface for local state
+// Interface for local state
 interface LookingForState {
   type: 'internship' | 'job';
   from_date: string;
@@ -107,7 +108,7 @@ const CreateProfile: React.FC = () => {
       e.location = 'Location is required';
     }
 
-    // 🔵 Validate Looking For Dates
+    // Validate Looking For Dates
     if (!lookingFor.from_date) {
       e.looking_for = 'Availability Start Date is required';
     }
@@ -177,30 +178,28 @@ const CreateProfile: React.FC = () => {
 
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <div className="mx-auto flex min-h-screen max-w-4xl flex-col px-4 pt-24 pb-10">
-        <div className="mb-6 text-center">
-          <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-            AU Placements
-          </h2>
-          <h1 className="mt-2 text-2xl font-semibold">Create Your Student Profile</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Fill in your details to help companies discover you.
+      <div className="mx-auto flex max-w-[760px] flex-col px-6 pt-24 pb-10">
+        <div className="mb-8">
+          <span className="eyebrow">New register entry</span>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Create your profile</h1>
+          <p className="text-muted-foreground mt-2 max-w-[65ch] text-sm">
+            Fill in your details to help companies discover you. Fields marked
+            <span className="text-danger"> *</span> are required.
           </p>
-          <p className="text-muted-foreground mt-1 text-xs">Fields marked with * are required.</p>
         </div>
 
         <form onSubmit={() => {}} className="space-y-6">
           {/* BASIC INFO */}
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold">Basic Information</h2>
+              <h2 className="text-xl font-semibold">Basic Information</h2>
             </CardHeader>
 
             <CardContent className="space-y-4">
               {/* PROFILE IMAGE */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Profile Image <span className="text-red-500">*</span>
+                <label htmlFor="profile-image-input" className="mb-1.5 block text-sm font-medium">
+                  Profile Image <span className="text-muted-foreground">(optional)</span>
                 </label>
 
                 <input
@@ -217,10 +216,10 @@ const CreateProfile: React.FC = () => {
                     <img
                       src={profileImagePreview}
                       alt="Preview"
-                      className="h-20 w-20 rounded-full border object-cover"
+                      className="border-border h-20 w-20 rounded-full border object-cover"
                     />
                   ) : (
-                    <div className="bg-muted text-muted-foreground flex h-20 w-20 items-center justify-center rounded-full border text-xs">
+                    <div className="bg-surface-2 text-muted-foreground border-border flex h-20 w-20 items-center justify-center rounded-full border text-xs">
                       No Image
                     </div>
                   )}
@@ -234,12 +233,15 @@ const CreateProfile: React.FC = () => {
                   </Button>
                 </div>
 
-                {profileImageError && <p className="text-xs text-red-500">{profileImageError}</p>}
+                {profileImageError && <p className="text-danger text-xs">{profileImageError}</p>}
               </div>
 
               <div>
-                <label className="text-sm font-medium">Headline (optional)</label>
+                <label htmlFor="headline" className="mb-1.5 block text-sm font-medium">
+                  Headline (optional)
+                </label>
                 <Input
+                  id="headline"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
                   placeholder="Aspiring Software Developer"
@@ -247,20 +249,25 @@ const CreateProfile: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">
-                  Location <span className="text-red-500">*</span>
+                <label htmlFor="location" className="mb-1.5 block text-sm font-medium">
+                  Location <span className="text-danger">*</span>
                 </label>
                 <Input
+                  id="location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Bathinda, Punjab"
+                  aria-invalid={!!errors.location}
                 />
-                {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location}</p>}
+                {errors.location && <p className="text-danger mt-1 text-xs">{errors.location}</p>}
               </div>
 
               <div>
-                <label className="text-sm font-medium">About (optional)</label>
+                <label htmlFor="about" className="mb-1.5 block text-sm font-medium">
+                  About (optional)
+                </label>
                 <Textarea
+                  id="about"
                   value={about}
                   onChange={(e) => setAbout(e.target.value)}
                   rows={4}
@@ -269,8 +276,11 @@ const CreateProfile: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">Preferred Field (optional)</label>
+                <label htmlFor="preferred-field" className="mb-1.5 block text-sm font-medium">
+                  Preferred Field (optional)
+                </label>
                 <Input
+                  id="preferred-field"
                   value={preferredField}
                   onChange={(e) => setPreferredField(e.target.value)}
                   placeholder="Software Engineering, Data Science, etc."
@@ -282,42 +292,53 @@ const CreateProfile: React.FC = () => {
           {/* LINKS & PREFERENCES */}
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold">Links & Preferences</h2>
+              <h2 className="text-xl font-semibold">Links &amp; Preferences</h2>
             </CardHeader>
 
             <CardContent className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium">LinkedIn URL (optional)</label>
+                  <label htmlFor="linkedin-url" className="mb-1.5 block text-sm font-medium">
+                    LinkedIn URL (optional)
+                  </label>
                   <Input
+                    id="linkedin-url"
                     value={linkedinUrl}
                     onChange={(e) => setLinkedinUrl(e.target.value)}
                     placeholder="https://linkedin.com/in/username"
+                    aria-invalid={!!errors.linkedin_url}
                   />
                   {errors.linkedin_url && (
-                    <p className="mt-1 text-xs text-red-500">{errors.linkedin_url}</p>
+                    <p className="mt-1 text-danger text-xs">{errors.linkedin_url}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">GitHub URL (optional)</label>
+                  <label htmlFor="github-url" className="mb-1.5 block text-sm font-medium">
+                    GitHub URL (optional)
+                  </label>
                   <Input
+                    id="github-url"
                     value={githubUrl}
                     onChange={(e) => setGithubUrl(e.target.value)}
                     placeholder="https://github.com/username"
+                    aria-invalid={!!errors.github_url}
                   />
                   {errors.github_url && (
-                    <p className="mt-1 text-xs text-red-500">{errors.github_url}</p>
+                    <p className="mt-1 text-danger text-xs">{errors.github_url}</p>
                   )}
                 </div>
               </div>
 
               {/* Resume File Input */}
               <div>
-                <label className="text-sm font-medium">Resume (optional)</label>
+                <label htmlFor="resume-input" className="mb-1.5 block text-sm font-medium">
+                  Resume (optional)
+                </label>
 
                 <input
                   ref={resumeInputRef}
+                  id="resume-input"
                   type="file"
                   accept=".pdf,.doc,.docx"
                   className="hidden"
@@ -334,14 +355,15 @@ const CreateProfile: React.FC = () => {
                   </Button>
 
                   {resumeFile ? (
-                    <div className="flex items-center gap-2 text-sm text-green-600">
+                    <div className="text-primary flex items-center gap-2 text-sm">
                       <span className="max-w-[200px] truncate font-medium">{resumeFile.name}</span>
                       <button
                         type="button"
+                        aria-label="Remove resume"
                         onClick={() => setResumeFile(null)}
-                        className="font-bold text-red-500 hover:text-red-700"
+                        className="text-danger rounded-sm font-bold hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-soft)]"
                       >
-                        ✕
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
@@ -349,7 +371,7 @@ const CreateProfile: React.FC = () => {
                   )}
                 </div>
 
-                {resumeError && <p className="mt-1 text-xs text-red-500">{resumeError}</p>}
+                {resumeError && <p className="mt-1 text-danger text-xs">{resumeError}</p>}
                 <p className="text-muted-foreground mt-1 text-xs">
                   Accepted formats: PDF, DOC, DOCX. Max size: 5MB.
                 </p>
@@ -357,10 +379,10 @@ const CreateProfile: React.FC = () => {
 
               <Separator />
 
-              {/* 🔵 UPDATED LOOKING FOR SECTION */}
+              {/* LOOKING FOR SECTION */}
               <div>
-                <label className="text-sm font-medium">
-                  What are you looking for? <span className="text-red-500">*</span>
+                <label className="mb-1.5 block text-sm font-medium">
+                  What are you looking for? <span className="text-danger">*</span>
                 </label>
 
                 <div className="mt-3 space-y-4">
@@ -374,7 +396,7 @@ const CreateProfile: React.FC = () => {
                         value="internship"
                         checked={lookingFor.type === 'internship'}
                         onChange={() => setLookingFor((prev) => ({ ...prev, type: 'internship' }))}
-                        className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
+                        className="accent-[var(--primary)] h-4 w-4"
                       />
                       <span>Internship</span>
                     </label>
@@ -387,7 +409,7 @@ const CreateProfile: React.FC = () => {
                         value="job"
                         checked={lookingFor.type === 'job'}
                         onChange={() => setLookingFor((prev) => ({ ...prev, type: 'job' }))}
-                        className="text-primary focus:ring-primary h-4 w-4 border-gray-300"
+                        className="accent-[var(--primary)] h-4 w-4"
                       />
                       <span>Job / Placement</span>
                     </label>
@@ -396,22 +418,31 @@ const CreateProfile: React.FC = () => {
                   {/* Date Range Selection */}
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className="text-muted-foreground mb-1 block text-xs">
-                        Available From *
+                      <label
+                        htmlFor="available-from"
+                        className="text-muted-foreground mb-1 block text-xs"
+                      >
+                        Available From <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id="available-from"
                         type="date"
                         value={lookingFor.from_date}
                         onChange={(e) =>
                           setLookingFor((prev) => ({ ...prev, from_date: e.target.value }))
                         }
+                        aria-invalid={!!errors.looking_for}
                       />
                     </div>
                     <div>
-                      <label className="text-muted-foreground mb-1 block text-xs">
+                      <label
+                        htmlFor="available-until"
+                        className="text-muted-foreground mb-1 block text-xs"
+                      >
                         Available Until (Optional)
                       </label>
                       <Input
+                        id="available-until"
                         type="date"
                         value={lookingFor.to_date}
                         onChange={(e) =>
@@ -422,7 +453,7 @@ const CreateProfile: React.FC = () => {
                   </div>
 
                   {errors.looking_for && (
-                    <p className="text-xs text-red-500">{errors.looking_for}</p>
+                    <p className="text-danger text-xs">{errors.looking_for}</p>
                   )}
                 </div>
               </div>
@@ -432,7 +463,7 @@ const CreateProfile: React.FC = () => {
           {/* ---------------------- SKILLS ---------------------- */}
           <Card>
             <CardHeader>
-              <h2 className="text-lg font-semibold">Skills</h2>
+              <h2 className="text-xl font-semibold">Skills</h2>
             </CardHeader>
 
             <CardContent>
@@ -448,7 +479,7 @@ const CreateProfile: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Education</h2>
+                <h2 className="text-xl font-semibold">Education</h2>
                 <Button
                   type="button"
                   size="sm"
@@ -475,28 +506,34 @@ const CreateProfile: React.FC = () => {
 
             <CardContent className="space-y-4">
               {educationList.map((edu, index) => (
-                <div key={index} className="bg-muted/40 space-y-2 rounded-md border p-3">
+                <div key={index} className="bg-bg-2 border border-border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Education {index + 1}</span>
                     {educationList.length > 1 && (
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="text-danger hover:bg-danger-soft"
                         onClick={() =>
                           setEducationList((prev) => prev.filter((_, i) => i !== index))
                         }
-                        className="text-xs text-red-500 hover:underline"
                       >
                         Remove
-                      </button>
+                      </Button>
                     )}
                   </div>
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">
-                        Institute <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`edu-institute-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Institute <span className="text-danger">*</span>
                       </label>
                       <select
+                        id={`edu-institute-${index}`}
                         value={edu.institute}
                         onChange={(e) =>
                           setEducationList((prev) =>
@@ -505,7 +542,7 @@ const CreateProfile: React.FC = () => {
                             )
                           )
                         }
-                        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        className="bg-bg-2 border border-border-strong rounded-[9px] px-3 py-2 text-[14px] w-full outline-none transition-[color,box-shadow,border-color] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-[var(--ring-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <option value="" disabled>
                           Select Institute
@@ -517,8 +554,11 @@ const CreateProfile: React.FC = () => {
 
                     <div className="flex gap-2">
                       <div className="flex-1">
-                        <label className="text-sm font-medium">
-                          Course <span className="text-red-500">*</span>
+                        <label
+                          id={`edu-course-label-${index}`}
+                          className="mb-1.5 block text-sm font-medium"
+                        >
+                          Course <span className="text-danger">*</span>
                         </label>
                         <CoursePicker
                           value={edu.courseName}
@@ -540,11 +580,17 @@ const CreateProfile: React.FC = () => {
                       </div>
 
                       <div className="w-24">
-                        <label className="text-sm font-medium">Category</label>
+                        <label
+                          htmlFor={`edu-category-${index}`}
+                          className="mb-1.5 block text-sm font-medium"
+                        >
+                          Category
+                        </label>
                         <Input
+                          id={`edu-category-${index}`}
                           readOnly
                           value={edu.category}
-                          className="bg-muted text-muted-foreground cursor-not-allowed"
+                          className="bg-surface-2 text-muted-foreground cursor-not-allowed"
                           placeholder="UG/PG"
                         />
                       </div>
@@ -553,10 +599,14 @@ const CreateProfile: React.FC = () => {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">
-                        From Date <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`edu-from-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        From Date <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id={`edu-from-${index}`}
                         type="date"
                         value={edu.from_date}
                         onChange={(e) =>
@@ -570,10 +620,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">
-                        To Date <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`edu-to-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        To Date <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id={`edu-to-${index}`}
                         type="date"
                         value={edu.to_date}
                         onChange={(e) =>
@@ -588,8 +642,14 @@ const CreateProfile: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Specialization (optional)</label>
+                    <label
+                      htmlFor={`edu-specialization-${index}`}
+                      className="mb-1.5 block text-sm font-medium"
+                    >
+                      Specialization (optional)
+                    </label>
                     <Input
+                      id={`edu-specialization-${index}`}
                       value={edu.specialization}
                       onChange={(e) =>
                         setEducationList((prev) =>
@@ -609,7 +669,7 @@ const CreateProfile: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Experience</h2>
+                <h2 className="text-xl font-semibold">Experience</h2>
                 <Button
                   type="button"
                   size="sm"
@@ -628,24 +688,30 @@ const CreateProfile: React.FC = () => {
 
             <CardContent className="space-y-4">
               {experiences.map((exp, index) => (
-                <div key={index} className="bg-muted/40 space-y-2 rounded-md border p-3">
+                <div key={index} className="bg-bg-2 border border-border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Experience {index + 1}</span>
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="text-danger hover:bg-danger-soft"
                       onClick={() => setExperiences((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-xs text-red-500 hover:underline"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">
-                        Company <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`exp-company-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Company <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id={`exp-company-${index}`}
                         value={exp.company}
                         onChange={(e) =>
                           setExperiences((prev) =>
@@ -658,10 +724,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">
-                        Role <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`exp-role-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Role <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id={`exp-role-${index}`}
                         value={exp.role}
                         onChange={(e) =>
                           setExperiences((prev) =>
@@ -674,10 +744,14 @@ const CreateProfile: React.FC = () => {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">
-                        Start Date <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`exp-start-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Start Date <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id={`exp-start-${index}`}
                         type="date"
                         value={exp.start_date}
                         onChange={(e) =>
@@ -691,8 +765,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">End Date</label>
+                      <label
+                        htmlFor={`exp-end-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        End Date
+                      </label>
                       <Input
+                        id={`exp-end-${index}`}
                         type="date"
                         value={exp.end_date}
                         onChange={(e) =>
@@ -707,8 +787,14 @@ const CreateProfile: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Description (optional)</label>
+                    <label
+                      htmlFor={`exp-description-${index}`}
+                      className="mb-1.5 block text-sm font-medium"
+                    >
+                      Description (optional)
+                    </label>
                     <Textarea
+                      id={`exp-description-${index}`}
                       rows={3}
                       value={exp.description}
                       onChange={(e) =>
@@ -729,7 +815,7 @@ const CreateProfile: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Projects</h2>
+                <h2 className="text-xl font-semibold">Projects</h2>
                 <Button
                   type="button"
                   size="sm"
@@ -757,23 +843,29 @@ const CreateProfile: React.FC = () => {
 
             <CardContent className="space-y-4">
               {projects.map((pr, index) => (
-                <div key={index} className="bg-muted/40 space-y-2 rounded-md border p-3">
+                <div key={index} className="bg-bg-2 border border-border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Project {index + 1}</span>
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="text-danger hover:bg-danger-soft"
                       onClick={() => setProjects((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-xs text-red-500 hover:underline"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">
-                      Title <span className="text-red-500">*</span>
+                    <label
+                      htmlFor={`project-title-${index}`}
+                      className="mb-1.5 block text-sm font-medium"
+                    >
+                      Title <span className="text-danger">*</span>
                     </label>
                     <Input
+                      id={`project-title-${index}`}
                       value={pr.title}
                       onChange={(e) =>
                         setProjects((prev) =>
@@ -785,10 +877,14 @@ const CreateProfile: React.FC = () => {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">
-                        Start Date <span className="text-red-500">*</span>
+                      <label
+                        htmlFor={`project-start-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Start Date <span className="text-danger">*</span>
                       </label>
                       <Input
+                        id={`project-start-${index}`}
                         type="date"
                         value={pr.start_date}
                         onChange={(e) =>
@@ -802,8 +898,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">End Date</label>
+                      <label
+                        htmlFor={`project-end-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        End Date
+                      </label>
                       <Input
+                        id={`project-end-${index}`}
                         type="date"
                         value={pr.end_date}
                         onChange={(e) =>
@@ -828,13 +930,20 @@ const CreateProfile: React.FC = () => {
                           )
                         )
                       }
+                      className="accent-[var(--primary)] h-4 w-4"
                     />
                     Ongoing
                   </label>
 
                   <div>
-                    <label className="text-sm font-medium">Description (optional)</label>
+                    <label
+                      htmlFor={`project-description-${index}`}
+                      className="mb-1.5 block text-sm font-medium"
+                    >
+                      Description (optional)
+                    </label>
                     <Textarea
+                      id={`project-description-${index}`}
                       rows={3}
                       value={pr.description}
                       onChange={(e) =>
@@ -849,8 +958,14 @@ const CreateProfile: React.FC = () => {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">Code URL</label>
+                      <label
+                        htmlFor={`project-code-url-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Code URL
+                      </label>
                       <Input
+                        id={`project-code-url-${index}`}
                         value={pr.code_url}
                         onChange={(e) =>
                           setProjects((prev) =>
@@ -863,8 +978,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Live URL</label>
+                      <label
+                        htmlFor={`project-live-url-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Live URL
+                      </label>
                       <Input
+                        id={`project-live-url-${index}`}
                         value={pr.live_url}
                         onChange={(e) =>
                           setProjects((prev) =>
@@ -879,7 +1000,7 @@ const CreateProfile: React.FC = () => {
 
                   {/* Tech Used */}
                   <div>
-                    <label className="text-sm font-medium">Technologies Used</label>
+                    <label className="mb-1.5 block text-sm font-medium">Technologies Used</label>
                     <SkillPicker
                       selected={pr.tech_used}
                       setSelected={(ids) =>
@@ -898,7 +1019,7 @@ const CreateProfile: React.FC = () => {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Certificates</h2>
+                <h2 className="text-xl font-semibold">Certificates</h2>
                 <Button
                   type="button"
                   size="sm"
@@ -923,22 +1044,30 @@ const CreateProfile: React.FC = () => {
 
             <CardContent className="space-y-4">
               {certificates.map((cert, index) => (
-                <div key={index} className="bg-muted/40 space-y-2 rounded-md border p-3">
+                <div key={index} className="bg-bg-2 border border-border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Certificate {index + 1}</span>
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="text-danger hover:bg-danger-soft"
                       onClick={() => setCertificates((prev) => prev.filter((_, i) => i !== index))}
-                      className="text-xs text-red-500 hover:underline"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">Name *</label>
+                      <label
+                        htmlFor={`cert-name-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Name <span className="text-danger">*</span>
+                      </label>
                       <Input
+                        id={`cert-name-${index}`}
                         value={cert.name}
                         onChange={(e) =>
                           setCertificates((prev) =>
@@ -949,8 +1078,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Issued By *</label>
+                      <label
+                        htmlFor={`cert-issued-by-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Issued By <span className="text-danger">*</span>
+                      </label>
                       <Input
+                        id={`cert-issued-by-${index}`}
                         value={cert.issued_by}
                         onChange={(e) =>
                           setCertificates((prev) =>
@@ -965,8 +1100,14 @@ const CreateProfile: React.FC = () => {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <div>
-                      <label className="text-sm font-medium">Issue Date *</label>
+                      <label
+                        htmlFor={`cert-issue-date-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Issue Date <span className="text-danger">*</span>
+                      </label>
                       <Input
+                        id={`cert-issue-date-${index}`}
                         type="date"
                         value={cert.issue_date}
                         onChange={(e) =>
@@ -980,8 +1121,14 @@ const CreateProfile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Valid Until</label>
+                      <label
+                        htmlFor={`cert-valid-until-${index}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Valid Until
+                      </label>
                       <Input
+                        id={`cert-valid-until-${index}`}
                         type="date"
                         value={cert.valid_until}
                         onChange={(e) =>
@@ -996,8 +1143,14 @@ const CreateProfile: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium">Certificate URL</label>
+                    <label
+                      htmlFor={`cert-url-${index}`}
+                      className="mb-1.5 block text-sm font-medium"
+                    >
+                      Certificate URL
+                    </label>
                     <Input
+                      id={`cert-url-${index}`}
                       value={cert.certificate_url}
                       onChange={(e) =>
                         setCertificates((prev) =>
@@ -1014,19 +1167,29 @@ const CreateProfile: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* ---------------------- SUBMIT ---------------------- */}
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={loading}
-              onClick={async (e) => {
+          {/* ---------------------- SUBMIT / SAVE BAR ---------------------- */}
+          <Card className="sticky bottom-4 z-10 flex-row items-center justify-between gap-4 py-4">
+            <div className="min-w-0 px-6 text-sm">
+              {Object.keys(errors).length > 0 ? (
+                <p className="text-danger">
+                  Please fix {Object.keys(errors).length} field
+                  {Object.keys(errors).length > 1 ? 's' : ''} before saving.
+                </p>
+              ) : (
+                <p className="text-muted-foreground">Review your details, then save your profile.</p>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2 px-6">
+              <Button type="button" variant="ghost" onClick={() => navigate('/profiles')}>
+                Skip for now
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                onClick={async (e) => {
                 e.preventDefault();
                 if (!validate()) return;
-
-                if (!profileImage) {
-                  setProfileImageError('Profile image is required');
-                  return;
-                }
 
                 // 1. Prepare the Plain Object Payload
                 const payload: any = {
@@ -1040,7 +1203,7 @@ const CreateProfile: React.FC = () => {
                   skills: selectedSkillIds.length ? selectedSkillIds : undefined,
                   profile_image: profileImage,
 
-                  // 🔵 Pass the SINGLE object directly
+                  // Pass the SINGLE object directly
                   looking_for: {
                     type: lookingFor.type,
                     from_date: lookingFor.from_date,
@@ -1091,10 +1254,11 @@ const CreateProfile: React.FC = () => {
                   navigate('/profiles');
                 }
               }}
-            >
-              {loading ? 'Saving…' : 'Save Profile'}
-            </Button>
-          </div>
+              >
+                {loading ? 'Saving…' : 'Save profile'}
+              </Button>
+            </div>
+          </Card>
         </form>
       </div>
     </main>

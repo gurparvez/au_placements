@@ -16,7 +16,7 @@ export interface RegisterPayload {
   phone: string;
   password: string;
   university: 'Akal University' | 'Eternal University';
-  id_card: File;
+  id_card?: File | null;
 }
 
 export interface UpdateDetailsPayload {
@@ -114,7 +114,8 @@ class Auth {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
-      // Append all fields
+      // Skip empty/optional fields (e.g. id_card when not provided)
+      if (value === undefined || value === null) return;
       formData.append(key, value as any);
     });
 

@@ -1,190 +1,287 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Menu, X } from 'lucide-react';
-import { ModeToggle } from './theme-toggle';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAppSelector } from '@/context/hooks';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/components/theme-provider';
+import { initials } from '@/utils/avatar';
 
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/context/store';
+const LogoMark = ({ size = 46 }: { size?: number }) => (
+  <img
+    src="/logo2.png"
+    alt="Kalgidhar Trust"
+    width={size}
+    height={size}
+    style={{ display: 'block', objectFit: 'contain', borderRadius: 10, flex: 'none' }}
+  />
+);
+
+const NAV = [
+  { to: '/', label: 'Home' },
+  { to: '/students', label: 'Register' },
+  { to: '/about', label: 'About' },
+];
 
 const Navbar: React.FC = () => {
+  const headerRef = useRef<HTMLElement>(null);
+  const user = useAppSelector((s) => s.auth.user);
+  const loading = useAppSelector((s) => s.auth.loading);
+  const { theme, setTheme } = useTheme();
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  const location = useLocation();
-
-  // 🔥 Redux auth state
-  const user = useSelector((state: RootState) => state.auth.user);
-  const loading = useSelector((state: RootState) => state.auth.loading);
-
-  // Add shadow when scrolling
-  React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4);
-    window.addEventListener('scroll', onScroll);
+  useEffect(() => {
+    const onScroll = () => {
+      const n = headerRef.current;
+      if (!n) return;
+      const s = (window.scrollY || document.documentElement.scrollTop || 0) > 6;
+      n.style.borderBottomColor = s ? 'var(--border)' : 'transparent';
+      n.style.boxShadow = s ? '0 8px 24px -20px rgba(0,0,0,.6)' : 'none';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const isHome = location.pathname === '/';
-  const isStudents = location.pathname.startsWith('/students');
-
-  const closeMobile = () => setMobileOpen(false);
-
-  /* -------------------- Small Spinner Component -------------------- */
-  const Spinner = () => (
-    <div className="flex h-5 w-5 items-center justify-center">
-      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
-    </div>
-  );
+  const me = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
+  const navLinkStyle: React.CSSProperties = {
+    padding: '8px 13px',
+    borderRadius: 'var(--r-ctl)',
+    textDecoration: 'none',
+    color: 'var(--text-muted)',
+    fontWeight: 500,
+    fontSize: 14,
+  };
 
   return (
-    <header
-      className={`bg-background/80 fixed inset-x-0 top-0 z-50 w-full border-b backdrop-blur transition-shadow ${
-        scrolled ? 'shadow-sm' : ''
-      }`}
-    >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3" onClick={closeMobile}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-600">
-              <img src="/logo2.png" alt="AU Logo" className="h-full w-full object-cover" />
-            </div>
-
-            <div className="hidden md:block">
-              <span className="text-lg leading-none font-semibold">Kalgidhar Trust Placements</span>
-              <div className="text-muted-foreground text-xs">Akal University | Eternal University</div>
-            </div>
+    <>
+      <header
+        ref={headerRef}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 120,
+          background: 'color-mix(in srgb, var(--bg) 82%, transparent)',
+          backdropFilter: 'saturate(140%) blur(12px)',
+          WebkitBackdropFilter: 'saturate(140%) blur(12px)',
+          borderBottom: '1px solid transparent',
+          transition: 'border-color .2s ease, box-shadow .2s ease',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            padding: '0 clamp(20px,3vw,48px)',
+            height: 76,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 20,
+          }}
+        >
+          <Link
+            to="/"
+            aria-label="Kalgidhar Placements home"
+            onClick={() => setMobileOpen(false)}
+            style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', flex: 'none' }}
+          >
+            <LogoMark />
+            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, gap: 4 }}>
+              <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: '-.01em' }}>Kalgidhar Placements</span>
+              <span style={{ fontSize: 12, color: 'var(--text-subtle)', fontWeight: 500, letterSpacing: '.01em' }}>
+                Akal University · Eternal University
+              </span>
+            </span>
           </Link>
 
-          {/* Right side */}
-          <div className="flex items-center gap-3">
-            <nav className="hidden items-center gap-2 md:flex">
+          <nav data-kp-show="desktop" style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+            {NAV.map((l) => (
               <Link
-                to="/"
-                onClick={closeMobile}
-                className={`text-sm font-medium hover:underline ${
-                  isHome ? 'underline underline-offset-4' : ''
-                }`}
+                key={l.to}
+                to={l.to}
+                style={navLinkStyle}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--text)';
+                  e.currentTarget.style.background = 'var(--surface-2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                  e.currentTarget.style.background = 'transparent';
+                }}
               >
-                Home
+                {l.label}
               </Link>
+            ))}
+          </nav>
 
-              <Link
-                to="/about"
-                onClick={closeMobile}
-                className={`text-sm font-medium hover:underline ${
-                  isHome ? 'underline underline-offset-4' : ''
-                }`}
-              >
-                About
-              </Link>
-            </nav>
-
-            <div className="hidden items-center gap-2 md:flex">
-              <ModeToggle />
-
-              {/* View Students */}
-              <Link to="/students" onClick={closeMobile}>
-                <Button variant={isStudents ? 'default' : 'outline'}>View Students</Button>
-              </Link>
-
-              {/* ------------------------------------ */}
-              {/* AUTH AREA (Redux version) */}
-              {/* ------------------------------------ */}
-
-              {loading ? (
-                // 🔵 Loading spinner while fetchCurrentUser() is running
-                <Button variant="outline" disabled>
-                  <Spinner />
-                </Button>
-              ) : user ? (
-                // 🟢 Logged-in: show profile avatar
-                <Link to="/profiles" onClick={closeMobile}>
-                  <button
-                    aria-label="User menu"
-                    className="focus:ring-ring flex items-center gap-2 rounded-full hover:cursor-pointer focus:ring-2 focus:outline-none"
-                  >
-                    <Avatar>
-                      <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
-                      <AvatarFallback>{user.firstName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </button>
-                </Link>
-              ) : (
-                // 🔴 Not logged in
-                <Link to="/login" onClick={closeMobile}>
-                  <Button variant="outline">Login / Signup</Button>
-                </Link>
-              )}
-            </div>
-
-            {/* Mobile button */}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
-              className="inline-flex items-center justify-center rounded-md p-2 md:hidden"
-              onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Toggle menu"
-              aria-expanded={mobileOpen}
+              data-kp-show="desktop"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              aria-label="Toggle dark mode"
+              title="Toggle theme"
+              style={{ width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', background: 'var(--surface-2)', border: '1px solid var(--border)' }}
             >
-              {mobileOpen ? <X /> : <Menu />}
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            {loading ? (
+              <span data-kp-sk="true" style={{ width: 34, height: 34, borderRadius: '50%' }} aria-hidden />
+            ) : user ? (
+              <Link
+                to="/profiles"
+                aria-label="Your profile"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  color: '#fff',
+                  background: 'var(--primary)',
+                  textDecoration: 'none',
+                  flex: 'none',
+                  border: '2px solid var(--bg-2)',
+                  boxShadow: '0 0 0 1px var(--border)',
+                }}
+              >
+                {initials(user.firstName, user.lastName) || 'U'}
+              </Link>
+            ) : (
+              <Link
+                data-kp-show="desktop"
+                to="/login"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '9px 17px',
+                  borderRadius: 'var(--r-ctl)',
+                  background: 'var(--primary)',
+                  color: 'var(--on-primary)',
+                  fontWeight: 550,
+                  fontSize: 14,
+                  textDecoration: 'none',
+                }}
+              >
+                Sign in
+              </Link>
+            )}
+
+            <button
+              data-kp-show="mobile"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 'var(--r-ctl)',
+                display: 'none',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'var(--text)',
+                border: '1px solid var(--border-strong)',
+                background: 'var(--surface)',
+                fontSize: 18,
+              }}
+            >
+              ☰
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Panel */}
-        {mobileOpen && (
-          <div className="mt-3 pb-4 md:hidden">
-            <div className="flex flex-col gap-2">
-              <Link
-                to="/"
-                onClick={closeMobile}
-                className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
+      {mobileOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300 }}>
+          <div onClick={() => setMobileOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.5)', animation: 'kpFade .15s ease' }} />
+          <div
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: 'min(82vw,320px)',
+              background: 'var(--bg-2)',
+              borderLeft: '1px solid var(--border)',
+              padding: 18,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              animation: 'kpPop .2s ease',
+              overflow: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>Menu</span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                style={{ width: 34, height: 34, borderRadius: 'var(--r-ctl)', cursor: 'pointer', color: 'var(--text)', border: '1px solid var(--border)', background: 'var(--surface)' }}
               >
-                Home
-              </Link>
-
-              <Link
-                to="/about"
-                onClick={closeMobile}
-                className="block rounded px-3 py-2 text-sm font-medium hover:bg-gray-600/40"
-              >
-                About
-              </Link>
-
-              <div className="mt-2 flex flex-col gap-2">
-                <Link to="/students" onClick={closeMobile}>
-                  <Button className="w-full">View Students</Button>
-                </Link>
-
-                {loading ? (
-                  <Button className="w-full" variant="outline" disabled>
-                    <Spinner />
-                  </Button>
-                ) : user ? (
-                  <Link
-                    to="/profiles"
-                    onClick={closeMobile}
-                    className="flex items-center gap-2 rounded px-3 py-2"
-                  >
-                    <Avatar>
-                      <AvatarImage src="/avatar-placeholder.png" alt="User avatar" />
-                      <AvatarFallback>{user.firstName?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm">Profile</span>
-                  </Link>
-                ) : (
-                  <Link to="/login" onClick={closeMobile}>
-                    <Button className="w-full" variant="outline">
-                      Login / Signup
-                    </Button>
-                  </Link>
-                )}
-              </div>
+                ✕
+              </button>
             </div>
+            {NAV.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                onClick={() => setMobileOpen(false)}
+                style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', textDecoration: 'none', color: 'var(--text)', fontWeight: 550 }}
+              >
+                {l.label}
+              </Link>
+            ))}
+            <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+            <span style={{ fontSize: 12, color: 'var(--text-subtle)', fontWeight: 600, padding: '0 14px', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              Theme
+            </span>
+            <div style={{ display: 'flex', gap: 8, padding: '6px 10px' }}>
+              {(['light', 'dark', 'system'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t)}
+                  style={{
+                    flex: 1,
+                    padding: 9,
+                    borderRadius: 'var(--r-ctl)',
+                    cursor: 'pointer',
+                    border: '1px solid var(--border)',
+                    background: theme === t ? 'var(--primary-soft)' : 'transparent',
+                    color: theme === t ? 'var(--primary)' : 'var(--text-muted)',
+                    fontWeight: 550,
+                    fontSize: 13,
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {t === 'system' ? 'Auto' : t}
+                </button>
+              ))}
+            </div>
+            <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+            {!user ? (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', textDecoration: 'none', fontWeight: 600, textAlign: 'center' }}
+              >
+                Sign in
+              </Link>
+            ) : (
+              <Link
+                to="/profiles"
+                onClick={() => setMobileOpen(false)}
+                style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', textDecoration: 'none', fontWeight: 600, textAlign: 'center' }}
+              >
+                Your profile
+              </Link>
+            )}
           </div>
-        )}
-      </div>
-    </header>
+        </div>
+      )}
+    </>
   );
 };
 

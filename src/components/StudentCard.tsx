@@ -1,102 +1,76 @@
-// src/components/StudentCard.tsx
+import React from 'react';
+import { Link } from 'react-router-dom';
+import type { CardVM } from '@/utils/cardVM';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MapPin, CalendarDays, School } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { formatDate } from '@/utils/formatDate';
+const onHover = (lift: boolean) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+  e.currentTarget.style.transform = lift ? 'translateY(-3px)' : 'none';
+  e.currentTarget.style.borderColor = lift ? 'var(--border-strong)' : 'var(--border)';
+  e.currentTarget.style.boxShadow = lift ? '0 16px 32px -20px rgba(0,0,0,.4)' : 'var(--shadow)';
+};
 
-interface StudentCardProps {
-  userId: string;
-  image_url: string;
-  name: string;
-  university?: string;
-  class: string;
-  location: string;
-  headline: string;
-  feild_preference: string;
-  open_to: string;
-  looking_for_start?: string;
-  looking_for_end?: string;
-  exprience: string;
-  skills: string[];
-}
-
-export default function StudentCard({
-  userId,
-  image_url,
-  name,
-  university, // 🟢 Destructure
-  class: className,
-  location,
-  headline,
-  feild_preference,
-  open_to,
-  looking_for_start,
-  looking_for_end,
-  exprience,
-  skills,
-}: StudentCardProps) {
-  const navigate = useNavigate();
-
-  const startDate = formatDate(looking_for_start);
-  const endDate = formatDate(looking_for_end);
-
+export default function StudentCard({ vm }: { vm: CardVM }) {
   return (
-    <Card
-      className="cursor-pointer rounded-2xl shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-      onClick={() => navigate(`/profiles/${userId}`)}
+    <Link
+      to={vm.href}
+      aria-label={`View profile of ${vm.name}`}
+      onMouseEnter={onHover(true)}
+      onMouseLeave={onHover(false)}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 13,
+        padding: 18,
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--r-card)',
+        textDecoration: 'none',
+        color: 'var(--text)',
+        boxShadow: 'var(--shadow)',
+        transition: 'border-color .18s,box-shadow .18s,transform .18s',
+      }}
     >
-      <CardContent className="flex items-start gap-4 p-4">
-        <img src={image_url} alt={name} className="bg-muted h-14 w-14 rounded-full object-cover" />
+      <span aria-hidden style={{ position: 'absolute', top: 18, right: 18, color: 'var(--text-subtle)', fontSize: 14 }}>↗</span>
 
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-foreground text-lg font-semibold capitalize">{name}</h2>
-            <span className="text-muted-foreground text-sm">{className}</span>
-
-            {/* 🟢 University Display */}
-            {university && (
-              <span className="text-muted-foreground flex items-center gap-1 text-sm">
-                <School className="h-3.5 w-3.5" /> {university}
-              </span>
-            )}
-
-            <span className="text-muted-foreground flex items-center gap-1 text-sm">
-              <MapPin className="h-3.5 w-3.5" /> {location}
-            </span>
-
-            <Badge className="rounded-full px-3 py-0.5">{exprience}</Badge>
-          </div>
-
-          <p className="text-muted-foreground mt-1 text-sm">{headline}</p>
-
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm font-medium">
-            <span className="text-muted-foreground">{feild_preference}</span>
-
-            {/* Updated Open To Section */}
-            <div className="flex items-center gap-2">
-              <Badge className="rounded-full px-3 py-0.5 capitalize">{open_to}</Badge>
-
-              {/* Show dates if available */}
-              {startDate && (
-                <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <CalendarDays className="h-3 w-3" />
-                  {startDate} {endDate ? ` - ${endDate}` : ''}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            {skills.map((skill, index) => (
-              <span key={index} className="bg-muted rounded-full px-3 py-1 text-sm">
-                {skill}
-              </span>
-            ))}
-          </div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', paddingRight: 22 }}>
+        <span
+          aria-hidden
+          style={{ width: 46, height: 46, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 15, color: '#fff', background: vm.avatarBg }}
+        >
+          {vm.initials}
+        </span>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontWeight: 600, fontSize: 15.5, lineHeight: 1.25, letterSpacing: '-.01em' }}>{vm.name}</span>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
+            {vm.headline}
+          </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <span style={{ fontSize: 11.5, fontWeight: 550, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+          {vm.oppLabel}
+        </span>
+        {vm.field && (
+          <span style={{ fontSize: 11.5, fontWeight: 500, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>
+            {vm.field}
+          </span>
+        )}
+      </div>
+
+      {vm.metaText && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>{vm.metaText}</div>}
+      {vm.hasAvail && <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>Available {vm.availLabel}</div>}
+
+      {vm.skills.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+          {vm.skills.map((sk, i) => (
+            <span key={i} style={{ fontSize: 11.5, padding: '3px 8px', borderRadius: 'var(--r-chip)', background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+              {sk}
+            </span>
+          ))}
+          {vm.hasExtra && <span style={{ fontSize: 11.5, padding: '3px 8px', color: 'var(--text-subtle)' }}>+{vm.extra}</span>}
+        </div>
+      )}
+    </Link>
   );
 }

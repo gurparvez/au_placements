@@ -1,509 +1,284 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Filter } from 'lucide-react';
-
-// UI Components
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import StudentCard from '@/components/StudentCard';
-
-// State/API
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAllStudents } from '@/context/student/studentSlice';
 import { skillsApi } from '@/api/skills';
+import StudentCard from '@/components/StudentCard';
+import { studentToCardVM } from '@/utils/cardVM';
+import { FILTER_SKILLS } from '@/utils/skills';
 
-// ----------------------------------------------------------------------
-// 1. REUSABLE COMPONENT: Skills Filter List
-// ----------------------------------------------------------------------
-interface SkillsFilterContentProps {
-  skillsList: string[];
-  skillsLoading: boolean;
-  selectedSkills: string[];
-  toggleSkill: (skill: string) => void;
-  skillSearchQuery: string;
-  setSkillSearchQuery: (val: string) => void;
-  clearSkills: () => void;
-}
+const PAGE = 9;
+const PADX = 'clamp(20px,3vw,48px)';
+const UNIVERSITIES = ['Any', 'Akal University', 'Eternal University'];
+const OPPORTUNITIES = ['Any', 'Internship', 'Job'];
+const EXP_RANGES = [
+  { v: 'Any', l: 'Experience' },
+  { v: '0-6', l: '0–6 months' },
+  { v: '6-12', l: '6–12 months' },
+  { v: '12-24', l: '12–24 months' },
+  { v: '24+', l: '24+ months' },
+];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const SkillsFilterContent: React.FC<SkillsFilterContentProps> = ({
-  skillsList,
-  skillsLoading,
-  selectedSkills,
-  toggleSkill,
-  skillSearchQuery,
-  setSkillSearchQuery,
-  clearSkills,
-}) => {
-  return (
-    <div className="flex h-full flex-col">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium">Skills</h3>
-        {selectedSkills.length > 0 && (
-          <button
-            className="text-muted-foreground text-[11px] hover:underline"
-            onClick={clearSkills}
-          >
-            Clear
-          </button>
-        )}
-      </div>
-
-      <div className="mb-3">
-        <Input
-          placeholder="Find a skill..."
-          value={skillSearchQuery}
-          onChange={(e) => setSkillSearchQuery(e.target.value)}
-          className="h-8 text-xs"
-        />
-      </div>
-
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
-        {skillsLoading && <div className="text-muted-foreground text-xs">Loading skills…</div>}
-
-        {!skillsLoading &&
-          skillsList
-            .filter((skill) => skill.toLowerCase().includes(skillSearchQuery.trim().toLowerCase()))
-            .map((skill) => (
-              <Button
-                key={skill}
-                variant={selectedSkills.includes(skill) ? 'default' : 'ghost'}
-                onClick={() => toggleSkill(skill)}
-                className="h-auto min-h-8 w-full justify-start rounded-full px-3 py-1 text-sm"
-              >
-                {skill}
-              </Button>
-            ))}
-
-        {!skillsLoading &&
-          skillsList.length > 0 &&
-          skillsList.filter((s) => s.toLowerCase().includes(skillSearchQuery.toLowerCase()))
-            .length === 0 && (
-            <div className="text-muted-foreground mt-2 text-xs">No matching skills found.</div>
-          )}
-      </div>
-
-      {selectedSkills.length > 0 && (
-        <div className="text-muted-foreground mt-3 text-[11px]">
-          Selected: <span className="font-medium">{selectedSkills.join(', ')}</span>
-        </div>
-      )}
-    </div>
-  );
+const selectStyle: React.CSSProperties = {
+  appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none',
+  padding: '10px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)',
+  background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
+  textAlign: 'center', textAlignLast: 'center',
 };
-
-// ----------------------------------------------------------------------
-// 2. MAIN PAGE COMPONENT
-// ----------------------------------------------------------------------
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '11px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
+  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+};
+const monthOf = (d?: string) => (d ? String(d).slice(0, 7) : '');
 
 const StudentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { allStudents, loading, error } = useAppSelector((s) => s.student);
+  const { allStudents, loading } = useAppSelector((s) => s.student);
 
-  // All skills
-  const [skillsList, setSkillsList] = useState<string[]>([]);
-  const [skillsLoading, setSkillsLoading] = useState(false);
-
-  // UI filter state
-  const [query, setQuery] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [openToFilter, setOpenToFilter] = useState<string>('');
-  const [dateFilter, setDateFilter] = useState<{ from: string; to: string }>({
-    from: '',
-    to: '',
-  });
-
-  const [fieldFilter, setFieldFilter] = useState<string | null>(null);
-  const [skillSearchQuery, setSkillSearchQuery] = useState('');
-  const [experienceRange, setExperienceRange] = useState<string | null>(null);
-  const [preferredField, setPreferredField] = useState<string | null>(null);
-
-  // University Filter State
-  const [universityFilter, setUniversityFilter] = useState<string>('');
-
-  /* ---------------------- FETCH DATA ---------------------- */
-  useEffect(() => {
-    dispatch(fetchAllStudents());
-  }, [dispatch]);
+  const [backendSkills, setBackendSkills] = useState<string[]>([]);
+  const [q, setQ] = useState('');
+  const [skills, setSkills] = useState<string[]>([]);
+  const [university, setUniversity] = useState('Any');
+  const [opportunity, setOpportunity] = useState('Any');
+  const [field, setField] = useState('Any');
+  const [exp, setExp] = useState('Any');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [skillQuery, setSkillQuery] = useState('');
+  const [visible, setVisible] = useState(PAGE);
+  const [sheet, setSheet] = useState(false);
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (!allStudents) dispatch(fetchAllStudents());
+  }, [dispatch, allStudents]);
 
+  useEffect(() => {
+    const c = new AbortController();
     (async () => {
       try {
-        setSkillsLoading(true);
-        const res = await skillsApi.getAllSkills({ signal: controller.signal });
-        const names = (res.skills ?? []).map((s) => s.displayName || s.name).filter(Boolean);
-        setSkillsList(Array.from(new Set(names)));
-      } catch (e) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to load skills:', e);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setSkillsLoading(false);
-        }
+        const res = await skillsApi.getAllSkills({ signal: c.signal });
+        setBackendSkills((res.skills ?? []).map((s) => s.displayName || s.name).filter(Boolean));
+      } catch {
+        /* ignore */
       }
     })();
-
-    return () => {
-      controller.abort();
-    };
+    return () => c.abort();
   }, []);
 
-  /* ---------------------- FILTER STUDENTS ---------------------- */
-  const filteredStudents = useMemo(() => {
-    if (!allStudents) return [];
-
-    const q = query.trim().toLowerCase();
-    const filterFromDate = dateFilter.from ? new Date(dateFilter.from) : null;
-    const filterToDate = dateFilter.to ? new Date(dateFilter.to) : null;
-
-    return allStudents.filter((student) => {
-      const fullName = `${student.user?.firstName ?? ''} ${student.user?.lastName ?? ''}`.trim();
-
-      const studentSkills: string[] = Array.isArray(student.skills)
-        ? student.skills
-            .map((s: any) => s?.displayName || s?.name || '')
-            .filter((x: string) => x.length > 0)
-        : [];
-
-      const openToType = student.looking_for?.type || '';
-      const studentFrom = student.looking_for?.from_date
-        ? new Date(student.looking_for.from_date)
-        : null;
-      const studentTo = student.looking_for?.to_date ? new Date(student.looking_for.to_date) : null;
-
-      const field: string = student.preferred_field ?? '';
-
-      // 🟢 FIX: Access university from the nested 'user' object
-      const uni = student.user?.university || '';
-
-      // 1. Search Query
-      if (q) {
-        const matchesQuery =
-          fullName.toLowerCase().includes(q) ||
-          (student.headline ?? '').toLowerCase().includes(q) ||
-          studentSkills.join(' ').toLowerCase().includes(q) ||
-          field.toLowerCase().includes(q);
-
-        if (!matchesQuery) return false;
-      }
-
-      // 2. Skills
-      if (selectedSkills.length > 0) {
-        const hasAll = selectedSkills.every((sk) => studentSkills.includes(sk));
-        if (!hasAll) return false;
-      }
-
-      // 3. Opportunity Type
-      if (openToFilter && openToType !== openToFilter) {
-        return false;
-      }
-
-      // 4. Date Range Logic
-      if (filterFromDate || filterToDate) {
-        if (!studentFrom) return false;
-        if (filterFromDate && studentFrom > filterFromDate) return false;
-        if (filterToDate && studentTo && studentTo < filterToDate) return false;
-      }
-
-      // 5. Preferred Field
-      if (preferredField && student.preferred_field !== preferredField) {
-        return false;
-      }
-
-      // 6. Experience
-      if (experienceRange) {
-        const exp = student.total_experience ?? 0;
-        if (experienceRange === '0-6' && !(exp >= 0 && exp <= 6)) return false;
-        if (experienceRange === '6-12' && !(exp >= 6 && exp <= 12)) return false;
-        if (experienceRange === '12-24' && !(exp >= 12 && exp <= 24)) return false;
-        if (experienceRange === '24+' && exp < 24) return false;
-      }
-
-      // 7. University Filter
-      if (universityFilter && uni !== universityFilter) {
-        return false;
-      }
-
-      return true;
+  const allSkills = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    [...FILTER_SKILLS, ...backendSkills].forEach((s) => {
+      const k = s.toLowerCase();
+      if (!seen.has(k)) { seen.add(k); out.push(s); }
     });
-  }, [
-    allStudents,
-    query,
-    selectedSkills,
-    openToFilter,
-    dateFilter,
-    experienceRange,
-    preferredField,
-    universityFilter,
-  ]);
+    return out;
+  }, [backendSkills]);
 
-  /* ---------------------- UI HELPERS ---------------------- */
-  const toggleSkill = (skill: string) => {
-    setSelectedSkills((prev) =>
-      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
-    );
-  };
-
-  const clearAllFilters = () => {
-    setQuery('');
-    setSelectedSkills([]);
-    setOpenToFilter('');
-    setDateFilter({ from: '', to: '' });
-    setFieldFilter(null);
-    setExperienceRange(null);
-    setPreferredField(null);
-    setUniversityFilter('');
-    setSkillSearchQuery('');
-  };
-
-  const uniquePreferredFields = useMemo(() => {
-    if (!allStudents) return [];
-    const fields = allStudents.map((s: any) => s.preferred_field).filter(Boolean);
-    return Array.from(new Set(fields));
+  const fields = useMemo(() => {
+    const set = new Set<string>();
+    (allStudents ?? []).forEach((s: any) => s.preferred_field && set.add(s.preferred_field));
+    return ['Any', ...Array.from(set)];
   }, [allStudents]);
 
-  const filtersActive =
-    query.trim() !== '' ||
-    selectedSkills.length > 0 ||
-    openToFilter !== '' ||
-    dateFilter.from !== '' ||
-    dateFilter.to !== '' ||
-    fieldFilter !== null ||
-    experienceRange !== null ||
-    preferredField !== null ||
-    universityFilter !== '';
+  const monthOpts = useMemo(() => {
+    const out: { v: string; l: string }[] = [];
+    const now = new Date();
+    for (let i = -6; i <= 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      out.push({ v: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, l: `${MONTHS[d.getMonth()]} ${d.getFullYear()}` });
+    }
+    return out;
+  }, []);
 
-  /* ---------------------- RENDER ---------------------- */
+  const filtered = useMemo(() => {
+    const list = allStudents ?? [];
+    const qq = q.trim().toLowerCase();
+    return list.filter((s: any) => {
+      const sn: string[] = Array.isArray(s.skills) ? s.skills.map((x: any) => x?.displayName || x?.name || '').filter(Boolean) : [];
+      if (qq) {
+        const hay = [s.user?.firstName, s.user?.lastName, s.headline, s.preferred_field, sn.join(' ')].join(' ').toLowerCase();
+        if (hay.indexOf(qq) < 0) return false;
+      }
+      if (skills.length) {
+        const low = sn.map((x) => x.toLowerCase());
+        if (!skills.every((k) => low.indexOf(k.toLowerCase()) >= 0)) return false;
+      }
+      if (university !== 'Any' && s.user?.university !== university) return false;
+      if (opportunity !== 'Any') {
+        const t = opportunity.toLowerCase() === 'internship' ? 'internship' : 'job';
+        if ((s.looking_for || {}).type !== t) return false;
+      }
+      if (field !== 'Any' && s.preferred_field !== field) return false;
+      if (exp !== 'Any') {
+        const e = s.total_experience || 0;
+        const ok = exp === '0-6' ? e < 6 : exp === '6-12' ? e >= 6 && e < 12 : exp === '12-24' ? e >= 12 && e < 24 : e >= 24;
+        if (!ok) return false;
+      }
+      if (from || to) {
+        const lf = s.looking_for || {};
+        const af = monthOf(lf.from_date);
+        const at = monthOf(lf.to_date) || '9999-12';
+        if (from && at < from) return false;
+        if (to && af > to) return false;
+      }
+      return true;
+    });
+  }, [allStudents, q, skills, university, opportunity, field, exp, from, to]);
+
+  useEffect(() => setVisible(PAGE), [q, skills, university, opportunity, field, exp, from, to]);
+
+  const toggleSkill = (sk: string) => setSkills((p) => (p.indexOf(sk) >= 0 ? p.filter((x) => x !== sk) : p.concat([sk])));
+  const clearAll = () => {
+    setQ(''); setSkills([]); setUniversity('Any'); setOpportunity('Any'); setField('Any'); setExp('Any'); setFrom(''); setTo(''); setSkillQuery('');
+  };
+
+  const cards = filtered.slice(0, visible).map(studentToCardVM);
+  const total = (allStudents ?? []).length;
+  const skillRows = allSkills.filter((s) => s.toLowerCase().indexOf(skillQuery.toLowerCase()) >= 0);
+
+  const SkillList = ({ box = 16, font = 13.5 }: { box?: number; font?: number }) => (
+    <>
+      {skillRows.map((name) => {
+        const sel = skills.indexOf(name) >= 0;
+        return (
+          <button key={name} onClick={() => toggleSkill(name)} aria-pressed={sel} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', color: 'var(--text)', background: sel ? 'var(--primary-soft)' : 'transparent', border: 'none' }}>
+            <span aria-hidden style={{ width: box, height: box, borderRadius: 5, border: `1.5px solid ${sel ? 'var(--primary)' : 'var(--border-strong)'}`, background: sel ? 'var(--primary)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flex: 'none' }}>{sel ? '✓' : ''}</span>
+            <span style={{ fontSize: font }}>{name}</span>
+          </button>
+        );
+      })}
+      {skillRows.length === 0 && <div style={{ padding: '14px 10px', fontSize: 13, color: 'var(--text-subtle)' }}>No skills found.</div>}
+    </>
+  );
+
   return (
-    <main className="bg-background text-foreground flex min-h-screen flex-col md:h-screen md:overflow-hidden">
-      {/* Header Container */}
-      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pt-24 pb-4 md:h-full md:px-6 md:pt-20 md:pb-0">
-        {/* Page Title */}
-        <div className="mb-6 flex shrink-0 flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Students</h1>
-            <p className="text-muted-foreground text-sm">
-              Browse students by skills, availability, and interests.
-            </p>
-          </div>
-
-          <div className="text-muted-foreground mt-2 text-left text-xs md:mt-0 md:text-right">
-            <div>{filteredStudents.length} students shown</div>
-            {filtersActive && (
-              <button
-                onClick={clearAllFilters}
-                aria-label="Clear all filters"
-                className="text-primary mt-1 text-xs font-medium hover:underline"
-              >
-                Clear all filters
-              </button>
-            )}
-          </div>
+    <section style={{ width: '100%', padding: `36px ${PADX} 80px` }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontSize: 'clamp(28px,4vw,38px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>Browse students</h1>
+          <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'left' }}>
+            <strong style={{ color: 'var(--text)', fontWeight: 650 }}>{filtered.length}</strong> of {total} students match your filters
+          </p>
         </div>
-
-        {/* MOBILE ONLY: Filter Button (Sheet Trigger) */}
-        <div className="mb-4 md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="flex w-full items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter by Skills ({selectedSkills.length})
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[350px]">
-              <SheetHeader>
-                <SheetTitle>Filter Skills</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4 h-full">
-                <SkillsFilterContent
-                  skillsList={skillsList}
-                  skillsLoading={skillsLoading}
-                  selectedSkills={selectedSkills}
-                  toggleSkill={toggleSkill}
-                  skillSearchQuery={skillSearchQuery}
-                  setSkillSearchQuery={setSkillSearchQuery}
-                  clearSkills={() => setSelectedSkills([])}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 gap-6 md:h-full md:min-h-0 md:grid-cols-12 md:pb-6">
-          {/* DESKTOP SIDEBAR: Independent Scroll */}
-          <aside className="hidden md:col-span-3 md:flex md:h-full md:min-h-0 md:flex-col">
-            <div className="bg-card flex h-full flex-col rounded-md border p-4">
-              <SkillsFilterContent
-                skillsList={skillsList}
-                skillsLoading={skillsLoading}
-                selectedSkills={selectedSkills}
-                toggleSkill={toggleSkill}
-                skillSearchQuery={skillSearchQuery}
-                setSkillSearchQuery={setSkillSearchQuery}
-                clearSkills={() => setSelectedSkills([])}
-              />
-            </div>
-          </aside>
-
-          {/* MAIN CONTENT AREA */}
-          <main className="flex flex-col md:col-span-9 md:h-full md:min-h-0">
-            {/* Search & Filters Bar */}
-            <div className="mb-4 shrink-0 space-y-4">
-              {/* Search */}
-              <div className="w-full">
-                <Input
-                  placeholder="Search students by name, skill, or field..."
-                  aria-label="Search students"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-
-              {/* Filter Chips */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* University Filter */}
-                <select
-                  value={universityFilter}
-                  onChange={(e) => setUniversityFilter(e.target.value)}
-                  aria-label="Filter by university"
-                  className="bg-card rounded-md border px-3 py-1.5 text-sm"
-                >
-                  <option value="">University (Any)</option>
-                  <option value="Akal University">Akal University</option>
-                  <option value="Eternal University">Eternal University</option>
-                </select>
-
-                <select
-                  value={openToFilter}
-                  onChange={(e) => setOpenToFilter(e.target.value)}
-                  aria-label="Filter by opportunity type"
-                  className="bg-card rounded-md border px-3 py-1.5 text-sm"
-                >
-                  <option value="">Opportunity (Any)</option>
-                  <option value="internship">Internship</option>
-                  <option value="job">Placement / Job</option>
-                </select>
-
-                {/* Date Filters */}
-                <div className="bg-card flex items-center gap-2 rounded-md border px-2 py-1">
-                  <span className="text-muted-foreground text-xs">From:</span>
-                  <input
-                    type="date"
-                    aria-label="Filter from date"
-                    className="bg-transparent text-sm focus:outline-none"
-                    value={dateFilter.from}
-                    onChange={(e) => setDateFilter((prev) => ({ ...prev, from: e.target.value }))}
-                  />
-                </div>
-
-                <div className="bg-card flex items-center gap-2 rounded-md border px-2 py-1">
-                  <span className="text-muted-foreground text-xs">To:</span>
-                  <input
-                    type="date"
-                    aria-label="Filter to date"
-                    className="bg-transparent text-sm focus:outline-none"
-                    value={dateFilter.to}
-                    onChange={(e) => setDateFilter((prev) => ({ ...prev, to: e.target.value }))}
-                  />
-                </div>
-
-                <select
-                  value={experienceRange ?? ''}
-                  onChange={(e) => setExperienceRange(e.target.value || null)}
-                  aria-label="Filter by experience"
-                  className="bg-card rounded-md border px-3 py-1.5 text-sm"
-                >
-                  <option value="">Experience (any)</option>
-                  <option value="0-6">0-6 months</option>
-                  <option value="6-12">6-12 months</option>
-                  <option value="12-24">1-2 years</option>
-                  <option value="24+">2+ years</option>
-                </select>
-
-                <select
-                  value={preferredField ?? ''}
-                  onChange={(e) => setPreferredField(e.target.value || null)}
-                  aria-label="Filter by field"
-                  className="bg-card max-w-[150px] truncate rounded-md border px-3 py-1.5 text-sm"
-                >
-                  <option value="">Field (any)</option>
-                  {uniquePreferredFields.map((field) => (
-                    <option key={field} value={field}>
-                      {field}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Separator />
-            </div>
-
-            {/* Students List */}
-            <div className="flex-1 pb-10 md:overflow-y-auto md:pr-2">
-              {loading && <div className="text-muted-foreground text-center text-sm">Loading…</div>}
-
-              {!loading && error && (
-                <div className="text-center text-sm text-red-500">
-                  Failed to load students: {error}
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {!loading &&
-                  !error &&
-                  filteredStudents.map((st: any) => {
-                    const name = `${st.user?.firstName ?? ''} ${st.user?.lastName ?? ''}`.trim();
-                    const courseName = st.education?.[0]?.course?.name ?? '—';
-                    const skillsNames: string[] = Array.isArray(st.skills)
-                      ? st.skills
-                          .map((s: any) => s?.displayName || s?.name || '')
-                          .filter((x: string) => x.length > 0)
-                      : [];
-
-                    const rawType = st.looking_for?.type;
-                    const openToLabel = rawType
-                      ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
-                      : '—';
-
-                    const experienceLabel = `${
-                      typeof st.total_experience === 'number' ? st.total_experience : 0
-                    } months`;
-
-                    return (
-                      <StudentCard
-                        key={st._id}
-                        userId={st.user._id}
-                        image_url={st.profile_image || '/avatar-placeholder.png'}
-                        name={name}
-                        // 🟢 FIX: Pass university from the nested user object
-                        university={st.user?.university}
-                        class={courseName}
-                        location={st.location}
-                        headline={st.headline}
-                        feild_preference={st.preferred_field}
-                        open_to={openToLabel}
-                        exprience={experienceLabel}
-                        skills={skillsNames}
-                        looking_for_start={st.looking_for?.from_date}
-                        looking_for_end={st.looking_for?.to_date}
-                      />
-                    );
-                  })}
-              </div>
-
-              {!loading && !error && filteredStudents.length === 0 && (
-                <div className="text-muted-foreground mt-10 text-center text-sm">
-                  No students found. Try changing filters or search text.
-                </div>
-              )}
-            </div>
-          </main>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>Skills filter</button>
+          <button onClick={clearAll} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text-muted)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>Clear all filters</button>
         </div>
       </div>
-    </main>
+
+      {/* Filters — all on one line, vertically centered */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 24, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+          <span aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)', fontSize: 15 }}>⌕</span>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, headline, skill, field…" aria-label="Search students" style={{ ...inputStyle, paddingLeft: 34 }} />
+        </div>
+        <select value={university} onChange={(e) => setUniversity(e.target.value)} aria-label="University" style={selectStyle}>
+          {UNIVERSITIES.map((u) => <option key={u} value={u}>{u === 'Any' ? 'University' : u}</option>)}
+        </select>
+        <select value={opportunity} onChange={(e) => setOpportunity(e.target.value)} aria-label="Opportunity" style={selectStyle}>
+          {OPPORTUNITIES.map((o) => <option key={o} value={o}>{o === 'Any' ? 'Opportunity' : o}</option>)}
+        </select>
+        <select value={field} onChange={(e) => setField(e.target.value)} aria-label="Preferred field" style={{ ...selectStyle, maxWidth: 200 }}>
+          {fields.map((f) => <option key={f} value={f}>{f === 'Any' ? 'Field' : f}</option>)}
+        </select>
+        <select value={exp} onChange={(e) => setExp(e.target.value)} aria-label="Experience" style={selectStyle}>
+          {EXP_RANGES.map((er) => <option key={er.v} value={er.v}>{er.l}</option>)}
+        </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>Available</span>
+          <select value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Available from" style={{ ...selectStyle, padding: '11px 12px', fontSize: 13.5 }}>
+            <option value="">Any month</option>
+            {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+          </select>
+          <span aria-hidden style={{ color: 'var(--text-subtle)' }}>→</span>
+          <select value={to} onChange={(e) => setTo(e.target.value)} aria-label="Available until" style={{ ...selectStyle, padding: '11px 12px', fontSize: 13.5 }}>
+            <option value="">Any month</option>
+            {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Body: skill sidebar + results */}
+      <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: '264px 1fr', gap: 26, marginTop: 26, alignItems: 'start' }}>
+        <aside data-kp-show="desktop" style={{ position: 'sticky', top: 96, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 18, boxShadow: 'var(--shadow)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span style={{ fontWeight: 650, fontSize: 15 }}>Filter by skill</span>
+            {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 12.5, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
+          </div>
+          <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" aria-label="Search skills" style={{ ...inputStyle, padding: '9px 12px', fontSize: 13.5, marginBottom: 12 }} />
+          {skills.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {skills.map((name) => (
+                <button key={name} onClick={() => toggleSkill(name)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 550, padding: '4px 9px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-soft-border)', cursor: 'pointer' }}>
+                  {name} <span aria-hidden>×</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{ maxHeight: 360, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 1, margin: '0 -6px' }}>
+            <SkillList />
+          </div>
+        </aside>
+
+        <div>
+          {loading && !allStudents ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 18 }}>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <span data-kp-sk="true" style={{ width: 46, height: 46, borderRadius: '50%' }} />
+                    <div style={{ flex: 1 }}>
+                      <span data-kp-sk="true" style={{ display: 'block', height: 14, width: '60%', marginBottom: 8 }} />
+                      <span data-kp-sk="true" style={{ display: 'block', height: 11, width: '85%' }} />
+                    </div>
+                  </div>
+                  <span data-kp-sk="true" style={{ display: 'block', height: 11, width: '100%', marginTop: 18 }} />
+                  <span data-kp-sk="true" style={{ display: 'block', height: 11, width: '70%', marginTop: 10 }} />
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '64px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
+              <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto', color: 'var(--text-subtle)' }}>⌕</div>
+              <h3 style={{ fontSize: 19, fontWeight: 650, margin: '18px 0 0' }}>No students found</h3>
+              <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>Try changing or clearing your filters.</p>
+              <button onClick={clearAll} style={{ marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Clear all filters</button>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
+                {cards.map((vm) => <StudentCard key={vm.id} vm={vm} />)}
+              </div>
+              {filtered.length > visible && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+                  <button onClick={() => setVisible((v) => v + PAGE)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer' }}>Load more students</button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile filter sheet */}
+      {sheet && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 310 }}>
+          <div onClick={() => setSheet(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.5)', animation: 'kpFade .15s ease' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '80vh', background: 'var(--bg-2)', borderTopLeftRadius: 18, borderTopRightRadius: 18, borderTop: '1px solid var(--border)', padding: 18, display: 'flex', flexDirection: 'column', animation: 'kpPop .2s ease' }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border-strong)', margin: '0 auto 14px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontWeight: 650, fontSize: 16 }}>Filter by skill</span>
+              {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 13, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
+            </div>
+            <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" style={{ ...inputStyle, background: 'var(--surface)', marginBottom: 12 }} />
+            <div style={{ overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <SkillList box={18} font={14} />
+            </div>
+            <button onClick={() => setSheet(false)} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none' }}>Show {filtered.length} results</button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 

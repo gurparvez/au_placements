@@ -1,340 +1,351 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { FolderGit2, Plus, Trash2, Github, Globe, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
 import { type ProjectPayload } from '@/api/students.types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import skillsApi, { type Skill } from '@/api/skills';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Edit2, Plus, Trash2, Github, Globe, Loader2 } from 'lucide-react';
 import SkillPicker from '@/components/SkillPicker';
-import skillsApi, { type Skill } from '@/api/skills'; 
+import SectionCard from './SectionCard';
 
-// Local Interface to bridge the gap between API Response and Form State
+// Local interface bridging the API response and form state.
 interface ProjectUI {
   _id?: string;
   title: string;
   start_date: string;
   end_date?: string;
   on_going?: boolean;
-  tech_used: string[];          // IDs for API
-  tech_used_resolved?: Skill[]; // Full Objects for UI
+  tech_used: string[]; // IDs for the API
+  tech_used_resolved?: Skill[]; // Full objects for display
   code_url?: string;
   live_url?: string;
   description?: string;
 }
 
+const toInputDate = (d?: string) => (d ? new Date(d).toISOString().split('T')[0] : '');
+
 const ProjectsSection: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { profile, loading } = useAppSelector((state) => state.student);
+  const { profile } = useAppSelector((state) => state.student);
 
-  // Local state for editing
-  const [projectList, setProjectList] = useState<ProjectUI[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [resolvingSkills, setResolvingSkills] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState<ProjectUI[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
-  // --- 1. Load Projects & FETCH SKILLS from API ---
+  // Resolve project tech_used skill IDs into full Skill objects for display.
   useEffect(() => {
-    const fetchSkillsForProjects = async () => {
-      if (!profile?.projects) return;
+    let cancelled = false;
 
-      setResolvingSkills(true);
+    const fetchSkillsForProjects = async () => {
+      if (!profile?.projects) {
+        setList([]);
+        return;
+      }
+
+      setLoadError(false);
 
       try {
-        // Map over projects and create a Promise to resolve each one
         const resolvedProjectsPromises = profile.projects.map(async (p: any) => {
-          // Ensure we have an array of IDs
-          const skillIds: string[] = p.tech_used 
+          // Normalise tech_used into an array of IDs.
+          const skillIds: string[] = p.tech_used
             ? p.tech_used.map((t: any) => (typeof t === 'string' ? t : t._id))
             : [];
 
-          // Fetch full skill details for these IDs
-          // We use Promise.all to fetch them in parallel for speed
-          const skillPromises = skillIds.map((id) => 
-            skillsApi.getSkillById(id)
-              .then((res) => res.skill) // Extract .skill from response
-              .catch(() => null) // Return null if fail, filter later
+          // Fetch full skill details in parallel; null on failure (filtered out).
+          const skillPromises = skillIds.map((id) =>
+            skillsApi
+              .getSkillById(id)
+              .then((res) => res.skill)
+              .catch(() => null),
           );
 
           const fetchedSkills = await Promise.all(skillPromises);
           const validSkills = fetchedSkills.filter((s): s is Skill => s !== null);
 
-          // Return the constructed ProjectUI object
           return {
             _id: p._id,
             title: p.title || '',
-            start_date: p.start_date ? new Date(p.start_date).toISOString().split('T')[0] : '',
-            end_date: p.end_date ? new Date(p.end_date).toISOString().split('T')[0] : '',
+            start_date: toInputDate(p.start_date),
+            end_date: toInputDate(p.end_date),
             on_going: p.on_going || false,
             description: p.description || '',
             code_url: p.code_url || '',
             live_url: p.live_url || '',
             tech_used: skillIds,
-            tech_used_resolved: validSkills, // <--- Hydrated from API
-          };
+            tech_used_resolved: validSkills,
+          } as ProjectUI;
         });
 
         const resolvedList = await Promise.all(resolvedProjectsPromises);
-        setProjectList(resolvedList);
+        if (!cancelled) setList(resolvedList);
       } catch (error) {
-        console.error("Error resolving project skills:", error);
-      } finally {
-        setResolvingSkills(false);
+        console.error('Error resolving project skills:', error);
+        if (!cancelled) setLoadError(true);
       }
     };
 
     fetchSkillsForProjects();
-  }, [profile]); // Re-run if profile changes
+    return () => {
+      cancelled = true;
+    };
+  }, [profile]);
 
   if (!profile) return null;
 
-  // --- Handlers ---
+  const change = (i: number, field: keyof ProjectUI, value: any) =>
+    setList((prev) => prev.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)));
 
-  const handleInputChange = (index: number, field: keyof ProjectUI, value: any) => {
-    const updatedList = [...projectList];
-    updatedList[index] = { ...updatedList[index], [field]: value };
-    setProjectList(updatedList);
-  };
+  const changeSkills = (i: number, newIds: string[]) =>
+    setList((prev) => prev.map((row, idx) => (idx === i ? { ...row, tech_used: newIds } : row)));
 
-  const handleSkillsChange = (index: number, newSkillIds: string[]) => {
-    // Note: We don't need to manually update tech_used_resolved here because 
-    // SkillPicker manages the UI display of selected items internally,
-    // and we only need to send the IDs (tech_used) to the backend on Save.
-    const updatedList = [...projectList];
-    updatedList[index] = { 
-      ...updatedList[index], 
-      tech_used: newSkillIds 
-    };
-    setProjectList(updatedList);
-  };
-
-  const handleAddNew = () => {
-    setProjectList([
-      ...projectList,
-      { 
-        title: '', 
-        start_date: '', 
-        description: '', 
-        tech_used: [], 
-        tech_used_resolved: [] 
-      },
+  const addRow = () =>
+    setList((prev) => [
+      ...prev,
+      { title: '', start_date: '', description: '', tech_used: [], tech_used_resolved: [] },
     ]);
-  };
 
-  const handleDelete = (index: number) => {
-    const updatedList = projectList.filter((_, i) => i !== index);
-    setProjectList(updatedList);
-  };
+  const removeRow = (i: number) => setList((prev) => prev.filter((_, idx) => idx !== i));
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    // The useEffect will naturally re-sync data if needed, or we can leave it
-  };
+  const save = async () => {
+    setSaving(true);
+    try {
+      // Keep only rows with the required fields filled in.
+      const cleaned = list.filter((p) => p.title.trim() && p.start_date);
 
-  const handleSave = () => {
-    const isValid = projectList.every(p => p.title && p.start_date);
-    if (!isValid) {
-      alert("Title and Start Date are required for all projects.");
-      return;
+      const projects: ProjectPayload[] = cleaned.map((p) => ({
+        title: p.title,
+        start_date: p.start_date,
+        end_date: p.on_going ? undefined : p.end_date || undefined,
+        on_going: p.on_going,
+        tech_used: p.tech_used, // send IDs
+        code_url: p.code_url || undefined,
+        live_url: p.live_url || undefined,
+        description: p.description,
+      }));
+
+      await dispatch(updateStudentProfile({ projects })).unwrap();
+      toast.success('Projects updated');
+      setOpen(false);
+    } catch (err: any) {
+      toast.error(typeof err === 'string' ? err : 'Could not save. Please try again.');
+    } finally {
+      setSaving(false);
     }
-
-    const payload: ProjectPayload[] = projectList.map((p) => ({
-      title: p.title,
-      start_date: p.start_date,
-      end_date: p.end_date || undefined,
-      on_going: p.on_going,
-      tech_used: p.tech_used, // Send IDs
-      code_url: p.code_url || undefined,
-      live_url: p.live_url || undefined,
-      description: p.description
-    }));
-
-    dispatch(updateStudentProfile({ projects: payload }));
-    setIsEditing(false);
   };
+
+  const items = list;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <h2 className="text-lg font-semibold">Projects</h2>
-        {!isEditing && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            disabled={resolvingSkills} // Disable edit while initial skills serve loads
-            className="h-8 w-8 p-0"
-          >
-            {resolvingSkills ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit2 className="h-4 w-4" />}
-          </Button>
+    <>
+      <SectionCard title="Projects" onEdit={() => setOpen(true)} isEmpty={items.length === 0}>
+        {loadError && (
+          <p className="text-danger mb-3 text-sm">
+            Couldn't load project details. Please refresh.
+          </p>
         )}
-      </CardHeader>
 
-      <CardContent className="space-y-4 pt-4">
-        {/* --- VIEW MODE --- */}
-        {!isEditing && (
-          <div className="space-y-4">
-            {resolvingSkills && projectList.length === 0 && (
-               <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                 <Loader2 className="h-3 w-3 animate-spin" /> Loading project details...
-               </div>
-            )}
-
-            {!resolvingSkills && projectList.length === 0 && (
-              <p className="text-muted-foreground text-sm">No projects added.</p>
-            )}
-
-            {projectList.map((pr) => (
-              <div key={pr._id} className="bg-muted/40 space-y-2 rounded-md p-4 border border-border/50">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="font-semibold text-base flex items-center gap-2">
-                      {pr.title}
-                    </div>
-                    <div className="text-muted-foreground text-xs mt-0.5">
-                       {new Date(pr.start_date).getFullYear()} 
-                       {pr.on_going ? ' - Present' : ''}
-                    </div>
-                  </div>
-                  
-                  {/* Links */}
-                  <div className="flex gap-3">
-                    {pr.code_url && (
-                      <a href={pr.code_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <Github className="h-4 w-4" />
-                      </a>
-                    )}
-                    {pr.live_url && (
-                      <a href={pr.live_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <Globe className="h-4 w-4" />
-                      </a>
-                    )}
-                  </div>
+        {items.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Showcase the projects you've built to stand out to recruiters.
+          </p>
+        ) : (
+          <ol className="divide-y divide-border">
+            {items.map((pr, i) => (
+              <li key={pr._id ?? i} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                <div className="bg-surface-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                  <FolderGit2 className="text-muted-foreground h-5 w-5" aria-hidden />
                 </div>
-
-                {pr.description && (
-                  <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
-                    {pr.description}
-                  </p>
-                )}
-
-                {/* --- SKILL BUBBLES --- */}
-                {pr.tech_used_resolved && pr.tech_used_resolved.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {pr.tech_used_resolved.map((skill) => (
-                      <span
-                        key={skill._id}
-                        // Bubble Styling
-                        className="bg-secondary text-secondary-foreground inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium"
-                      >
-                        {skill.displayName || skill.name}
-                      </span>
-                    ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-foreground font-medium">{pr.title}</h3>
+                      <p className="data text-text-subtle text-sm">
+                        {pr.start_date ? new Date(pr.start_date).getFullYear() : ''}
+                        {pr.on_going ? ' – Ongoing' : ''}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 gap-3">
+                      {pr.code_url && (
+                        <a
+                          href={pr.code_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="View source code"
+                          className="text-muted-foreground hover:text-foreground rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                          <Github className="h-4 w-4" aria-hidden />
+                        </a>
+                      )}
+                      {pr.live_url && (
+                        <a
+                          href={pr.live_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="View live project"
+                          className="text-muted-foreground hover:text-foreground rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                          <Globe className="h-4 w-4" aria-hidden />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
 
-        {/* --- EDIT MODE --- */}
-        {isEditing && (
-          <div className="space-y-6">
-            {projectList.map((pr, index) => (
-              <div key={index} className="border-muted relative rounded-md border p-4 shadow-sm">
-                
+                  {pr.description && (
+                    <p className="text-muted-foreground mt-2 text-sm leading-relaxed whitespace-pre-wrap">
+                      {pr.description}
+                    </p>
+                  )}
+
+                  {pr.tech_used_resolved && pr.tech_used_resolved.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {pr.tech_used_resolved.map((skill) => (
+                        <span
+                          key={skill._id}
+                          className="bg-surface-2 text-muted-foreground inline-flex items-center rounded-[7px] border border-border px-2.5 py-0.5 text-xs"
+                        >
+                          {skill.displayName || skill.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </SectionCard>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit projects</DialogTitle>
+            <DialogDescription>Showcase the projects you've built.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            {list.map((pr, i) => (
+              <div key={i} className="bg-bg-2 relative rounded-lg border border-border p-4">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-2 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => handleDelete(index)}
+                  className="text-danger absolute top-2 right-2 h-8 w-8"
+                  onClick={() => removeRow(i)}
+                  aria-label={`Delete project ${i + 1}`}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" aria-hidden />
                 </Button>
 
-                <div className="grid gap-4">
-                  {/* Title */}
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="text-xs font-medium">Project Title *</label>
+                    <label htmlFor={`proj-title-${i}`} className="mb-1.5 block text-sm font-medium">
+                      Title
+                    </label>
                     <Input
+                      id={`proj-title-${i}`}
                       value={pr.title}
-                      onChange={(e) => handleInputChange(index, 'title', e.target.value)}
+                      onChange={(e) => change(i, 'title', e.target.value)}
                       placeholder="e.g. Portfolio Website"
                     />
                   </div>
 
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="text-xs font-medium">Start Date *</label>
+                      <label
+                        htmlFor={`proj-start-${i}`}
+                        className="mb-1.5 block text-sm font-medium"
+                      >
+                        Start date
+                      </label>
                       <Input
+                        id={`proj-start-${i}`}
                         type="date"
-                        value={pr.start_date}
-                        onChange={(e) => handleInputChange(index, 'start_date', e.target.value)}
+                        value={toInputDate(pr.start_date)}
+                        onChange={(e) => change(i, 'start_date', e.target.value)}
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium">End Date</label>
+                      <label htmlFor={`proj-end-${i}`} className="mb-1.5 block text-sm font-medium">
+                        End date <span className="text-muted-foreground">(blank = present)</span>
+                      </label>
                       <Input
+                        id={`proj-end-${i}`}
                         type="date"
                         disabled={pr.on_going}
-                        value={pr.end_date}
-                        onChange={(e) => handleInputChange(index, 'end_date', e.target.value)}
+                        value={toInputDate(pr.end_date)}
+                        onChange={(e) => change(i, 'end_date', e.target.value)}
                       />
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Checkbox 
-                          id={`ongoing-${index}`} 
-                          checked={pr.on_going}
-                          onCheckedChange={(checked) => handleInputChange(index, 'on_going', checked)}
+                      <label
+                        htmlFor={`proj-ongoing-${i}`}
+                        className="mt-2 flex items-center gap-2 text-sm font-medium"
+                      >
+                        <input
+                          id={`proj-ongoing-${i}`}
+                          type="checkbox"
+                          className="accent-primary h-4 w-4"
+                          checked={!!pr.on_going}
+                          onChange={(e) => change(i, 'on_going', e.target.checked)}
                         />
-                        <label
-                          htmlFor={`ongoing-${index}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Ongoing
-                        </label>
-                      </div>
+                        Ongoing
+                      </label>
                     </div>
                   </div>
 
-                  {/* Links */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                       <label className="text-xs font-medium flex items-center gap-1"><Github className="w-3 h-3"/> Code URL</label>
-                       <Input 
-                          value={pr.code_url}
-                          onChange={(e) => handleInputChange(index, 'code_url', e.target.value)}
-                          placeholder="https://github.com/..."
-                       />
+                      <label htmlFor={`proj-code-${i}`} className="mb-1.5 block text-sm font-medium">
+                        Code URL
+                      </label>
+                      <Input
+                        id={`proj-code-${i}`}
+                        value={pr.code_url}
+                        onChange={(e) => change(i, 'code_url', e.target.value)}
+                        placeholder="https://github.com/..."
+                      />
                     </div>
                     <div>
-                       <label className="text-xs font-medium flex items-center gap-1"><Globe className="w-3 h-3"/> Live URL</label>
-                       <Input 
-                          value={pr.live_url}
-                          onChange={(e) => handleInputChange(index, 'live_url', e.target.value)}
-                          placeholder="https://my-app.com"
-                       />
+                      <label htmlFor={`proj-live-${i}`} className="mb-1.5 block text-sm font-medium">
+                        Live URL
+                      </label>
+                      <Input
+                        id={`proj-live-${i}`}
+                        value={pr.live_url}
+                        onChange={(e) => change(i, 'live_url', e.target.value)}
+                        placeholder="https://my-app.com"
+                      />
                     </div>
                   </div>
 
-                  {/* Description */}
                   <div>
-                    <label className="text-xs font-medium">Description</label>
+                    <label htmlFor={`proj-desc-${i}`} className="mb-1.5 block text-sm font-medium">
+                      Description
+                    </label>
                     <Textarea
+                      id={`proj-desc-${i}`}
+                      rows={3}
                       value={pr.description}
-                      onChange={(e) => handleInputChange(index, 'description', e.target.value)}
-                      rows={2}
+                      onChange={(e) => change(i, 'description', e.target.value)}
+                      placeholder="What did you build?"
                     />
                   </div>
 
-                  {/* SKILL PICKER */}
                   <div>
-                    <SkillPicker 
-                      label="Technologies Used"
-                      selected={pr.tech_used} 
-                      setSelected={(newIds) => handleSkillsChange(index, newIds)}
-                      // Crucial: Pass the fetched objects so chips show names immediately
+                    <SkillPicker
+                      label="Technologies used"
+                      selected={pr.tech_used}
+                      setSelected={(newIds) => changeSkills(i, newIds)}
                       initialData={pr.tech_used_resolved}
                     />
                   </div>
@@ -342,26 +353,28 @@ const ProjectsSection: React.FC = () => {
               </div>
             ))}
 
-            <Button
-              variant="outline"
-              className="w-full border-dashed"
-              onClick={handleAddNew}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Project
+            <Button variant="outline" className="w-full border-dashed" onClick={addRow}>
+              <Plus className="mr-1 h-4 w-4" aria-hidden /> Add project
             </Button>
-
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

@@ -1,222 +1,167 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, Search, UserCheck, ArrowRight, Briefcase, GraduationCap } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/context/hooks';
+import { fetchAllStudents } from '@/context/student/studentSlice';
+import StudentCard from '@/components/StudentCard';
+import { studentToCardVM } from '@/utils/cardVM';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+const STATS = [
+  { num: '120+', label: 'Students placed' },
+  { num: '30+', label: 'Partner companies' },
+  { num: '2', label: 'University campuses' },
+  { num: '50+', label: 'Recruitment drives' },
+];
 
-// Redux Hooks
-import { useAppSelector } from '@/context/hooks';
+const STEPS = [
+  { n: '1', title: 'Create your profile', body: 'Sign in with your university ID and build a rich profile in minutes — experience, projects, skills and more.' },
+  { n: '2', title: 'Get discovered', body: 'Recruiters browse the register and filter by skills, field, university and availability to find you.' },
+  { n: '3', title: 'Get hired', body: 'Get contacted directly by email about internships and roles that match your goals.' },
+];
+
+const ctaPrimary: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', borderRadius: 'var(--r-ctl)',
+  background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, textDecoration: 'none',
+};
+const ctaOutline: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)',
+  background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 15, textDecoration: 'none', border: '1px solid var(--border-strong)',
+};
+const eyebrow: React.CSSProperties = { fontSize: 12.5, fontWeight: 650, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '.06em' };
 
 const LandingPage: React.FC = () => {
-  // Get Auth State
-  const { user, loading } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((s) => s.auth);
+  const { allStudents } = useAppSelector((s) => s.student);
+
+  useEffect(() => {
+    if (!allStudents) dispatch(fetchAllStudents());
+  }, [dispatch, allStudents]);
+
+  const cards = (allStudents ?? []).slice(0, 6).map(studentToCardVM);
 
   return (
-    <div className="bg-background text-foreground min-h-screen transition-colors duration-300">
-      {/* ------------------- HERO SECTION ------------------- */}
-      <section className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24">
-        {/* Decorative Glow */}
-        <div className="pointer-events-none absolute inset-x-0 top-16 -z-10 flex justify-center">
-          <div className="bg-primary/20 h-96 w-96 rounded-full blur-[100px]" />
+    <>
+      {/* ===================== HERO ===================== */}
+      <section style={{ position: 'relative', overflow: 'hidden' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px 40px' }}>
+          <div data-kp-hero="true" style={{ display: 'grid', gridTemplateColumns: '1.05fr .95fr', gap: 48, alignItems: 'center' }}>
+            <div style={{ animation: 'kpRise .5s ease' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 600, border: '1px solid var(--primary-soft-border)' }}>
+                The campus placement register
+              </span>
+              <h1 style={{ fontSize: 'clamp(34px,5vw,54px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 700, margin: '18px 0 0', maxWidth: '14ch' }}>
+                Connecting talent with opportunity.
+              </h1>
+              <p style={{ fontSize: 'clamp(15px,1.6vw,18px)', color: 'var(--text-muted)', margin: '18px 0 0', maxWidth: '46ch', lineHeight: 1.6 }}>
+                Graduating students of Akal &amp; Eternal University build one rich profile. Recruiters browse, filter and reach out directly. No job posts, no noise — just talent.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
+                <Link to="/students" style={ctaPrimary}>Browse students <span aria-hidden>→</span></Link>
+                <Link to="/login" style={ctaOutline}>Create your profile</Link>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 30 }}>
+                <div style={{ display: 'flex' }}>
+                  {[['HK', '#2563EB'], ['AM', '#4F6B8F'], ['NS', '#3F7D8C']].map(([t, bg], i) => (
+                    <span key={t} style={{ width: 32, height: 32, borderRadius: '50%', background: bg, border: '2px solid var(--bg)', marginLeft: i ? -9 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 600 }}>{t}</span>
+                  ))}
+                  <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--surface-3)', border: '2px solid var(--bg)', marginLeft: -9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}>+120</span>
+                </div>
+                <span style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>120+ students registered and counting</span>
+              </div>
+            </div>
+
+            <div style={{ animation: 'kpRise .6s ease' }}>
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: 'var(--shadow)', padding: 22, position: 'relative' }}>
+                <span style={{ position: 'absolute', top: 18, right: 18, fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-soft)', padding: '4px 10px', borderRadius: 'var(--r-pill)' }}>Preview</span>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                  <span style={{ width: 58, height: 58, borderRadius: '50%', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 19, fontWeight: 600 }}>HK</span>
+                  <div>
+                    <div style={{ fontWeight: 650, fontSize: 18, letterSpacing: '-.01em' }}>Harleen Kaur</div>
+                    <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Final-year CSE · Frontend &amp; React</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 16 }}>
+                  <span style={{ fontSize: 12, fontWeight: 550, padding: '4px 11px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)' }}>Open to internship</span>
+                  <span style={{ fontSize: 12, padding: '4px 11px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>Web Development</span>
+                </div>
+                <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>B.Tech Computer Science · Akal University · Bathinda, Punjab · 8 months exp</div>
+                <div style={{ height: 1, background: 'var(--border)', margin: '16px 0' }} />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['React', 'TypeScript', 'Tailwind'].map((s) => (
+                    <span key={s} style={{ fontSize: 11.5, padding: '3px 9px', borderRadius: 'var(--r-chip)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>{s}</span>
+                  ))}
+                  <span style={{ fontSize: 11.5, padding: '3px 9px', borderRadius: 'var(--r-chip)', color: 'var(--text-subtle)' }}>+5</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="container mx-auto px-6 text-center">
-          <Badge variant="outline" className="mb-6 px-3 py-1 text-sm tracking-widest uppercase">
-            Akal & Eternal Placement Portal
-          </Badge>
+      {/* ===================== STATS ===================== */}
+      <section style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', background: 'var(--bg-2)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '34px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 20 }}>
+          {STATS.map((st) => (
+            <div key={st.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1 }}>{st.num}</span>
+              <span style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>{st.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <h1 className="mb-6 text-4xl font-bold tracking-tight md:text-6xl">
-            Where Talent Meets <br className="hidden md:block" />
-            <span className="text-primary">Opportunity</span>
-          </h1>
+      {/* ===================== HOW IT WORKS ===================== */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '72px 24px' }}>
+        <div style={{ maxWidth: 560 }}>
+          <span style={eyebrow}>How it works</span>
+          <h2 style={{ fontSize: 'clamp(26px,3.4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: '12px 0 0' }}>Three steps from profile to placed.</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 18, marginTop: 36 }}>
+          {STEPS.map((step) => (
+            <div key={step.n} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 26, boxShadow: 'var(--shadow)' }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, border: '1px solid var(--primary-soft-border)' }}>{step.n}</div>
+              <h3 style={{ fontSize: 18, fontWeight: 650, margin: '18px 0 0', letterSpacing: '-.01em' }}>{step.title}</h3>
+              <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', lineHeight: 1.6 }}>{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg md:text-xl">
-            The official centralized placement platform connecting leading organizations with the
-            bright minds of <span className="text-foreground font-medium">Akal University</span> and{' '}
-            <span className="text-foreground font-medium">Eternal University</span>.
-          </p>
-
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            {/* 1. Start Hiring Button */}
-            <Link to="/students">
-              <Button size="lg" className="h-12 px-8 text-base">
-                Start Hiring <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+      {/* ===================== EXPLORE STUDENTS ===================== */}
+      {cards.length > 0 && (
+        <section style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 72px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 28 }}>
+            <div>
+              <span style={eyebrow}>The register</span>
+              <h2 style={{ fontSize: 'clamp(26px,3.4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: '12px 0 0' }}>Explore talented students.</h2>
+            </div>
+            <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, textDecoration: 'none' }}>
+              See all <span aria-hidden>→</span>
             </Link>
-
-            {/* 2. Login / Profile Button */}
-            {!loading &&
-              (user ? (
-                <Link to="/profiles">
-                  <Button size="lg" variant="outline" className="h-12 px-8 text-base">
-                    View Profile
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/login">
-                  <Button size="lg" variant="outline" className="h-12 px-8 text-base">
-                    Student Login
-                  </Button>
-                </Link>
-              ))}
           </div>
-        </div>
-      </section>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
+            {cards.map((vm) => (
+              <StudentCard key={vm.id} vm={vm} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* ------------------- STATS BAR ------------------- */}
-      <section className="bg-primary text-primary-foreground py-12">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
-            <div className="space-y-1">
-              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">120+</div>
-              <div className="text-xs font-medium uppercase opacity-80">Students Placed</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">30+</div>
-              <div className="text-xs font-medium uppercase opacity-80">Partner Companies</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">2</div>
-              <div className="text-xs font-medium uppercase opacity-80">Premium Campuses</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-3xl font-bold tracking-tighter sm:text-4xl">50+</div>
-              <div className="text-xs font-medium uppercase opacity-80">Recruitment Drives</div>
+      {/* ===================== CTA ===================== */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 80px' }}>
+        <div style={{ background: 'var(--primary)', borderRadius: 22, padding: 'clamp(32px,5vw,56px)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.14), transparent 55%)' }} />
+          <div style={{ position: 'relative', maxWidth: 620 }}>
+            <h2 style={{ color: '#fff', fontSize: 'clamp(26px,4vw,40px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0, lineHeight: 1.1 }}>Your next opportunity starts with a profile.</h2>
+            <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, margin: '16px 0 0', lineHeight: 1.6 }}>It takes a few minutes to set up — and a lifetime of recruiters to find you.</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
+              {!user && <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: '#fff', color: '#0F1115', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>Create your profile</Link>}
+              <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: 'rgba(255,255,255,.16)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none', border: '1px solid rgba(255,255,255,.25)' }}>Browse the register</Link>
             </div>
           </div>
         </div>
       </section>
-
-      {/* ------------------- FOR RECRUITERS & STUDENTS ------------------- */}
-      <section className="py-20 md:py-32">
-        <div className="container mx-auto px-6">
-          <div className="mb-16 text-center">
-            <h2 className="text-3xl font-bold tracking-tight">Streamlining the Process</h2>
-            <p className="text-muted-foreground mt-4">
-              A dedicated ecosystem designed to simplify recruitment for everyone.
-            </p>
-          </div>
-
-          <div className="grid gap-12 md:grid-cols-2">
-            {/* Recruiters Side */}
-            <div className="space-y-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                <Briefcase size={24} />
-              </div>
-              <h3 className="text-2xl font-semibold">For Recruiters</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Access a unified database of pre-verified students from two prestigious
-                universities. Filter by skills, experience, and academic performance to find your
-                perfect match.
-              </p>
-              <ul className="space-y-3">
-                <li className="text-muted-foreground flex items-center gap-3 text-sm">
-                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
-                    ✓
-                  </div>
-                  Direct access to student profiles
-                </li>
-                <li className="text-muted-foreground flex items-center gap-3 text-sm">
-                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
-                    ✓
-                  </div>
-                  Schedule interviews & track applications
-                </li>
-                <li className="text-muted-foreground flex items-center gap-3 text-sm">
-                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
-                    ✓
-                  </div>
-                  Zero-friction hiring process
-                </li>
-              </ul>
-            </div>
-
-            {/* Students Side */}
-            <div className="space-y-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-                <GraduationCap size={24} />
-              </div>
-              <h3 className="text-2xl font-semibold">For Students</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Showcase your skills, projects, and achievements to top recruiters. One profile is
-                all you need to apply for internships and full-time placements across the network.
-              </p>
-              <ul className="space-y-3">
-                <li className="text-muted-foreground flex items-center gap-3 text-sm">
-                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
-                    ✓
-                  </div>
-                  Build a professional portfolio
-                </li>
-                <li className="text-muted-foreground flex items-center gap-3 text-sm">
-                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
-                    ✓
-                  </div>
-                  Apply to exclusive campus drives
-                </li>
-                <li className="text-muted-foreground flex items-center gap-3 text-sm">
-                  <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full">
-                    ✓
-                  </div>
-                  Get discovered by industry leaders
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      {/* ------------------- FEATURES GRID ------------------- */}
-      <section className="bg-muted/30 py-20 md:py-32">
-        <div className="container mx-auto px-6">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <Card className="bg-background/60 hover:bg-background border-none shadow-sm transition-all hover:shadow-md">
-              <CardHeader>
-                <div className="bg-muted mb-2 w-fit rounded-md p-2">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <CardTitle>Dual Campus Reach</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                Tap into talent pools from both the Himalayan serenity of Baru Sahib and the heart
-                of Punjab at Talwandi Sabo.
-              </CardContent>
-            </Card>
-
-            <Card className="bg-background/60 hover:bg-background border-none shadow-sm transition-all hover:shadow-md">
-              <CardHeader>
-                <div className="bg-muted mb-2 w-fit rounded-md p-2">
-                  <UserCheck className="h-5 w-5" />
-                </div>
-                <CardTitle>Verified Profiles</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                Every student profile is verified by university administration, ensuring authentic
-                data regarding grades and skills.
-              </CardContent>
-            </Card>
-
-            <Card className="bg-background/60 hover:bg-background border-none shadow-sm transition-all hover:shadow-md">
-              <CardHeader>
-                <div className="bg-muted mb-2 w-fit rounded-md p-2">
-                  <Search className="h-5 w-5" />
-                </div>
-                <CardTitle>Smart Filtering</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                Advanced search capabilities allow recruiters to find candidates based on specific
-                technical stacks and experience.
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-    </div>
+    </>
   );
 };
 

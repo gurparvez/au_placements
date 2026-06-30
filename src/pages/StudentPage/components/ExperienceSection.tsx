@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Briefcase, Plus, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { rangeYears } from '@/utils/dates';
+
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit2, Plus, Trash2, Briefcase } from 'lucide-react';
+import SectionCard from './SectionCard';
 
-// Interface matching your backend schema roughly
 interface ExperienceItem {
   _id?: string;
   role: string;
@@ -17,202 +28,186 @@ interface ExperienceItem {
   description?: string;
 }
 
+const toInputDate = (d?: string) => (d ? new Date(d).toISOString().split('T')[0] : '');
+
 const ExperienceSection: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { profile, loading } = useAppSelector((state) => state.student);
+  const { profile } = useAppSelector((s) => s.student);
 
-  // Local state for the list of experiences
-  const [experienceList, setExperienceList] = useState<ExperienceItem[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState<ExperienceItem[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  // Sync state when profile loads
+  // Hydrate the editable list whenever the dialog opens
   useEffect(() => {
-    if (profile?.experience) {
-      setExperienceList(profile.experience);
-    }
-  }, [profile]);
+    if (open) setList(profile?.experience ?? []);
+  }, [open, profile]);
 
   if (!profile) return null;
 
-  // --- Handlers ---
+  const change = (i: number, field: keyof ExperienceItem, value: string) =>
+    setList((prev) => prev.map((row, idx) => (idx === i ? { ...row, [field]: value } : row)));
 
-  const handleInputChange = (index: number, field: keyof ExperienceItem, value: string) => {
-    const updatedList = [...experienceList];
-    updatedList[index] = { ...updatedList[index], [field]: value };
-    setExperienceList(updatedList);
+  const addRow = () =>
+    setList((prev) => [...prev, { role: '', company: '', start_date: '', description: '' }]);
+
+  const removeRow = (i: number) => setList((prev) => prev.filter((_, idx) => idx !== i));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const cleaned = list.filter((e) => e.role.trim() && e.company.trim() && e.start_date);
+      await dispatch(updateStudentProfile({ experience: cleaned })).unwrap();
+      toast.success('Experience updated');
+      setOpen(false);
+    } catch (err: any) {
+      toast.error(typeof err === 'string' ? err : 'Could not save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleAddNew = () => {
-    setExperienceList([
-      ...experienceList,
-      { role: '', company: '', start_date: '', description: '' },
-    ]);
-  };
-
-  const handleDelete = (index: number) => {
-    const updatedList = experienceList.filter((_, i) => i !== index);
-    setExperienceList(updatedList);
-  };
-
-  const handleCancel = () => {
-    setExperienceList(profile.experience || []);
-    setIsEditing(false);
-  };
-
-  const handleSave = () => {
-    // Dispatch the ENTIRE array to replace the current list on the backend
-    dispatch(updateStudentProfile({ experience: experienceList }));
-    setIsEditing(false);
-  };
-
-  // Helper to format date for input (YYYY-MM-DD)
-  const formatDateForInput = (dateString?: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toISOString().split('T')[0];
-  };
+  const items = profile.experience ?? [];
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <h2 className="text-lg font-semibold">Experience</h2>
-        {!isEditing && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="h-8 w-8 p-0"
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        )}
-      </CardHeader>
-
-      <CardContent className="space-y-4 pt-4">
-        {/* --- VIEW MODE --- */}
-        {!isEditing && (
-          <div className="space-y-4">
-            {profile.experience.length === 0 && (
-              <p className="text-muted-foreground text-sm">No experience added.</p>
-            )}
-
-            {profile.experience.map((exp) => (
-              <div key={exp._id} className="bg-muted rounded-md p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-medium flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-gray-500" />
-                      {exp.role}
-                    </h3>
-                    <p className="text-muted-foreground text-sm">{exp.company}</p>
-                  </div>
-                  <p className="text-muted-foreground text-xs whitespace-nowrap">
-                    {new Date(exp.start_date).getFullYear()} –{' '}
-                    {exp.end_date ? new Date(exp.end_date).getFullYear() : 'Present'}
-                  </p>
+    <>
+      <SectionCard title="Experience" onEdit={() => setOpen(true)} isEmpty={items.length === 0}>
+        {items.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Add internships and jobs to show recruiters what you've done.
+          </p>
+        ) : (
+          <ol className="divide-y divide-border">
+            {items.map((exp) => (
+              <li key={exp._id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                <div className="bg-surface-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+                  <Briefcase className="text-muted-foreground h-5 w-5" aria-hidden />
                 </div>
-                {exp.description && (
-                  <p className="text-muted-foreground mt-2 text-sm whitespace-pre-wrap">
-                    {exp.description}
-                  </p>
-                )}
-              </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-foreground font-medium">{exp.role}</h3>
+                      <p className="text-muted-foreground text-sm">{exp.company}</p>
+                    </div>
+                    <p className="data text-text-subtle shrink-0 text-xs whitespace-nowrap">
+                      {rangeYears(exp.start_date, exp.end_date)}
+                    </p>
+                  </div>
+                  {exp.description && (
+                    <p className="text-muted-foreground mt-2 text-sm leading-relaxed whitespace-pre-wrap">
+                      {exp.description}
+                    </p>
+                  )}
+                </div>
+              </li>
             ))}
-          </div>
+          </ol>
         )}
+      </SectionCard>
 
-        {/* --- EDIT MODE --- */}
-        {isEditing && (
-          <div className="space-y-6">
-            {experienceList.map((exp, index) => (
-              <div key={index} className="border-muted relative rounded-md border p-4 shadow-sm">
-                
-                {/* Delete Button (Top Right of individual item) */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit experience</DialogTitle>
+            <DialogDescription>Add the internships and roles you've held.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5">
+            {list.map((exp, i) => (
+              <div key={i} className="bg-bg-2 relative rounded-lg border border-border p-4">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-2 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => handleDelete(index)}
+                  className="text-danger absolute top-2 right-2 h-8 w-8"
+                  onClick={() => removeRow(i)}
+                  aria-label={`Delete experience ${i + 1}`}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" aria-hidden />
                 </Button>
 
-                <div className="grid gap-3">
-                  {/* Role & Company */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-medium">Role</label>
-                      <Input
-                        value={exp.role}
-                        onChange={(e) => handleInputChange(index, 'role', e.target.value)}
-                        placeholder="Software Engineer"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium">Company</label>
-                      <Input
-                        value={exp.company}
-                        onChange={(e) => handleInputChange(index, 'company', e.target.value)}
-                        placeholder="Google, etc."
-                      />
-                    </div>
-                  </div>
-
-                  {/* Dates */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-medium">Start Date</label>
-                      <Input
-                        type="date"
-                        value={formatDateForInput(exp.start_date)}
-                        onChange={(e) => handleInputChange(index, 'start_date', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium">End Date (Leave blank if Present)</label>
-                      <Input
-                        type="date"
-                        value={formatDateForInput(exp.end_date)}
-                        onChange={(e) => handleInputChange(index, 'end_date', e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Description */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-xs font-medium">Description</label>
+                    <label htmlFor={`exp-role-${i}`} className="mb-1.5 block text-sm font-medium">
+                      Role
+                    </label>
+                    <Input
+                      id={`exp-role-${i}`}
+                      value={exp.role}
+                      onChange={(e) => change(i, 'role', e.target.value)}
+                      placeholder="Software Engineering Intern"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`exp-company-${i}`} className="mb-1.5 block text-sm font-medium">
+                      Company
+                    </label>
+                    <Input
+                      id={`exp-company-${i}`}
+                      value={exp.company}
+                      onChange={(e) => change(i, 'company', e.target.value)}
+                      placeholder="Company name"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`exp-start-${i}`} className="mb-1.5 block text-sm font-medium">
+                      Start date
+                    </label>
+                    <Input
+                      id={`exp-start-${i}`}
+                      type="date"
+                      value={toInputDate(exp.start_date)}
+                      onChange={(e) => change(i, 'start_date', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor={`exp-end-${i}`} className="mb-1.5 block text-sm font-medium">
+                      End date <span className="text-muted-foreground">(blank = present)</span>
+                    </label>
+                    <Input
+                      id={`exp-end-${i}`}
+                      type="date"
+                      value={toInputDate(exp.end_date)}
+                      onChange={(e) => change(i, 'end_date', e.target.value)}
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label htmlFor={`exp-desc-${i}`} className="mb-1.5 block text-sm font-medium">
+                      Description
+                    </label>
                     <Textarea
-                      value={exp.description}
-                      onChange={(e) => handleInputChange(index, 'description', e.target.value)}
-                      placeholder="Describe your responsibilities..."
+                      id={`exp-desc-${i}`}
                       rows={3}
+                      value={exp.description}
+                      onChange={(e) => change(i, 'description', e.target.value)}
+                      placeholder="What did you work on?"
                     />
                   </div>
                 </div>
               </div>
             ))}
 
-            {/* Add New Button */}
-            <Button
-              variant="outline"
-              className="w-full border-dashed"
-              onClick={handleAddNew}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Experience
+            <Button variant="outline" className="w-full border-dashed" onClick={addRow}>
+              <Plus className="mr-1 h-4 w-4" aria-hidden /> Add experience
             </Button>
-
-            {/* Save/Cancel Actions */}
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

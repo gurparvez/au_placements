@@ -1,34 +1,47 @@
 import React, { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Edit2, Loader2 } from 'lucide-react';
 import SkillPicker from '@/components/SkillPicker';
 import skillsApi, { type Skill } from '@/api/skills';
+import SectionCard from './SectionCard';
 
 const SkillsSection: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { profile, loading } = useAppSelector((state) => state.student);
+  const { profile } = useAppSelector((state) => state.student);
 
   // State
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const [resolvedSkills, setResolvedSkills] = useState<Skill[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const [open, setOpen] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // --- 1. Load & Resolve Skills ---
+  // --- 1. Load & Resolve Skills (preserved exactly) ---
   useEffect(() => {
     const resolveProfileSkills = async () => {
       if (!profile?.skills) return;
 
       setResolving(true);
+      setLoadError(false);
       try {
         // 1. Separate IDs from Objects
         const rawSkills = profile.skills;
-        
+
         // Determine IDs for the Edit State
-        const ids: string[] = rawSkills.map((s: any) => 
+        const ids: string[] = rawSkills.map((s: any) =>
           typeof s === 'string' ? s : s._id
         );
         setSkillIds(ids);
@@ -50,11 +63,15 @@ const SkillsSection: React.FC = () => {
 
         const results = await Promise.all(skillPromises);
         const validSkills = results.filter((s): s is Skill => s !== null);
-        
-        setResolvedSkills(validSkills);
 
+        setResolvedSkills(validSkills);
+        // Some skills failed to resolve and were silently dropped
+        if (validSkills.length < results.length) {
+          setLoadError(true);
+        }
       } catch (error) {
-        console.error("Error resolving skills:", error);
+        console.error('Error resolving skills:', error);
+        setLoadError(true);
       } finally {
         setResolving(false);
       }
@@ -63,93 +80,97 @@ const SkillsSection: React.FC = () => {
     resolveProfileSkills();
   }, [profile]);
 
+  // Hydrate the editable skill ids whenever the dialog opens (mirrors the old reset logic)
+  useEffect(() => {
+    if (open && profile) {
+      const ids = profile.skills.map((s: any) => (typeof s === 'string' ? s : s._id));
+      setSkillIds(ids);
+    }
+  }, [open, profile]);
+
   if (!profile) return null;
 
   // --- Handlers ---
 
-  const handleSkillsChange = (newIds: string[]) => {
-    setSkillIds(newIds);
-    // Note: We don't verify names here locally; SkillPicker handles the UI 
-    // and resolvedSkills will update after save -> success -> useEffect re-run
-  };
-
-  const handleCancel = () => {
-    // Reset to profile state
-    const ids = profile.skills.map((s: any) => (typeof s === 'string' ? s : s._id));
-    setSkillIds(ids);
-    setIsEditing(false);
-  };
-
-  const handleSave = () => {
-    dispatch(updateStudentProfile({ skills: skillIds }));
-    setIsEditing(false);
+  const save = async () => {
+    setSaving(true);
+    try {
+      await dispatch(updateStudentProfile({ skills: skillIds })).unwrap();
+      toast.success('Skills updated');
+      setOpen(false);
+    } catch (err: any) {
+      toast.error(typeof err === 'string' ? err : 'Could not save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <h2 className="text-lg font-semibold">Skills</h2>
-        {!isEditing && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            disabled={resolving}
-            className="h-8 w-8 p-0"
-          >
-            {resolving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit2 className="h-4 w-4" />}
-          </Button>
-        )}
-      </CardHeader>
+    <>
+      <SectionCard title="Skills" onEdit={() => setOpen(true)} isEmpty={resolvedSkills.length === 0}>
+        {/* --- READ-ONLY VIEW --- */}
+        <div className="flex flex-wrap gap-2">
+          {resolving && resolvedSkills.length === 0 && (
+            <p className="text-muted-foreground flex items-center gap-2 text-sm">
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" /> Loading skills...
+            </p>
+          )}
 
-      <CardContent className="pt-4">
-        {/* --- VIEW MODE --- */}
-        {!isEditing && (
-          <div className="flex flex-wrap gap-2">
-            {resolving && resolvedSkills.length === 0 && (
-              <p className="text-muted-foreground text-sm flex items-center gap-2">
-                 <Loader2 className="h-3 w-3 animate-spin" /> Loading skills...
-              </p>
-            )}
+          {!resolving && loadError && (
+            <p className="text-danger text-sm">Couldn't load some skills. Please refresh.</p>
+          )}
 
-            {!resolving && resolvedSkills.length === 0 && (
-              <p className="text-muted-foreground text-sm">No skills added yet.</p>
-            )}
+          {!resolving && !loadError && resolvedSkills.length === 0 && (
+            <p className="text-muted-foreground text-sm">No skills added yet.</p>
+          )}
 
-            {resolvedSkills.map((s) => (
-              <div
-                key={s._id}
-                className="bg-secondary text-secondary-foreground inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium"
-              >
-                {s.displayName || s.name}
-              </div>
-            ))}
-          </div>
-        )}
+          {resolvedSkills.map((s) => (
+            <div
+              key={s._id}
+              className="bg-surface-2 text-muted-foreground inline-flex items-center rounded-[7px] border border-border px-2.5 py-1 text-xs font-medium"
+            >
+              {s.displayName || s.name}
+            </div>
+          ))}
+        </div>
+      </SectionCard>
 
-        {/* --- EDIT MODE --- */}
-        {isEditing && (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit skills</DialogTitle>
+            <DialogDescription>
+              Search and add the skills you want recruiters to see.
+            </DialogDescription>
+          </DialogHeader>
+
           <div className="space-y-4">
             <SkillPicker
               selected={skillIds}
-              setSelected={handleSkillsChange}
+              setSelected={setSkillIds}
               // Pass resolved skills so chips show names immediately
               initialData={resolvedSkills}
-              label="Search & Add Skills"
+              label="Search & add skills"
             />
-
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={loading}>
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Saving…
+                </>
+              ) : (
+                'Save'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
