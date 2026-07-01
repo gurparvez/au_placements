@@ -76,17 +76,22 @@ const CreateProfile: React.FC = () => {
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
 
   // ---------------- EDUCATION ----------------
-  const [educationList, setEducationList] = useState([
-    {
-      institute: '',
-      from_date: '',
-      to_date: '',
-      courseId: '',
-      courseName: '',
-      category: '',
-      specialization: '',
-    },
-  ]);
+  const newEduRow = () => ({
+    level: 'university' as 'university' | 'school',
+    institute: '',
+    from_date: '',
+    to_date: '',
+    courseId: '',
+    courseName: '',
+    category: '',
+    specialization: '',
+    board: '',
+    grade: '',
+    passing_year: '',
+  });
+  const [educationList, setEducationList] = useState([newEduRow()]);
+  const setEdu = (index: number, patch: Partial<ReturnType<typeof newEduRow>>) =>
+    setEducationList((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
 
   // ---------------- EXPERIENCE ----------------
   const [experiences, setExperiences] = useState<ExperiencePayload[]>([]);
@@ -484,20 +489,7 @@ const CreateProfile: React.FC = () => {
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() =>
-                    setEducationList((prev) => [
-                      ...prev,
-                      {
-                        institute: '',
-                        from_date: '',
-                        to_date: '',
-                        courseId: '',
-                        courseName: '',
-                        category: '',
-                        specialization: '',
-                      },
-                    ])
-                  }
+                  onClick={() => setEducationList((prev) => [...prev, newEduRow()])}
                 >
                   Add Education
                 </Button>
@@ -524,142 +516,177 @@ const CreateProfile: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="grid gap-2 md:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor={`edu-institute-${index}`}
-                        className="mb-1.5 block text-sm font-medium"
-                      >
-                        Institute <span className="text-danger">*</span>
-                      </label>
-                      <select
-                        id={`edu-institute-${index}`}
-                        value={edu.institute}
-                        onChange={(e) =>
-                          setEducationList((prev) =>
-                            prev.map((r, i) =>
-                              i === index ? { ...r, institute: e.target.value } : r
-                            )
-                          )
+                  {/* Level toggle: University vs School */}
+                  <div className="inline-flex rounded-[9px] border border-border-strong bg-bg-2 p-1">
+                    {(['university', 'school'] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setEdu(index, { level: lvl })}
+                        className={
+                          'rounded-[7px] px-3 py-1.5 text-[13px] font-medium capitalize transition-colors ' +
+                          (edu.level === lvl
+                            ? 'bg-primary text-white'
+                            : 'text-muted-foreground hover:text-foreground')
                         }
-                        className="bg-bg-2 border border-border-strong rounded-[9px] px-3 py-2 text-[14px] w-full outline-none transition-[color,box-shadow,border-color] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-[var(--ring-soft)] disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <option value="" disabled>
-                          Select Institute
-                        </option>
-                        <option value="Akal University">Akal University</option>
-                        <option value="Eternal University">Eternal University</option>
-                      </select>
-                    </div>
+                        {lvl === 'university' ? 'University' : 'School (10th / 12th)'}
+                      </button>
+                    ))}
+                  </div>
 
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label
-                          id={`edu-course-label-${index}`}
-                          className="mb-1.5 block text-sm font-medium"
-                        >
-                          Course <span className="text-danger">*</span>
+                  {edu.level === 'university' ? (
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <div>
+                        <label htmlFor={`edu-institute-${index}`} className="mb-1.5 block text-sm font-medium">
+                          Institute <span className="text-danger">*</span>
                         </label>
-                        <CoursePicker
-                          value={edu.courseName}
-                          onSelect={(selectedCourse: Course) => {
-                            setEducationList((prev) =>
-                              prev.map((r, i) =>
-                                i === index
-                                  ? {
-                                      ...r,
-                                      courseId: selectedCourse._id,
-                                      courseName: selectedCourse.name,
-                                      category: selectedCourse.category,
-                                    }
-                                  : r
-                              )
-                            );
-                          }}
-                        />
+                        <select
+                          id={`edu-institute-${index}`}
+                          value={edu.institute}
+                          onChange={(e) => setEdu(index, { institute: e.target.value })}
+                          className="bg-bg-2 border border-border-strong rounded-[9px] px-3 py-2 text-[14px] w-full outline-none transition-[color,box-shadow,border-color] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-[var(--ring-soft)] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="" disabled>
+                            Select Institute
+                          </option>
+                          <option value="Akal University">Akal University</option>
+                          <option value="Eternal University">Eternal University</option>
+                        </select>
                       </div>
 
-                      <div className="w-24">
-                        <label
-                          htmlFor={`edu-category-${index}`}
-                          className="mb-1.5 block text-sm font-medium"
-                        >
-                          Category
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label id={`edu-course-label-${index}`} className="mb-1.5 block text-sm font-medium">
+                            Course <span className="text-danger">*</span>
+                          </label>
+                          <CoursePicker
+                            value={edu.courseName}
+                            onSelect={(selectedCourse: Course) =>
+                              setEdu(index, {
+                                courseId: selectedCourse._id,
+                                courseName: selectedCourse.name,
+                                category: selectedCourse.category,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="w-24">
+                          <label htmlFor={`edu-category-${index}`} className="mb-1.5 block text-sm font-medium">
+                            Category
+                          </label>
+                          <Input
+                            id={`edu-category-${index}`}
+                            readOnly
+                            value={edu.category}
+                            className="bg-surface-2 text-muted-foreground cursor-not-allowed"
+                            placeholder="UG/PG"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <div>
+                        <label htmlFor={`edu-school-${index}`} className="mb-1.5 block text-sm font-medium">
+                          School name <span className="text-danger">*</span>
                         </label>
                         <Input
-                          id={`edu-category-${index}`}
-                          readOnly
-                          value={edu.category}
-                          className="bg-surface-2 text-muted-foreground cursor-not-allowed"
-                          placeholder="UG/PG"
+                          id={`edu-school-${index}`}
+                          value={edu.institute}
+                          onChange={(e) => setEdu(index, { institute: e.target.value })}
+                          placeholder="e.g. Delhi Public School"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="w-32">
+                          <label htmlFor={`edu-grade-${index}`} className="mb-1.5 block text-sm font-medium">
+                            Class <span className="text-danger">*</span>
+                          </label>
+                          <select
+                            id={`edu-grade-${index}`}
+                            value={edu.grade}
+                            onChange={(e) => setEdu(index, { grade: e.target.value })}
+                            className="bg-bg-2 border border-border-strong rounded-[9px] px-3 py-2 text-[14px] w-full outline-none transition-[color,box-shadow,border-color] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-[var(--ring-soft)]"
+                          >
+                            <option value="" disabled>
+                              Select
+                            </option>
+                            <option value="10th">10th</option>
+                            <option value="12th">12th</option>
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <label htmlFor={`edu-board-${index}`} className="mb-1.5 block text-sm font-medium">
+                            Board (optional)
+                          </label>
+                          <Input
+                            id={`edu-board-${index}`}
+                            value={edu.board}
+                            onChange={(e) => setEdu(index, { board: e.target.value })}
+                            placeholder="e.g. CBSE, ICSE, PSEB"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label htmlFor={`edu-passing-${index}`} className="mb-1.5 block text-sm font-medium">
+                          Passing year <span className="text-danger">*</span>
+                        </label>
+                        <Input
+                          id={`edu-passing-${index}`}
+                          type="number"
+                          inputMode="numeric"
+                          min={1950}
+                          max={2100}
+                          value={edu.passing_year}
+                          onChange={(e) => setEdu(index, { passing_year: e.target.value })}
+                          placeholder="e.g. 2020"
                         />
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="grid gap-2 md:grid-cols-2">
+                  {edu.level === 'university' && (
+                    <div className="grid gap-2 md:grid-cols-2">
+                      <div>
+                        <label htmlFor={`edu-from-${index}`} className="mb-1.5 block text-sm font-medium">
+                          From Date <span className="text-danger">*</span>
+                        </label>
+                        <Input
+                          id={`edu-from-${index}`}
+                          type="date"
+                          value={edu.from_date}
+                          onChange={(e) => setEdu(index, { from_date: e.target.value })}
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor={`edu-to-${index}`} className="mb-1.5 block text-sm font-medium">
+                          To Date <span className="text-danger">*</span>
+                        </label>
+                        <Input
+                          id={`edu-to-${index}`}
+                          type="date"
+                          value={edu.to_date}
+                          onChange={(e) => setEdu(index, { to_date: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {edu.level === 'university' && (
                     <div>
-                      <label
-                        htmlFor={`edu-from-${index}`}
-                        className="mb-1.5 block text-sm font-medium"
-                      >
-                        From Date <span className="text-danger">*</span>
+                      <label htmlFor={`edu-specialization-${index}`} className="mb-1.5 block text-sm font-medium">
+                        Specialization (optional)
                       </label>
                       <Input
-                        id={`edu-from-${index}`}
-                        type="date"
-                        value={edu.from_date}
-                        onChange={(e) =>
-                          setEducationList((prev) =>
-                            prev.map((r, i) =>
-                              i === index ? { ...r, from_date: e.target.value } : r
-                            )
-                          )
-                        }
+                        id={`edu-specialization-${index}`}
+                        value={edu.specialization}
+                        onChange={(e) => setEdu(index, { specialization: e.target.value })}
                       />
                     </div>
-
-                    <div>
-                      <label
-                        htmlFor={`edu-to-${index}`}
-                        className="mb-1.5 block text-sm font-medium"
-                      >
-                        To Date <span className="text-danger">*</span>
-                      </label>
-                      <Input
-                        id={`edu-to-${index}`}
-                        type="date"
-                        value={edu.to_date}
-                        onChange={(e) =>
-                          setEducationList((prev) =>
-                            prev.map((r, i) =>
-                              i === index ? { ...r, to_date: e.target.value } : r
-                            )
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor={`edu-specialization-${index}`}
-                      className="mb-1.5 block text-sm font-medium"
-                    >
-                      Specialization (optional)
-                    </label>
-                    <Input
-                      id={`edu-specialization-${index}`}
-                      value={edu.specialization}
-                      onChange={(e) =>
-                        setEducationList((prev) =>
-                          prev.map((r, i) =>
-                            i === index ? { ...r, specialization: e.target.value } : r
-                          )
-                        )
-                      }
-                    />
-                  </div>
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -1211,14 +1238,29 @@ const CreateProfile: React.FC = () => {
                   },
 
                   education: educationList
-                    .filter((e) => e.institute && e.courseId && e.from_date && e.to_date)
-                    .map((edu) => ({
-                      institute: edu.institute,
-                      from_date: edu.from_date,
-                      to_date: edu.to_date,
-                      course: edu.courseId,
-                      specialization: edu.specialization || undefined,
-                    })),
+                    .filter((e) =>
+                      e.level === 'university'
+                        ? e.institute && e.courseId && e.from_date && e.to_date
+                        : e.institute && e.grade && e.passing_year
+                    )
+                    .map((edu) =>
+                      edu.level === 'university'
+                        ? {
+                            level: 'university' as const,
+                            institute: edu.institute,
+                            from_date: edu.from_date,
+                            to_date: edu.to_date,
+                            course: edu.courseId,
+                            specialization: edu.specialization || undefined,
+                          }
+                        : {
+                            level: 'school' as const,
+                            institute: edu.institute,
+                            grade: edu.grade,
+                            board: edu.board || undefined,
+                            passing_year: edu.passing_year ? Number(edu.passing_year) : undefined,
+                          }
+                    ),
 
                   experience: experiences
                     .filter((e) => e.company && e.role && e.start_date)

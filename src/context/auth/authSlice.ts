@@ -5,8 +5,6 @@ import axios from 'axios';
 import type {
   LoginPayload,
   LoginResponse,
-  RegisterPayload,
-  RegisterResponse,
   UserData,
   UpdateDetailsPayload,
   UpdateDetailsResponse,
@@ -27,21 +25,6 @@ export const loginUser = createAsyncThunk<LoginResponse, LoginPayload>(
         return rejectWithValue(err.response.data.message);
       }
       return rejectWithValue(err.message || 'Login failed');
-    }
-  }
-);
-
-export const registerUser = createAsyncThunk<RegisterResponse, RegisterPayload>(
-  'auth/register',
-  async (payload, { rejectWithValue }) => {
-    try {
-      return await authApi.register(payload);
-    } catch (err: any) {
-      // This specifically catches your 400 error message from the backend
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        return rejectWithValue(err.response.data.message);
-      }
-      return rejectWithValue(err.message || 'Registration failed');
     }
   }
 );
@@ -147,15 +130,6 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.data.user;
-        state.initialized = true;
-      });
-
-    // --- REGISTER ---
-    builder
-      .addCase(registerUser.pending, pending)
-      .addCase(registerUser.rejected, rejected)
-      .addCase(registerUser.fulfilled, (state) => {
-        state.loading = false;
         state.initialized = true;
       });
 

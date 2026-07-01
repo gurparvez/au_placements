@@ -1,9 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAppSelector } from '@/context/hooks';
-import { Sun, Moon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/context/hooks';
+import { Sun, Moon, User as UserIcon, LogOut } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { initials } from '@/utils/avatar';
+import { logoutUser, clearAuth } from '@/context/auth/authSlice';
+import { clearStudentState } from '@/context/student/studentSlice';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const LogoMark = ({ size = 46 }: { size?: number }) => (
   <img
@@ -23,8 +33,23 @@ const NAV = [
 
 const Navbar: React.FC = () => {
   const headerRef = useRef<HTMLElement>(null);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const user = useAppSelector((s) => s.auth.user);
   const loading = useAppSelector((s) => s.auth.loading);
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      dispatch(clearAuth());
+      dispatch(clearStudentState());
+      setMobileOpen(false);
+      navigate('/');
+    }
+  };
   const { theme, setTheme } = useTheme();
   const isDark =
     theme === 'dark' ||
@@ -45,6 +70,7 @@ const Navbar: React.FC = () => {
   }, []);
 
   const me = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
+  const isAdmin = !!user?.roles?.includes('admin');
   const navLinkStyle: React.CSSProperties = {
     padding: '8px 13px',
     borderRadius: 'var(--r-ctl)',
@@ -112,6 +138,16 @@ const Navbar: React.FC = () => {
                 {l.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                style={{ ...navLinkStyle, color: 'var(--primary)', fontWeight: 600 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -128,28 +164,46 @@ const Navbar: React.FC = () => {
             {loading ? (
               <span data-kp-sk="true" style={{ width: 34, height: 34, borderRadius: '50%' }} aria-hidden />
             ) : user ? (
-              <Link
-                to="/profiles"
-                aria-label="Your profile"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 600,
-                  fontSize: 14,
-                  color: '#fff',
-                  background: 'var(--primary)',
-                  textDecoration: 'none',
-                  flex: 'none',
-                  border: '2px solid var(--bg-2)',
-                  boxShadow: '0 0 0 1px var(--border)',
-                }}
-              >
-                {initials(user.firstName, user.lastName) || 'U'}
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    aria-label="Account menu"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 600,
+                      fontSize: 14,
+                      color: '#fff',
+                      background: 'var(--primary)',
+                      flex: 'none',
+                      cursor: 'pointer',
+                      border: '2px solid var(--bg-2)',
+                      boxShadow: '0 0 0 1px var(--border)',
+                    }}
+                  >
+                    {initials(user.firstName, user.lastName) || 'U'}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-48">
+                  <DropdownMenuLabel>
+                    <span style={{ display: 'block', textTransform: 'capitalize' }}>{me || 'Your account'}</span>
+                    <span style={{ display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>
+                      AUID {user.auid}
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profiles')}>
+                    <UserIcon size={16} /> View profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+                    <LogOut size={16} /> Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link
                 data-kp-show="desktop"
@@ -234,6 +288,15 @@ const Navbar: React.FC = () => {
                 {l.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileOpen(false)}
+                style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', textDecoration: 'none', color: 'var(--primary)', fontWeight: 600 }}
+              >
+                Admin
+              </Link>
+            )}
             <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
             <span style={{ fontSize: 12, color: 'var(--text-subtle)', fontWeight: 600, padding: '0 14px', textTransform: 'uppercase', letterSpacing: '.05em' }}>
               Theme
@@ -270,13 +333,21 @@ const Navbar: React.FC = () => {
                 Sign in
               </Link>
             ) : (
-              <Link
-                to="/profiles"
-                onClick={() => setMobileOpen(false)}
-                style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', textDecoration: 'none', fontWeight: 600, textAlign: 'center' }}
-              >
-                Your profile
-              </Link>
+              <>
+                <Link
+                  to="/profiles"
+                  onClick={() => setMobileOpen(false)}
+                  style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', textDecoration: 'none', fontWeight: 600, textAlign: 'center' }}
+                >
+                  View profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  style={{ padding: '12px 14px', borderRadius: 'var(--r-ctl)', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--border)', fontWeight: 600, textAlign: 'center', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                >
+                  <LogOut size={16} /> Log out
+                </button>
+              </>
             )}
           </div>
         </div>

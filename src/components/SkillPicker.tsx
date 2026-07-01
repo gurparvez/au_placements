@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useId } from 'react';
 import { Input } from '@/components/ui/input';
 import { skillsApi } from '@/api/skills';
 import type { Skill } from '@/api/skills';
+import { FILTER_SKILLS } from '@/utils/skills';
 import { Loader2, X, Check, Plus } from 'lucide-react';
 
 interface SkillPickerProps {
@@ -21,6 +22,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
   const [error, setError] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
   /* ------------ 1. Initialize Map with Initial Data ------------ */
@@ -43,9 +45,24 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
     } else {
       setSelected([...safeSelected, skillId]);
     }
-    // Keep dropdown open for multi-select convenience, or close it:
-    // setOpen(false); 
   };
+
+  // Reset the search box so the user can immediately add the next skill.
+  const resetInput = () => {
+    setQuery('');
+    setSearchResults([]);
+    inputRef.current?.focus();
+  };
+
+  // Select a skill from the dropdown, then clear the input (keeps dropdown open
+  // showing suggestions for the next pick).
+  const selectSkillById = (skillId: string) => {
+    if (!safeSelected.includes(skillId)) setSelected([...safeSelected, skillId]);
+    resetInput();
+    setOpen(true);
+  };
+
+  const clearAll = () => setSelected([]);
 
   /* ------------ Debounced search ------------ */
   const debouncedSearch = useCallback(() => {
@@ -86,35 +103,34 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
     }
   }, [searchResults]);
 
-  /* ------------ Add new skill ------------ */
-  const handleAddSkill = async () => {
-    if (!query.trim()) return;
+  /* ------------ Add (upsert) a skill by name and select it ------------ */
+  // Works for both a typed custom skill and a curated suggestion. The backend
+  // upserts by normalized name, so clicking an existing skill won't duplicate.
+  const addAndSelect = async (rawName: string) => {
+    const name = rawName.trim();
+    if (!name) return;
 
     try {
       setLoading(true);
       setError(null);
-      const res: any = await skillsApi.addSkill(query.trim());
-      // Handle response structure (adjust if your API returns { success: true, skill: ... })
-      const newSkill: Skill = res.skill || res; 
+      const res: any = await skillsApi.addSkill(name);
+      const newSkill: Skill = res.skill || res;
 
-      // Select it
-      setSelected([...safeSelected, newSkill._id]);
-      
-      // Add to map so it displays correctly
-      setSkillMap((prev) => ({
-        ...prev,
-        [newSkill._id]: newSkill,
-      }));
-
-      setQuery('');
-      setSearchResults([]);
-      setOpen(false);
+      setSelected(safeSelected.includes(newSkill._id) ? safeSelected : [...safeSelected, newSkill._id]);
+      setSkillMap((prev) => ({ ...prev, [newSkill._id]: newSkill }));
+      resetInput();
     } catch (err) {
       console.error('Failed to add skill:', err);
       setError('Failed to add skill. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddSkill = async () => {
+    if (!query.trim()) return;
+    await addAndSelect(query);
+    setOpen(true);
   };
 
   /* ------------ Close dropdown on outside click ------------ */
@@ -128,6 +144,21 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
     return () => document.removeEventListener('click', onClickOutside);
   }, []);
 
+  /* ------------ Curated suggestions (from the built-in skills list) ------------ */
+  const q = query.trim().toLowerCase();
+  const selectedNames = new Set(
+    (safeSelected.map((id) => skillMap[id]?.name?.toLowerCase()).filter(Boolean) as string[])
+  );
+  const dbNames = new Set(searchResults.map((s) => s.name.toLowerCase()));
+  const curatedSuggestions = FILTER_SKILLS.filter((name) => {
+    const lower = name.toLowerCase();
+    if (selectedNames.has(lower) || dbNames.has(lower)) return false;
+    return q ? lower.includes(q) : true;
+  }).slice(0, q ? 8 : 12);
+
+  const hasDropdownContent =
+    searchResults.length > 0 || curatedSuggestions.length > 0 || !!query.trim();
+
   return (
     <div ref={containerRef} className="relative w-full">
       <label htmlFor={inputId} className="eyebrow mb-1 block text-muted-foreground">
@@ -135,6 +166,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
       </label>
 
       <Input
+        ref={inputRef}
         id={inputId}
         aria-label={label ?? 'Search skills'}
         role="combobox"
@@ -156,7 +188,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
       />
 
       {/* Dropdown */}
-      {open && (searchResults.length > 0 || query.trim()) && (
+      {open && hasDropdownContent && (
         <div
           id={`${inputId}-listbox`}
           role="listbox"
@@ -184,7 +216,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
                   type="button"
                   role="option"
                   aria-selected={isSelected}
-                  onClick={() => toggleSkill(skill._id)}
+                  onClick={() => selectSkillById(skill._id)}
                   className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset flex w-full items-center justify-between px-3 py-2 text-sm"
                 >
                   <span>{skill.displayName || skill.name}</span>
@@ -195,13 +227,39 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
               );
             })}
 
+          {/* CURATED SUGGESTIONS (from built-in list) */}
+          {!loading && !error && curatedSuggestions.length > 0 && (
+            <>
+              {!q && (
+                <div className="text-muted-foreground px-3 pt-2 pb-1 text-xs font-medium">
+                  Suggestions
+                </div>
+              )}
+              {curatedSuggestions.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  role="option"
+                  aria-selected={false}
+                  onClick={() => addAndSelect(name)}
+                  className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset flex w-full items-center justify-between px-3 py-2 text-sm"
+                >
+                  <span>{name}</span>
+                  <Plus className="text-muted-foreground h-4 w-4" aria-hidden />
+                </button>
+              ))}
+            </>
+          )}
+
           {/* EMPTY STATE */}
-          {!loading && !error && query.trim() && searchResults.length === 0 && (
+          {!loading && !error && query.trim() && searchResults.length === 0 && curatedSuggestions.length === 0 && (
             <div className="px-3 py-2 text-sm text-muted-foreground">No skills found.</div>
           )}
 
           {/* ADD NEW SKILL */}
-          {!loading && !error && query.trim() && !searchResults.some(s => s.name.toLowerCase() === query.trim().toLowerCase()) && (
+          {!loading && !error && query.trim() &&
+            !searchResults.some((s) => s.name.toLowerCase() === query.trim().toLowerCase()) &&
+            !curatedSuggestions.some((n) => n.toLowerCase() === query.trim().toLowerCase()) && (
             <button
               type="button"
               className="hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset w-full px-3 py-2 text-left text-sm text-primary font-medium"
@@ -218,7 +276,20 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
 
       {/* SELECTED SKILLS CHIPS */}
       {safeSelected.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-muted-foreground text-xs font-medium">
+              {safeSelected.length} skill{safeSelected.length === 1 ? '' : 's'} selected
+            </span>
+            <button
+              type="button"
+              onClick={clearAll}
+              className="text-muted-foreground hover:text-destructive text-xs font-medium"
+            >
+              Clear all
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
           {safeSelected.map((id) => {
             const displayName = skillMap[id]?.displayName || skillMap[id]?.name;
             return (
@@ -244,6 +315,7 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
               </span>
             );
           })}
+          </div>
         </div>
       )}
     </div>

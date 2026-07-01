@@ -8,22 +8,11 @@ export interface LoginPayload {
   password: string;
 }
 
-export interface RegisterPayload {
-  auid: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-  university: 'Akal University' | 'Eternal University';
-  id_card?: File | null;
-}
-
 export interface UpdateDetailsPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface UpdatePasswordPayload {
@@ -46,17 +35,6 @@ export interface LoginResponse {
       university: string;
       roles: string[];
     };
-  };
-}
-
-export interface RegisterResponse {
-  success: boolean;
-  message: string;
-  data: {
-    _id: string;
-    auid: string;
-    university: string;
-    roles: string[];
   };
 }
 
@@ -107,29 +85,6 @@ class Auth {
       withCredentials: true,
       timeout: 15000,
     });
-  }
-
-  /* ------------------------------- REGISTER ------------------------------- */
-  async register(data: RegisterPayload): Promise<RegisterResponse> {
-    const formData = new FormData();
-
-    Object.entries(data).forEach(([key, value]) => {
-      // Skip empty/optional fields (e.g. id_card when not provided)
-      if (value === undefined || value === null) return;
-      formData.append(key, value as any);
-    });
-
-    try {
-      const response = await this.instance.post<RegisterResponse>('/api/auth/register', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
   }
 
   /* -------------------------------- LOGIN -------------------------------- */

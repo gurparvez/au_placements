@@ -194,16 +194,35 @@ const PublicStudentProfile: React.FC = () => {
           {(p.education || []).length > 0 && (
             <Section title="Education">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                {p.education.map((ed: any, i: number) => (
-                  <div key={i}>
-                    <div style={{ fontWeight: 650, fontSize: 15 }}>{ed.course?.name}</div>
-                    <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>{ed.institute} · {rangeYears(ed.from_date, ed.to_date, false)}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 550, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{CATEGORY[ed.course?.category] || 'Course'}</span>
-                      {ed.specialization && <span style={{ fontSize: 11.5, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{ed.specialization}</span>}
+                {p.education.map((ed: any, i: number) => {
+                  const isSchool = ed.level === 'school';
+                  const years = isSchool
+                    ? ed.passing_year
+                      ? String(ed.passing_year)
+                      : ''
+                    : rangeYears(ed.from_date, ed.to_date, false);
+                  return (
+                    <div key={i}>
+                      <div style={{ fontWeight: 650, fontSize: 15 }}>
+                        {isSchool ? ed.institute : ed.course?.name || ed.institute}
+                      </div>
+                      <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>
+                        {isSchool
+                          ? [ed.grade && `Class ${ed.grade}`, ed.board].filter(Boolean).join(' · ') || 'School'
+                          : ed.institute}
+                        {years ? ` · ${years}` : ''}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                        {isSchool ? (
+                          ed.grade && <span style={{ fontSize: 11.5, fontWeight: 550, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>School</span>
+                        ) : (
+                          <span style={{ fontSize: 11.5, fontWeight: 550, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{CATEGORY[ed.course?.category] || 'Course'}</span>
+                        )}
+                        {!isSchool && ed.specialization && <span style={{ fontSize: 11.5, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{ed.specialization}</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Section>
           )}

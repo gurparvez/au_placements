@@ -57,7 +57,11 @@ const LandingPage: React.FC = () => {
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
                 <Link to="/students" style={ctaPrimary}>Browse students <span aria-hidden>→</span></Link>
-                <Link to="/login" style={ctaOutline}>Create your profile</Link>
+                {user ? (
+                  <Link to="/profiles" style={ctaOutline}>Go to your profile</Link>
+                ) : (
+                  <Link to="/login" style={ctaOutline}>Sign in</Link>
+                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 30 }}>
                 <div style={{ display: 'flex' }}>
@@ -155,7 +159,7 @@ const LandingPage: React.FC = () => {
             <h2 style={{ color: '#fff', fontSize: 'clamp(26px,4vw,40px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0, lineHeight: 1.1 }}>Your next opportunity starts with a profile.</h2>
             <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, margin: '16px 0 0', lineHeight: 1.6 }}>It takes a few minutes to set up — and a lifetime of recruiters to find you.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
-              {!user && <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: '#fff', color: '#0F1115', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>Create your profile</Link>}
+              {!user && <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: '#fff', color: '#0F1115', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>Sign in</Link>}
               <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: 'rgba(255,255,255,.16)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none', border: '1px solid rgba(255,255,255,.25)' }}>Browse the register</Link>
             </div>
           </div>

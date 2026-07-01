@@ -27,12 +27,18 @@ export interface ProjectPayload {
   description?: string;
 }
 
+export type EducationLevel = 'university' | 'school';
+
 export interface EducationPayload {
+  level: EducationLevel;
   institute: string;
-  from_date: string;
-  to_date: string;
-  course: string;
-  specialization?: string;
+  from_date?: string;
+  to_date?: string;
+  course?: string; // university only
+  specialization?: string; // university only
+  board?: string; // school only
+  grade?: string; // school only (e.g. 10th, 12th)
+  passing_year?: number; // school only
 }
 
 export interface CertificatePayload {
@@ -94,11 +100,15 @@ export interface CertificateResponse {
 
 export interface EducationResponse {
   _id: string;
+  level?: EducationLevel;
   institute: string;
-  from_date: string;
-  to_date: string;
-  course: any;
-  specialization: string;
+  from_date?: string;
+  to_date?: string;
+  course?: any; // university only
+  specialization?: string; // university only
+  board?: string; // school only
+  grade?: string; // school only
+  passing_year?: number; // school only
 }
 
 export interface StudentProfileResponse {

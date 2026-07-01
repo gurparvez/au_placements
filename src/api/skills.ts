@@ -29,6 +29,7 @@ export class SkillsApi {
   constructor() {
     this.instance = axios.create({
       baseURL: URL,
+      withCredentials: true, // send the auth cookie for protected routes (POST /skills)
       timeout: 15000,
     });
   }

@@ -43,16 +43,29 @@ const ChangePasswordDialog: React.FC<{
   const dispatch = useAppDispatch();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setOldPassword('');
       setNewPassword('');
+      setConfirmPassword('');
     }
   }, [open]);
 
+  const mismatch = confirmPassword.length > 0 && newPassword !== confirmPassword;
+  const canSave = !!oldPassword && newPassword.length >= 8 && newPassword === confirmPassword;
+
   const handleSave = async () => {
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match.');
+      return;
+    }
     setSaving(true);
     try {
       await dispatch(updateUserPassword({ oldPassword, newPassword })).unwrap();
@@ -97,6 +110,20 @@ const ChangePasswordDialog: React.FC<{
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
+            <p className="text-muted-foreground mt-1 text-xs">At least 8 characters.</p>
+          </div>
+          <div>
+            <label htmlFor="cp-confirm" className="mb-1.5 block text-sm font-medium">
+              Re-enter new password
+            </label>
+            <Input
+              id="cp-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            {mismatch && <p className="mt-1 text-xs text-red-500">Passwords do not match.</p>}
           </div>
         </div>
 
@@ -104,7 +131,7 @@ const ChangePasswordDialog: React.FC<{
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving || !oldPassword || !newPassword}>
+          <Button onClick={handleSave} disabled={saving || !canSave}>
             {saving ? (
               <>
                 <Loader2 className="mr-1 h-4 w-4 animate-spin" aria-hidden /> Saving…

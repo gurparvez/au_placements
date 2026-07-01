@@ -20,6 +20,7 @@ export class CoursesApi {
   constructor() {
     this.instance = axios.create({
       baseURL: URL,
+      withCredentials: true, // send the auth cookie for protected routes (POST /courses)
       timeout: 15000,
     });
   }

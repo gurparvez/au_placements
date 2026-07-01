@@ -12,6 +12,7 @@ import { store } from './context/store.ts';
 import StudentProfilePage from './pages/StudentPage/StudentProfilePage.tsx';
 import CreateProfile from './pages/CreateProfile/CreateProfile.tsx';
 import AboutPage from './pages/AboutPage.tsx';
+import AdminPage from './pages/Admin/AdminPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="profiles" element={<StudentProfilePage />} />
             <Route path="profiles/:userId" element={<StudentProfile />} />
             <Route path="profiles/create" element={<CreateProfile />} />
+            <Route path="admin" element={<AdminPage />} />
             <Route path="login" element={<LoginPage />} />
           </Route>
         </Routes>
