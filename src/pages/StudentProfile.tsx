@@ -1,9 +1,13 @@
 // src/pages/StudentProfile.tsx — public profile /profiles/:userId
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAnyStudentProfile } from '@/context/student/studentSlice';
 import skillsApi from '@/api/skills';
+import outreachApi from '@/api/outreach';
+import messagesApi from '@/api/messages';
+import connectionsApi, { type ConnStatus } from '@/api/connections';
+import { toast } from 'sonner';
 import { avatarColor, initials } from '@/utils/avatar';
 import { rangeYears, fmtMonth, availLabel, yearOf } from '@/utils/dates';
 
@@ -31,13 +35,28 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const PublicStudentProfile: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { userId } = useParams();
   const { publicProfile, loading, error } = useAppSelector((s) => s.student);
+  const authUser = useAppSelector((s) => s.auth.user);
   const [resolved, setResolved] = useState<any[] | null>(null);
+  const [compose, setCompose] = useState<{ open: boolean; subject: string; body: string }>({ open: false, subject: '', body: '' });
+  const [sending, setSending] = useState(false);
+  const [conn, setConn] = useState<{ status: ConnStatus; connectionId?: string }>({ status: 'none' });
 
   useEffect(() => {
     if (userId) dispatch(fetchAnyStudentProfile({ userId }));
   }, [userId, dispatch]);
+
+  // Connection relationship with the profile owner (when viewing someone else).
+  useEffect(() => {
+    const targetId = (publicProfile as any)?.user?._id;
+    if (authUser && targetId && authUser._id !== targetId) {
+      connectionsApi.status(targetId).then(setConn).catch(() => setConn({ status: 'none' }));
+    } else {
+      setConn({ status: 'none' });
+    }
+  }, [authUser, publicProfile]);
 
   useEffect(() => {
     if (!publicProfile) return;
@@ -96,6 +115,69 @@ const PublicStudentProfile: React.FC = () => {
   const av = availLabel({ from_date: lf.from_date, to_date: lf.to_date });
   const cs = { firstName: u.firstName, email: u.email, field: p.preferred_field };
 
+  // Inbuilt emailing is available only to logged-in, approved recruiters.
+  const isRecruiter = !!authUser?.roles?.includes('recruiter') && authUser?.status === 'active';
+  const studentId = u._id || userId || '';
+  const canMessage = !!authUser && authUser._id !== studentId;
+
+  const startMessage = async () => {
+    try {
+      const convo = await messagesApi.start(studentId);
+      navigate(`/messages?c=${convo._id}`);
+    } catch {
+      toast.error('Could not start the conversation.');
+    }
+  };
+
+  const doConnect = async () => {
+    try { await connectionsApi.request(studentId); setConn({ status: 'outgoing' }); toast.success('Connection request sent.'); }
+    catch (e: any) { toast.error(e?.response?.data?.message || 'Could not send request.'); }
+  };
+  const doAccept = async () => {
+    if (!conn.connectionId) return;
+    try { await connectionsApi.respond(conn.connectionId, true); setConn({ status: 'connected' }); toast.success('Connected.'); }
+    catch { toast.error('Could not accept.'); }
+  };
+  const doRemoveConn = async () => {
+    try { await connectionsApi.remove(studentId); setConn({ status: 'none' }); }
+    catch { toast.error('Could not update connection.'); }
+  };
+
+  const connectButton = () => {
+    if (!authUser || authUser._id === studentId) return null;
+    const base: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)' };
+    if (conn.status === 'none') return <button onClick={doConnect} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}>+ Connect</button>;
+    if (conn.status === 'outgoing') return <button onClick={doRemoveConn} style={base} title="Withdraw request">Requested</button>;
+    if (conn.status === 'incoming') return <button onClick={doAccept} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}>Accept request</button>;
+    if (conn.status === 'connected') return <button onClick={doRemoveConn} style={base} title="Remove connection">✓ Connected</button>;
+    return null;
+  };
+
+  const openCompose = () =>
+    setCompose({
+      open: true,
+      subject: 'Opportunity via Kalgidhar Placements',
+      body:
+        `Hi ${u.firstName || 'there'},\n\nI came across your profile on Kalgidhar Placements and was impressed by your background in ${p.preferred_field || 'your field'}. We have an opportunity that may be a strong fit and would love to connect.\n\nWould you be open to a short call this week?\n\nWarm regards,\n${authUser?.firstName ?? ''}`,
+    });
+
+  const sendCompose = async () => {
+    if (!compose.subject.trim() || !compose.body.trim()) {
+      toast.error('Subject and message are required.');
+      return;
+    }
+    setSending(true);
+    try {
+      await outreachApi.emailStudent({ studentId, subject: compose.subject, body: compose.body });
+      toast.success(`Email sent to ${u.firstName || 'the student'}.`);
+      setCompose((c) => ({ ...c, open: false }));
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Could not send the email. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div style={{ ...card, padding: 24 }}>
       <h2 style={h2}>{title}</h2>
@@ -131,7 +213,15 @@ const PublicStudentProfile: React.FC = () => {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 170 }}>
-            <a href={contactHref(cs)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Contact</a>
+            {isRecruiter ? (
+              <button onClick={openCompose} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Contact</button>
+            ) : (
+              <a href={contactHref(cs)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Contact</a>
+            )}
+            {connectButton()}
+            {canMessage && (
+              <button onClick={startMessage} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Message</button>
+            )}
             {p.resume_link && <a href={p.resume_link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Résumé <span aria-hidden>↗</span></a>}
           </div>
         </div>
@@ -280,10 +370,43 @@ const PublicStudentProfile: React.FC = () => {
                 </a>
               )}
             </div>
-            <a href={contactHref(cs)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Email {name}</a>
+            {isRecruiter ? (
+              <button onClick={openCompose} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Email {name}</button>
+            ) : (
+              <a href={contactHref(cs)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Email {name}</a>
+            )}
           </div>
         </aside>
       </div>
+
+      {compose.open && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={() => !sending && setCompose((c) => ({ ...c, open: false }))} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
+          <div style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
+            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Email {name}</h2>
+            <p style={{ margin: '6px 0 16px', fontSize: 13, color: 'var(--text-muted)' }}>
+              Sent through Kalgidhar Placements. {name} can reply directly to your email.
+            </p>
+            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' }}>Subject</label>
+            <input
+              value={compose.subject}
+              onChange={(e) => setCompose((c) => ({ ...c, subject: e.target.value }))}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none', marginBottom: 14 }}
+            />
+            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' }}>Message</label>
+            <textarea
+              value={compose.body}
+              onChange={(e) => setCompose((c) => ({ ...c, body: e.target.value }))}
+              rows={8}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'vertical' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
+              <button onClick={() => setCompose((c) => ({ ...c, open: false }))} disabled={sending} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border)' }}>Cancel</button>
+              <button onClick={sendCompose} disabled={sending} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', opacity: sending ? 0.7 : 1 }}>{sending ? 'Sending…' : 'Send email'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </Shell>
   );
 };

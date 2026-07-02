@@ -23,13 +23,15 @@ function App() {
       >
         Skip to content
       </a>
-      <Navbar />
-      <ErrorBoundary>
-        <main id="main">
-          <Outlet />
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Navbar />
+        <main id="main" style={{ flex: 1 }}>
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
-      </ErrorBoundary>
-      <Footer />
+        <Footer />
+      </div>
       <Toaster position="top-center" />
     </ThemeProvider>
   );

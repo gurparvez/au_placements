@@ -13,6 +13,13 @@ import StudentProfilePage from './pages/StudentPage/StudentProfilePage.tsx';
 import CreateProfile from './pages/CreateProfile/CreateProfile.tsx';
 import AboutPage from './pages/AboutPage.tsx';
 import AdminPage from './pages/Admin/AdminPage.tsx';
+import RecruiterApply from './pages/RecruiterApply/RecruiterApply.tsx';
+import OpeningsPage from './pages/Openings/OpeningsPage.tsx';
+import RecruiterOpenings from './pages/RecruiterOpenings/RecruiterOpenings.tsx';
+import FeedPage from './pages/Feed/FeedPage.tsx';
+import MessagesPage from './pages/Messages/MessagesPage.tsx';
+import NetworkPage from './pages/Network/NetworkPage.tsx';
+import CompaniesPage from './pages/Companies/CompaniesPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -27,6 +34,13 @@ createRoot(document.getElementById('root')!).render(
             <Route path="profiles/:userId" element={<StudentProfile />} />
             <Route path="profiles/create" element={<CreateProfile />} />
             <Route path="admin" element={<AdminPage />} />
+            <Route path="feed" element={<FeedPage />} />
+            <Route path="messages" element={<MessagesPage />} />
+            <Route path="network" element={<NetworkPage />} />
+            <Route path="companies" element={<CompaniesPage />} />
+            <Route path="openings" element={<OpeningsPage />} />
+            <Route path="recruiter/apply" element={<RecruiterApply />} />
+            <Route path="recruiter/openings" element={<RecruiterOpenings />} />
             <Route path="login" element={<LoginPage />} />
           </Route>
         </Routes>

@@ -11,6 +11,7 @@ import adminApi, {
   type Role,
   type University,
 } from '@/api/admin';
+import RecruitersPanel from './RecruitersPanel';
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -72,9 +73,9 @@ function UserFormModal({
   const [form, setForm] = useState<FormState>(
     editing
       ? {
-          auid: editing.auid, password: '', firstName: editing.firstName,
+          auid: editing.auid ?? '', password: '', firstName: editing.firstName,
           lastName: editing.lastName ?? '', email: editing.email ?? '',
-          phone: editing.phone ?? '', university: editing.university,
+          phone: editing.phone ?? '', university: editing.university ?? 'Akal University',
           roles: editing.roles?.length ? editing.roles : ['student'],
         }
       : emptyForm
@@ -214,6 +215,7 @@ const AdminPage: React.FC = () => {
 
   const isAdmin = !!user?.roles?.includes('admin');
 
+  const [tab, setTab] = useState<'users' | 'recruiters'>('users');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -280,14 +282,37 @@ const AdminPage: React.FC = () => {
           <Shield size={22} />
         </span>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-.02em' }}>User management</h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-.02em' }}>Admin</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
-            Create, edit, and remove student &amp; admin accounts.
+            Manage users and review recruiter requests.
           </p>
         </div>
-        <button onClick={openCreate} style={btnPrimary}><Plus size={16} /> New user</button>
+        {tab === 'users' && <button onClick={openCreate} style={btnPrimary}><Plus size={16} /> New user</button>}
       </div>
 
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, margin: '20px 0 4px', borderBottom: '1px solid var(--border)' }}>
+        {(['users', 'recruiters'] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            style={{
+              padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
+              fontWeight: 600, fontSize: 14, textTransform: 'capitalize',
+              color: tab === t ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: `2px solid ${tab === t ? 'var(--primary)' : 'transparent'}`,
+              marginBottom: -1,
+            }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'recruiters' ? (
+        <div style={{ marginTop: 18 }}><RecruitersPanel /></div>
+      ) : (
+      <>
       <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 16px' }}>
         <div style={{ position: 'relative', flex: 1 }}>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
@@ -364,6 +389,8 @@ const AdminPage: React.FC = () => {
       )}
 
       {modalOpen && <UserFormModal editing={editing} onClose={() => setModalOpen(false)} onSaved={load} />}
+      </>
+      )}
     </section>
   );
 };

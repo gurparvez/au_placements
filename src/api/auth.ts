@@ -4,8 +4,24 @@ import { URL } from '../constants';
 /* ----------------------------- REQUEST TYPES ----------------------------- */
 
 export interface LoginPayload {
-  auid: string;
+  identifier: string; // students: auid, recruiters/admin: email
   password: string;
+}
+
+export interface RecruiterRequestPayload {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  password: string;
+  company: string;
+  designation?: string;
+  company_website?: string;
+  industry?: string;
+  company_size?: '1-10' | '11-50' | '51-200' | '201-500' | '500+';
+  location?: string;
+  linkedin_url?: string;
+  about?: string;
 }
 
 export interface UpdateDetailsPayload {
@@ -29,11 +45,12 @@ export interface LoginResponse {
     token: string;
     user: {
       _id: string;
-      auid: string;
+      auid?: string;
       firstName: string;
       lastName?: string;
-      university: string;
+      university?: string;
       roles: string[];
+      status?: string;
     };
   };
 }
@@ -42,13 +59,14 @@ export interface MeResponse {
   success: boolean;
   data: {
     _id: string;
-    auid: string;
+    auid?: string;
     firstName: string;
     lastName?: string;
-    university: string;
+    university?: string;
     roles: string[];
     email?: string;
     phone?: string;
+    status?: string;
   };
 }
 
@@ -100,6 +118,12 @@ class Auth {
   /* -------------------------------- LOGOUT ------------------------------- */
   logout() {
     return this.instance.post('/api/auth/logout');
+  }
+
+  /* ------------------------- RECRUITER SELF-REQUEST ---------------------- */
+  async requestRecruiter(data: RecruiterRequestPayload): Promise<{ success: boolean; message: string }> {
+    const response = await this.instance.post('/api/auth/recruiter-request', data);
+    return response.data;
   }
 
   /* -------------------------------- GET USER ----------------------------- */

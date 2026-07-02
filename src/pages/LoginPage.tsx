@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { loginUser } from '@/context/auth/authSlice';
 
@@ -27,15 +27,16 @@ const LoginPage: React.FC = () => {
 
   const submitSignin = async () => {
     const er: Errors = {};
-    if (!siRoll.trim()) er.siRoll = 'Enter your AUID / Roll No.';
+    if (!siRoll.trim()) er.siRoll = 'Enter your AUID or email.';
     if (!siPw) er.siPw = 'Enter your password';
     setErrors(er);
     if (Object.keys(er).length) { setBanner('Please fix the highlighted fields.'); return; }
     setBanner('');
-    const res = await dispatch(loginUser({ auid: siRoll.trim(), password: siPw.trim() }));
+    const res = await dispatch(loginUser({ identifier: siRoll.trim(), password: siPw.trim() }));
     if (loginUser.fulfilled.match(res)) {
       const roles = res.payload.data.user.roles || [];
-      navigate(roles.includes('admin') ? '/admin' : '/profiles', { replace: true });
+      const dest = roles.includes('admin') ? '/admin' : roles.includes('recruiter') ? '/students' : '/profiles';
+      navigate(dest, { replace: true });
     }
   };
 
@@ -90,8 +91,8 @@ const LoginPage: React.FC = () => {
 
           <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label htmlFor="si-roll" style={labelStyle}>AUID / Roll No.</label>
-              <input id="si-roll" value={siRoll} onChange={(e) => setSiRoll(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="e.g. 100482" style={fieldStyle(errors.siRoll)} />
+              <label htmlFor="si-roll" style={labelStyle}>AUID or Email</label>
+              <input id="si-roll" value={siRoll} onChange={(e) => setSiRoll(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Students: AUID · Recruiters: email" style={fieldStyle(errors.siRoll)} />
               {errors.siRoll && <div style={errStyle}>{errors.siRoll}</div>}
             </div>
             <div>
@@ -103,6 +104,10 @@ const LoginPage: React.FC = () => {
               {errors.siPw && <div style={errStyle}>{errors.siPw}</div>}
             </div>
             <button onClick={submitSignin} style={{ marginTop: 6, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none' }}>Sign in</button>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 0' }}>
+              Are you a recruiter?{' '}
+              <Link to="/recruiter/apply" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Apply for access</Link>
+            </p>
           </div>
         </div>
       </div>
