@@ -2,8 +2,19 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { Briefcase, UserRound, Building2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import authApi, { type RecruiterRequestPayload } from '@/api/auth';
 import { isValidEmail } from '@/utils/validation';
+
+const SectionCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
+  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 22, marginTop: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16 }}>
+      <span style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
+      <h2 style={{ margin: 0, fontSize: 15.5, fontWeight: 650 }}>{title}</h2>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>{children}</div>
+  </div>
+);
 
 const label: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 550, marginBottom: 6 };
 const err: React.CSSProperties = { color: 'var(--danger)', fontSize: 12.5, marginTop: 5 };
@@ -93,13 +104,22 @@ const RecruiterApply: React.FC = () => {
   }
 
   return (
-    <section style={{ maxWidth: 720, margin: '0 auto', padding: '40px 24px 80px' }}>
-      <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>Apply as a recruiter</h1>
-      <p style={{ color: 'var(--text-muted)', marginTop: 8, fontSize: 14 }}>
-        Tell us about you and your company. An admin reviews every request before your account is activated.
-      </p>
+    <section style={{ maxWidth: 720, margin: '0 auto', padding: '36px 24px 80px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <span aria-hidden style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+          <Briefcase size={24} />
+        </span>
+        <div>
+          <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>Apply as a recruiter</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '5px 0 0', fontSize: 14 }}>Tell us about you and your company to start hiring.</p>
+        </div>
+      </div>
 
-      <div style={{ marginTop: 26, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 20, padding: '11px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', border: '1px solid var(--primary-soft-border)', color: 'var(--primary)', fontSize: 13.5, fontWeight: 500 }}>
+        <ShieldCheck size={16} /> An admin reviews every request before your account is activated.
+      </div>
+
+      <SectionCard title="Your details" icon={<UserRound size={18} />}>
         <div>
           <label style={label}>First name</label>
           <input value={form.firstName} onChange={(e) => set('firstName', e.target.value)} style={field(errors.firstName)} />
@@ -128,10 +148,10 @@ const RecruiterApply: React.FC = () => {
           <label style={label}>Your designation</label>
           <input value={form.designation} onChange={(e) => set('designation', e.target.value)} placeholder="e.g. HR Manager" style={field()} />
         </div>
+      </SectionCard>
 
-        <div style={{ gridColumn: '1 / -1', height: 1, background: 'var(--border)', margin: '4px 0' }} />
-
-        <div>
+      <SectionCard title="Your company" icon={<Building2 size={18} />}>
+        <div style={{ gridColumn: '1 / -1' }}>
           <label style={label}>Company name</label>
           <input value={form.company} onChange={(e) => set('company', e.target.value)} style={field(errors.company)} />
           {errors.company && <div style={err}>{errors.company}</div>}
@@ -155,7 +175,7 @@ const RecruiterApply: React.FC = () => {
           <label style={label}>Location</label>
           <input value={form.location} onChange={(e) => set('location', e.target.value)} style={field()} />
         </div>
-        <div>
+        <div style={{ gridColumn: '1 / -1' }}>
           <label style={label}>LinkedIn URL</label>
           <input value={form.linkedin_url} onChange={(e) => set('linkedin_url', e.target.value)} placeholder="https://linkedin.com/…" style={field()} />
         </div>
@@ -163,13 +183,13 @@ const RecruiterApply: React.FC = () => {
           <label style={label}>About the company <span style={{ color: 'var(--text-subtle)', fontWeight: 400 }}>(optional)</span></label>
           <textarea value={form.about} onChange={(e) => set('about', e.target.value)} rows={3} style={{ ...field(), resize: 'vertical' }} />
         </div>
+      </SectionCard>
 
-        <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-          <Link to="/login" style={{ color: 'var(--text-muted)', fontSize: 13.5, textDecoration: 'none' }}>← Back to sign in</Link>
-          <button onClick={submit} disabled={submitting} style={{ padding: '12px 22px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1 }}>
-            {submitting ? 'Submitting…' : 'Submit request'}
-          </button>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
+        <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13.5, textDecoration: 'none' }}><ArrowLeft size={15} /> Back to sign in</Link>
+        <button onClick={submit} disabled={submitting} style={{ padding: '12px 24px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1 }}>
+          {submitting ? 'Submitting…' : 'Submit request'}
+        </button>
       </div>
     </section>
   );

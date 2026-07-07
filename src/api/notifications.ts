@@ -4,7 +4,7 @@ import type { ChatUser } from './messages';
 
 export type NotificationType =
   | 'reaction' | 'comment' | 'reply' | 'mention' | 'message' | 'recruiter_approved' | 'recruiter_rejected'
-  | 'connection_request' | 'connection_accepted' | 'follow';
+  | 'connection_request' | 'connection_accepted' | 'follow' | 'application';
 
 export interface AppNotification {
   _id: string;

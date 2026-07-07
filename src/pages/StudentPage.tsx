@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Search, ChevronDown, SlidersHorizontal, Users } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAllStudents } from '@/context/student/studentSlice';
 import { skillsApi } from '@/api/skills';
@@ -21,10 +22,21 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const selectStyle: React.CSSProperties = {
   appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none',
-  padding: '10px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)',
-  background: 'var(--surface-2)', color: 'var(--text-muted)', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
-  textAlign: 'center', textAlignLast: 'center',
+  padding: '10px 34px 10px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)',
+  background: 'var(--surface-2)', color: 'var(--text)', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
 };
+
+// Select with a chevron affordance (native select is appearance:none).
+const FilterSelect: React.FC<{
+  value: string; onChange: (v: string) => void; label: string; style?: React.CSSProperties; children: React.ReactNode;
+}> = ({ value, onChange, label, style, children }) => (
+  <div style={{ position: 'relative', display: 'inline-flex' }}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} style={{ ...selectStyle, ...style }}>
+      {children}
+    </select>
+    <ChevronDown size={15} style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-subtle)' }} />
+  </div>
+);
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '11px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
   background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
@@ -155,47 +167,52 @@ const StudentsPage: React.FC = () => {
   return (
     <section style={{ width: '100%', padding: `36px ${PADX} 80px` }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div>
-          <h1 style={{ fontSize: 'clamp(28px,4vw,38px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>Browse students</h1>
-          <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'left' }}>
-            <strong style={{ color: 'var(--text)', fontWeight: 650 }}>{filtered.length}</strong> of {total} students match your filters
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span aria-hidden style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+            <Users size={24} />
+          </span>
+          <div>
+            <h1 style={{ fontSize: 'clamp(26px,4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>Explore students</h1>
+            <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+              <strong style={{ color: 'var(--text)', fontWeight: 650 }}>{filtered.length}</strong> of {total} students match your filters
+            </p>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>Skills filter</button>
-          <button onClick={clearAll} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text-muted)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>Clear all filters</button>
+          <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}><SlidersHorizontal size={15} /> Skills</button>
+          <button onClick={clearAll} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text-muted)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>Clear filters</button>
         </div>
       </div>
 
-      {/* Filters — all on one line, vertically centered */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 24, alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
-          <span aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)', fontSize: 15 }}>⌕</span>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, headline, skill, field…" aria-label="Search students" style={{ ...inputStyle, paddingLeft: 34 }} />
+      {/* Filters — grouped in a bar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 22, alignItems: 'center', padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+          <Search size={16} aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, headline, skill, field…" aria-label="Search students" style={{ ...inputStyle, paddingLeft: 38 }} />
         </div>
-        <select value={university} onChange={(e) => setUniversity(e.target.value)} aria-label="University" style={selectStyle}>
+        <FilterSelect value={university} onChange={setUniversity} label="University">
           {UNIVERSITIES.map((u) => <option key={u} value={u}>{u === 'Any' ? 'University' : u}</option>)}
-        </select>
-        <select value={opportunity} onChange={(e) => setOpportunity(e.target.value)} aria-label="Opportunity" style={selectStyle}>
+        </FilterSelect>
+        <FilterSelect value={opportunity} onChange={setOpportunity} label="Opportunity">
           {OPPORTUNITIES.map((o) => <option key={o} value={o}>{o === 'Any' ? 'Opportunity' : o}</option>)}
-        </select>
-        <select value={field} onChange={(e) => setField(e.target.value)} aria-label="Preferred field" style={{ ...selectStyle, maxWidth: 200 }}>
+        </FilterSelect>
+        <FilterSelect value={field} onChange={setField} label="Preferred field" style={{ maxWidth: 190 }}>
           {fields.map((f) => <option key={f} value={f}>{f === 'Any' ? 'Field' : f}</option>)}
-        </select>
-        <select value={exp} onChange={(e) => setExp(e.target.value)} aria-label="Experience" style={selectStyle}>
+        </FilterSelect>
+        <FilterSelect value={exp} onChange={setExp} label="Experience">
           {EXP_RANGES.map((er) => <option key={er.v} value={er.v}>{er.l}</option>)}
-        </select>
+        </FilterSelect>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 13, color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>Available</span>
-          <select value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Available from" style={{ ...selectStyle, padding: '11px 12px', fontSize: 13.5 }}>
+          <FilterSelect value={from} onChange={setFrom} label="Available from" style={{ fontSize: 13.5 }}>
             <option value="">Any month</option>
             {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-          </select>
+          </FilterSelect>
           <span aria-hidden style={{ color: 'var(--text-subtle)' }}>→</span>
-          <select value={to} onChange={(e) => setTo(e.target.value)} aria-label="Available until" style={{ ...selectStyle, padding: '11px 12px', fontSize: 13.5 }}>
+          <FilterSelect value={to} onChange={setTo} label="Available until" style={{ fontSize: 13.5 }}>
             <option value="">Any month</option>
             {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-          </select>
+          </FilterSelect>
         </div>
       </div>
 

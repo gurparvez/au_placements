@@ -23,8 +23,17 @@ export interface Opening {
   apply_url?: string;
   apply_by?: string;
   status: OpeningStatus;
+  application_count?: number;
+  has_applied?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Applicant {
+  _id: string;
+  status: string;
+  appliedAt: string;
+  student: { _id: string; firstName?: string; lastName?: string; auid?: string; university?: string } | null;
 }
 
 export interface OpeningPayload {
@@ -62,7 +71,7 @@ class OpeningsApi {
     this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
   }
 
-  async list(params?: { page?: number; limit?: number; q?: string; type?: string; university?: string; skill?: string; status?: string }): Promise<ListOpeningsResponse> {
+  async list(params?: { page?: number; limit?: number; q?: string; type?: string; university?: string; skill?: string; status?: string; recruiter?: string }): Promise<ListOpeningsResponse> {
     const res = await this.instance.get<ListOpeningsResponse>('/api/openings', { params });
     return res.data;
   }
@@ -94,6 +103,16 @@ class OpeningsApi {
 
   async remove(id: string): Promise<void> {
     await this.instance.delete(`/api/openings/${id}`);
+  }
+
+  async apply(id: string): Promise<{ applied: boolean; application_count: number }> {
+    const res = await this.instance.post<{ success: boolean; data: { applied: boolean; application_count: number } }>(`/api/openings/${id}/apply`);
+    return res.data.data;
+  }
+
+  async applicants(id: string): Promise<Applicant[]> {
+    const res = await this.instance.get<{ success: boolean; data: Applicant[] }>(`/api/openings/${id}/applicants`);
+    return res.data.data;
   }
 }
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { Plus, Pencil, Trash2, Search, Shield, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Shield, RefreshCw, Users, Building2 } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import adminApi, {
   type AdminUser,
@@ -12,6 +12,7 @@ import adminApi, {
   type University,
 } from '@/api/admin';
 import RecruitersPanel from './RecruitersPanel';
+import { avatarColor, initials } from '@/utils/avatar';
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -49,6 +50,14 @@ const btnGhost: React.CSSProperties = {
   fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
 };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
+
+const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) => (
+  <span aria-hidden style={{
+    width: 32, height: 32, borderRadius: '50%', flex: 'none', display: 'inline-flex',
+    alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12,
+    background: avatarColor(`${first ?? ''} ${last ?? ''}`),
+  }}>{initials(first, last) || '?'}</span>
+);
 
 /* --------------------------- user form modal --------------------------- */
 
@@ -223,6 +232,14 @@ const AdminPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  const loadPending = useCallback(async () => {
+    try {
+      const res = await adminApi.listRecruiters({ page: 1, limit: 1, status: 'pending' });
+      setPendingCount(res.pagination.total);
+    } catch { /* non-critical badge */ }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -247,6 +264,10 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     if (isAdmin) load();
   }, [isAdmin, load]);
+
+  useEffect(() => {
+    if (isAdmin) loadPending();
+  }, [isAdmin, loadPending]);
 
   const openCreate = () => { setEditing(null); setModalOpen(true); };
   const openEdit = (u: AdminUser) => { setEditing(u); setModalOpen(true); };
@@ -292,11 +313,12 @@ const AdminPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, margin: '20px 0 4px', borderBottom: '1px solid var(--border)' }}>
-        {(['users', 'recruiters'] as const).map((t) => (
+        {([['users', Users], ['recruiters', Building2]] as const).map(([t, Icon]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
+              display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
               fontWeight: 600, fontSize: 14, textTransform: 'capitalize',
               color: tab === t ? 'var(--primary)' : 'var(--text-muted)',
@@ -304,13 +326,20 @@ const AdminPage: React.FC = () => {
               marginBottom: -1,
             }}
           >
-            {t}
+            <Icon size={16} /> {t}
+            {t === 'recruiters' && !!pendingCount && (
+              <span style={{
+                minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                background: 'color-mix(in srgb, orange 18%, transparent)', color: 'orange',
+              }}>{pendingCount}</span>
+            )}
           </button>
         ))}
       </div>
 
       {tab === 'recruiters' ? (
-        <div style={{ marginTop: 18 }}><RecruitersPanel /></div>
+        <div style={{ marginTop: 18 }}><RecruitersPanel onChanged={loadPending} /></div>
       ) : (
       <>
       <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 16px' }}>
@@ -337,12 +366,24 @@ const AdminPage: React.FC = () => {
               {loading ? (
                 <tr><td colSpan={6} style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>No users found.</td></tr>
+                <tr><td colSpan={6}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '40px 20px', color: 'var(--text-muted)' }}>
+                    <Users size={26} style={{ opacity: 0.5 }} />
+                    <span>{q ? 'No users match your search.' : 'No users yet.'}</span>
+                  </div>
+                </td></tr>
               ) : (
                 rows.map((u) => (
-                  <tr key={u._id} style={{ borderTop: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px 14px', fontWeight: 600, whiteSpace: 'nowrap' }}>{u.auid}</td>
-                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{`${u.firstName} ${u.lastName ?? ''}`.trim()}</td>
+                  <tr key={u._id} style={{ borderTop: '1px solid var(--border)', transition: 'background .15s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                    <td style={{ padding: '12px 14px', fontWeight: 600, whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{u.auid}</td>
+                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <Avatar first={u.firstName} last={u.lastName} />
+                        <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{`${u.firstName} ${u.lastName ?? ''}`.trim()}</span>
+                      </span>
+                    </td>
                     <td style={{ padding: '12px 14px', color: 'var(--text-muted)' }}>{u.email || '—'}</td>
                     <td style={{ padding: '12px 14px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{u.university}</td>
                     <td style={{ padding: '12px 14px' }}>

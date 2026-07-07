@@ -22,7 +22,33 @@ import type { Course } from '@/api/courses';
 import CoursePicker from '@/components/CoursePicker';
 import SkillPicker from '@/components/SkillPicker';
 import { isValidUrl } from '@/utils/validation';
-import { X } from 'lucide-react';
+import {
+  X, UserRound, Link2, Sparkles, GraduationCap, Briefcase,
+  FolderKanban, Award, Rocket,
+} from 'lucide-react';
+
+const SectionHeader: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  hint?: string;
+  action?: React.ReactNode;
+}> = ({ icon, title, hint, action }) => (
+  <div className="flex items-start justify-between gap-4">
+    <div className="flex items-center gap-3">
+      <span
+        aria-hidden
+        className="bg-primary-soft text-primary flex h-10 w-10 flex-none items-center justify-center rounded-[11px]"
+      >
+        {icon}
+      </span>
+      <div>
+        <h2 className="text-lg font-semibold leading-tight tracking-tight">{title}</h2>
+        {hint && <p className="text-muted-foreground mt-0.5 text-xs">{hint}</p>}
+      </div>
+    </div>
+    {action}
+  </div>
+);
 
 // Interface for local state
 interface LookingForState {
@@ -184,20 +210,29 @@ const CreateProfile: React.FC = () => {
   return (
     <main className="bg-background text-foreground min-h-screen">
       <div className="mx-auto flex max-w-[760px] flex-col px-6 pt-24 pb-10">
-        <div className="mb-8">
-          <span className="eyebrow">New register entry</span>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Create your profile</h1>
-          <p className="text-muted-foreground mt-2 max-w-[65ch] text-sm">
-            Fill in your details to help companies discover you. Fields marked
-            <span className="text-danger"> *</span> are required.
-          </p>
+        <div className="mb-8 flex items-start gap-4">
+          <span
+            aria-hidden
+            className="bg-primary-soft text-primary flex h-12 w-12 flex-none items-center justify-center rounded-[13px]"
+          >
+            <Rocket size={24} />
+          </span>
+          <div>
+            <span className="eyebrow">Set up your profile</span>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">Create your profile</h1>
+            <p className="text-muted-foreground mt-2 max-w-[65ch] text-sm">
+              A complete profile helps recruiters across Akal &amp; Eternal discover you. Fields
+              marked <span className="text-danger">*</span> are required — everything else you can
+              fill in as you go.
+            </p>
+          </div>
         </div>
 
         <form onSubmit={() => {}} className="space-y-6">
           {/* BASIC INFO */}
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-semibold">Basic Information</h2>
+              <SectionHeader icon={<UserRound size={19} />} title="Basic Information" hint="Your name, photo and a short intro." />
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -297,7 +332,7 @@ const CreateProfile: React.FC = () => {
           {/* LINKS & PREFERENCES */}
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-semibold">Links &amp; Preferences</h2>
+              <SectionHeader icon={<Link2 size={19} />} title="Links &amp; Preferences" hint="Portfolios, resume and what you're looking for." />
             </CardHeader>
 
             <CardContent className="space-y-6">
@@ -468,7 +503,7 @@ const CreateProfile: React.FC = () => {
           {/* ---------------------- SKILLS ---------------------- */}
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-semibold">Skills</h2>
+              <SectionHeader icon={<Sparkles size={19} />} title="Skills" hint="Add the tools and technologies you know." />
             </CardHeader>
 
             <CardContent>
@@ -483,17 +518,21 @@ const CreateProfile: React.FC = () => {
           {/* ---------------------- EDUCATION ---------------------- */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Education</h2>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setEducationList((prev) => [...prev, newEduRow()])}
-                >
-                  Add Education
-                </Button>
-              </div>
+              <SectionHeader
+                icon={<GraduationCap size={19} />}
+                title="Education"
+                hint="School and university, most recent first."
+                action={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEducationList((prev) => [...prev, newEduRow()])}
+                  >
+                    Add Education
+                  </Button>
+                }
+              />
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -695,22 +734,26 @@ const CreateProfile: React.FC = () => {
           {/* ---------------------- EXPERIENCE ---------------------- */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Experience</h2>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setExperiences((prev) => [
-                      ...prev,
-                      { company: '', role: '', start_date: '', end_date: '', description: '' },
-                    ])
-                  }
-                >
-                  Add Experience
-                </Button>
-              </div>
+              <SectionHeader
+                icon={<Briefcase size={19} />}
+                title="Experience"
+                hint="Internships and jobs you've held."
+                action={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setExperiences((prev) => [
+                        ...prev,
+                        { company: '', role: '', start_date: '', end_date: '', description: '' },
+                      ])
+                    }
+                  >
+                    Add Experience
+                  </Button>
+                }
+              />
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -841,31 +884,35 @@ const CreateProfile: React.FC = () => {
           {/* ---------------------- PROJECTS ---------------------- */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Projects</h2>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setProjects((prev) => [
-                      ...prev,
-                      {
-                        title: '',
-                        start_date: '',
-                        end_date: '',
-                        on_going: false,
-                        tech_used: [],
-                        code_url: '',
-                        live_url: '',
-                        description: '',
-                      },
-                    ])
-                  }
-                >
-                  Add Project
-                </Button>
-              </div>
+              <SectionHeader
+                icon={<FolderKanban size={19} />}
+                title="Projects"
+                hint="Things you've built — with links if you have them."
+                action={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setProjects((prev) => [
+                        ...prev,
+                        {
+                          title: '',
+                          start_date: '',
+                          end_date: '',
+                          on_going: false,
+                          tech_used: [],
+                          code_url: '',
+                          live_url: '',
+                          description: '',
+                        },
+                      ])
+                    }
+                  >
+                    Add Project
+                  </Button>
+                }
+              />
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -1045,28 +1092,32 @@ const CreateProfile: React.FC = () => {
           {/* ---------------------- CERTIFICATES ---------------------- */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Certificates</h2>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    setCertificates((prev) => [
-                      ...prev,
-                      {
-                        name: '',
-                        issued_by: '',
-                        issue_date: '',
-                        certificate_url: '',
-                        valid_until: '',
-                      },
-                    ])
-                  }
-                >
-                  Add Certificate
-                </Button>
-              </div>
+              <SectionHeader
+                icon={<Award size={19} />}
+                title="Certificates"
+                hint="Courses and credentials you've earned."
+                action={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setCertificates((prev) => [
+                        ...prev,
+                        {
+                          name: '',
+                          issued_by: '',
+                          issue_date: '',
+                          certificate_url: '',
+                          valid_until: '',
+                        },
+                      ])
+                    }
+                  >
+                    Add Certificate
+                  </Button>
+                }
+              />
             </CardHeader>
 
             <CardContent className="space-y-4">
@@ -1297,7 +1348,7 @@ const CreateProfile: React.FC = () => {
                 }
               }}
               >
-                {loading ? 'Saving…' : 'Save profile'}
+                {loading ? 'Saving…' : (<><Rocket size={16} /> Save profile</>)}
               </Button>
             </div>
           </Card>

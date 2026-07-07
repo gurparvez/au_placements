@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/context/hooks';
-import { Home, Newspaper, GraduationCap, Briefcase, Building2, Users, Shield, Info, X } from 'lucide-react';
+import { Home, Newspaper, GraduationCap, Briefcase, Building2, Users, Shield, Info, X, Search } from 'lucide-react';
 
 interface Item {
   to: string;
@@ -32,12 +32,13 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
 
   const items: Item[] = [
     { to: '/', label: 'Home', icon: <Home size={18} /> },
+    { to: '/search', label: 'Search', icon: <Search size={18} /> },
     { to: '/feed', label: 'Feed', icon: <Newspaper size={18} /> },
-    { to: '/students', label: 'Register', icon: <GraduationCap size={18} /> },
+    { to: '/students', label: 'Students', icon: <GraduationCap size={18} /> },
     { to: '/openings', label: 'Openings', icon: <Briefcase size={18} /> },
     { to: '/companies', label: 'Companies', icon: <Building2 size={18} /> },
     { to: '/network', label: 'My network', icon: <Users size={18} />, show: !!user },
-    { to: '/recruiter/openings', label: 'My openings', icon: <Briefcase size={18} />, show: isRecruiter, accent: true },
+    { to: '/recruiter/openings', label: 'My openings', icon: <Briefcase size={18} />, show: isRecruiter || isAdmin, accent: true },
     { to: '/admin', label: 'Admin', icon: <Shield size={18} />, show: isAdmin, accent: true },
     { to: '/about', label: 'About', icon: <Info size={18} /> },
   ];

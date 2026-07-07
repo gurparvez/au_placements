@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { loginUser } from '@/context/auth/authSlice';
 
@@ -92,14 +93,18 @@ const LoginPage: React.FC = () => {
           <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label htmlFor="si-roll" style={labelStyle}>AUID or Email</label>
-              <input id="si-roll" value={siRoll} onChange={(e) => setSiRoll(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Students: AUID · Recruiters: email" style={fieldStyle(errors.siRoll)} />
+              <div style={{ position: 'relative' }}>
+                <User size={16} aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                <input id="si-roll" value={siRoll} onChange={(e) => setSiRoll(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Students: AUID · Recruiters: email" style={{ ...fieldStyle(errors.siRoll), paddingLeft: 38 }} />
+              </div>
               {errors.siRoll && <div style={errStyle}>{errors.siRoll}</div>}
             </div>
             <div>
               <label htmlFor="si-pw" style={labelStyle}>Password</label>
               <div style={{ position: 'relative' }}>
-                <input id="si-pw" type={siShow ? 'text' : 'password'} value={siPw} onChange={(e) => setSiPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Your password" style={{ ...fieldStyle(errors.siPw), paddingRight: 56 }} />
-                <button onClick={() => setSiShow((v) => !v)} aria-label="Show or hide password" style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', padding: '6px 8px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12.5, fontWeight: 550, background: 'none', border: 'none' }}>{siShow ? 'Hide' : 'Show'}</button>
+                <Lock size={16} aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                <input id="si-pw" type={siShow ? 'text' : 'password'} value={siPw} onChange={(e) => setSiPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Your password" style={{ ...fieldStyle(errors.siPw), paddingLeft: 38, paddingRight: 44 }} />
+                <button onClick={() => setSiShow((v) => !v)} aria-label="Show or hide password" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', display: 'flex', padding: 4 }}>{siShow ? <EyeOff size={16} /> : <Eye size={16} />}</button>
               </div>
               {errors.siPw && <div style={errStyle}>{errors.siPw}</div>}
             </div>

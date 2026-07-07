@@ -11,6 +11,15 @@ export interface Company {
   is_following: boolean;
 }
 
+export interface CompanyProfile extends Company {
+  website?: string;
+  company_size?: string;
+  designation?: string;
+  linkedin_url?: string;
+  about?: string;
+  contact?: string;
+}
+
 export interface Pagination { page: number; limit: number; total: number; totalPages: number; }
 export interface CompaniesResponse { success: boolean; data: Company[]; pagination: Pagination; }
 
@@ -21,6 +30,10 @@ class CompaniesApi {
   async list(params?: { page?: number; limit?: number; q?: string }): Promise<CompaniesResponse> {
     const res = await this.instance.get<CompaniesResponse>('/api/companies', { params });
     return res.data;
+  }
+  async get(companyUserId: string): Promise<CompanyProfile> {
+    const res = await this.instance.get(`/api/companies/${companyUserId}`);
+    return res.data.data;
   }
   async following(): Promise<Company[]> {
     const res = await this.instance.get('/api/companies/following');

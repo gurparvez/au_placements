@@ -1,6 +1,11 @@
 // src/pages/StudentProfile.tsx — public profile /profiles/:userId
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeft, BadgeCheck, MapPin, GraduationCap, CalendarClock, Mail, Linkedin, Github,
+  FileText, UserPlus, MessageCircle, Check,
+  Briefcase, FolderGit2, Award, Wrench, User as UserIcon, Newspaper,
+} from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAnyStudentProfile } from '@/context/student/studentSlice';
 import skillsApi from '@/api/skills';
@@ -9,6 +14,7 @@ import messagesApi from '@/api/messages';
 import connectionsApi, { type ConnStatus } from '@/api/connections';
 import { toast } from 'sonner';
 import { avatarColor, initials } from '@/utils/avatar';
+import ProfilePosts from '@/components/ProfilePosts';
 import { rangeYears, fmtMonth, availLabel, yearOf } from '@/utils/dates';
 
 const CATEGORY: Record<string, string> = { high_school: 'High School', ug: 'Undergraduate', pg: 'Postgraduate', diploma: 'Diploma', phd: 'PhD', other: 'Other' };
@@ -25,9 +31,9 @@ function contactHref(s: any) {
 }
 
 const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <section style={{ maxWidth: 1080, margin: '0 auto', padding: '28px 24px 80px' }}>
+  <section style={{ maxWidth: 1080, margin: '0 auto', padding: '24px 24px 80px' }}>
     <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500 }}>
-      <span aria-hidden>←</span> Back to register
+      <ArrowLeft size={15} /> Back to students
     </Link>
     {children}
   </section>
@@ -146,10 +152,10 @@ const PublicStudentProfile: React.FC = () => {
   const connectButton = () => {
     if (!authUser || authUser._id === studentId) return null;
     const base: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)' };
-    if (conn.status === 'none') return <button onClick={doConnect} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}>+ Connect</button>;
+    if (conn.status === 'none') return <button onClick={doConnect} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}><UserPlus size={16} /> Connect</button>;
     if (conn.status === 'outgoing') return <button onClick={doRemoveConn} style={base} title="Withdraw request">Requested</button>;
-    if (conn.status === 'incoming') return <button onClick={doAccept} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}>Accept request</button>;
-    if (conn.status === 'connected') return <button onClick={doRemoveConn} style={base} title="Remove connection">✓ Connected</button>;
+    if (conn.status === 'incoming') return <button onClick={doAccept} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}><Check size={16} /> Accept request</button>;
+    if (conn.status === 'connected') return <button onClick={doRemoveConn} style={base} title="Remove connection"><Check size={16} /> Connected</button>;
     return null;
   };
 
@@ -178,9 +184,12 @@ const PublicStudentProfile: React.FC = () => {
     }
   };
 
-  const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  const Section: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
     <div style={{ ...card, padding: 24 }}>
-      <h2 style={h2}>{title}</h2>
+      <h2 style={{ ...h2, display: 'flex', alignItems: 'center', gap: 8 }}>
+        {icon && <span style={{ color: 'var(--primary)', display: 'inline-flex' }}>{icon}</span>}
+        {title}
+      </h2>
       {children}
     </div>
   );
@@ -188,41 +197,57 @@ const PublicStudentProfile: React.FC = () => {
   return (
     <Shell>
       {/* Masthead */}
-      <div style={{ ...card, marginTop: 18, padding: 'clamp(22px,3vw,30px)' }}>
-        <div style={{ display: 'flex', gap: 22, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          {p.profile_image ? (
-            <img src={p.profile_image} alt={name} style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
-          ) : (
-            <span aria-hidden style={{ width: 96, height: 96, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 34, color: '#fff', background: avatarColor(name) }}>{initials(u.firstName, u.lastName) || 'U'}</span>
-          )}
-          <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: 'clamp(24px,3.4vw,32px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>{name}</h1>
-              {u.verified && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 'var(--r-pill)', background: 'var(--success-soft)', color: 'var(--success)' }}><span aria-hidden>✓</span> Verified</span>}
+      <div style={{ ...card, marginTop: 16, padding: 0, overflow: 'hidden' }}>
+        {/* cover band */}
+        <div aria-hidden style={{ height: 108, position: 'relative', background: 'linear-gradient(120deg, var(--primary-soft), var(--surface-2))' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(80% 150% at 10% 0%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%)' }} />
+        </div>
+
+        <div style={{ padding: 'clamp(16px,3vw,26px)', paddingTop: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+              {/* avatar overlapping the cover */}
+              <div style={{ marginTop: -58, position: 'relative', zIndex: 1, width: 'fit-content' }}>
+                {p.profile_image ? (
+                  <img src={p.profile_image} alt={name} style={{ width: 108, height: 108, borderRadius: '50%', objectFit: 'cover', border: '4px solid var(--surface)', boxShadow: '0 0 0 1px var(--border)' }} />
+                ) : (
+                  <span aria-hidden style={{ width: 108, height: 108, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 38, color: '#fff', background: avatarColor(name), border: '4px solid var(--surface)', boxShadow: '0 0 0 1px var(--border)' }}>{initials(u.firstName, u.lastName) || 'U'}</span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                <h1 style={{ fontSize: 'clamp(23px,3.4vw,30px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0, textTransform: 'capitalize' }}>{name}</h1>
+                {u.verified && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--success-soft)', color: 'var(--success)' }}><BadgeCheck size={13} /> Verified</span>}
+              </div>
+              {p.headline && <p style={{ fontSize: 15.5, color: 'var(--text)', margin: '6px 0 0' }}>{p.headline}</p>}
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 12, fontSize: 13.5, color: 'var(--text-muted)' }}>
+                {u.university && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><GraduationCap size={15} /> {u.university}</span>}
+                {p.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><MapPin size={15} /> {p.location}</span>}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Briefcase size={15} /> {p.total_experience || 0} mo experience</span>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+                  <span aria-hidden style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />
+                  {lf.type === 'job' ? 'Open to work' : 'Open to internship'}
+                </span>
+                {av && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 500, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}><CalendarClock size={13} /> Available {av}</span>}
+              </div>
             </div>
-            {p.headline && <p style={{ fontSize: 16, color: 'var(--text)', margin: '8px 0 0' }}>{p.headline}</p>}
-            <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 10, lineHeight: 1.6 }}>
-              {[u.university, p.location, `${p.total_experience || 0} months experience`].filter(Boolean).join(' · ')}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 170, marginTop: 16 }}>
+              {isRecruiter ? (
+                <button onClick={openCompose} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}><Mail size={16} /> Contact</button>
+              ) : (
+                <a href={contactHref(cs)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}><Mail size={16} /> Contact</a>
+              )}
+              {connectButton()}
+              {canMessage && (
+                <button onClick={startMessage} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}><MessageCircle size={16} /> Message</button>
+              )}
+              {p.resume_link && <a href={p.resume_link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}><FileText size={16} /> Résumé</a>}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)' }}>
-                <span aria-hidden style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />
-                {lf.type === 'job' ? 'Open to work' : 'Open to internship'}
-              </span>
-              {av && <span style={{ fontSize: 12.5, fontWeight: 500, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>Available {av}</span>}
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 170 }}>
-            {isRecruiter ? (
-              <button onClick={openCompose} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Contact</button>
-            ) : (
-              <a href={contactHref(cs)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Contact</a>
-            )}
-            {connectButton()}
-            {canMessage && (
-              <button onClick={startMessage} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Message</button>
-            )}
-            {p.resume_link && <a href={p.resume_link} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Résumé <span aria-hidden>↗</span></a>}
           </div>
         </div>
       </div>
@@ -231,13 +256,13 @@ const PublicStudentProfile: React.FC = () => {
       <div data-kp-split="true" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 18, marginTop: 18, alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
           {p.about?.trim() && (
-            <Section title="About">
+            <Section title="About" icon={<UserIcon size={17} />}>
               <p style={{ fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{p.about}</p>
             </Section>
           )}
 
           {(p.experience || []).length > 0 && (
-            <Section title="Experience">
+            <Section title="Experience" icon={<Briefcase size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {p.experience.map((ex: any, i: number) => (
                   <div key={i} style={{ display: 'flex', gap: 14 }}>
@@ -257,7 +282,7 @@ const PublicStudentProfile: React.FC = () => {
           )}
 
           {resolved && resolved.length > 0 && (
-            <Section title="Projects">
+            <Section title="Projects" icon={<FolderGit2 size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {resolved.map((pr: any, i: number) => (
                   <div key={i} style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16, background: 'var(--bg-2)' }}>
@@ -282,7 +307,7 @@ const PublicStudentProfile: React.FC = () => {
           )}
 
           {(p.education || []).length > 0 && (
-            <Section title="Education">
+            <Section title="Education" icon={<GraduationCap size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {p.education.map((ed: any, i: number) => {
                   const isSchool = ed.level === 'school';
@@ -318,7 +343,7 @@ const PublicStudentProfile: React.FC = () => {
           )}
 
           {(p.certificates || []).length > 0 && (
-            <Section title="Licenses & certifications">
+            <Section title="Licenses & certifications" icon={<Award size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {p.certificates.map((c: any, i: number) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -335,10 +360,16 @@ const PublicStudentProfile: React.FC = () => {
           )}
 
           {(p.skills || []).length > 0 && (
-            <Section title="Skills">
+            <Section title="Skills" icon={<Wrench size={17} />}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                 {p.skills.map((s: any, i: number) => <span key={i} style={{ fontSize: 12.5, padding: '5px 11px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)' }}>{s.displayName || s.name}</span>)}
               </div>
+            </Section>
+          )}
+
+          {studentId && (
+            <Section title="Posts" icon={<Newspaper size={17} />}>
+              <ProfilePosts userId={studentId} />
             </Section>
           )}
         </div>
@@ -346,29 +377,24 @@ const PublicStudentProfile: React.FC = () => {
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 84 }}>
           <div style={{ ...card, padding: 22 }}>
             <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 14px' }}>Contact</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <a href={contactHref(cs)} style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', fontSize: 13.5 }}>
-                <span aria-hidden style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, flex: 'none' }}>✉</span>
-                <span style={{ wordBreak: 'break-all' }}>{u.email}</span>
-              </a>
-              {u.phone && (
-                <a href={`tel:${u.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', fontSize: 13.5 }}>
-                  <span aria-hidden style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, flex: 'none' }}>☎</span>
-                  <span>{u.phone}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[
+                { href: contactHref(cs), icon: <Mail size={15} />, label: u.email, breakAll: true },
+                p.linkedin_url ? { href: p.linkedin_url, icon: <Linkedin size={15} />, label: 'LinkedIn', external: true } : null,
+                p.github_url ? { href: p.github_url, icon: <Github size={15} />, label: 'GitHub', external: true } : null,
+              ].filter(Boolean).map((row: any, i) => (
+                <a
+                  key={i}
+                  href={row.href}
+                  {...(row.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', fontSize: 13.5, padding: '7px 8px', borderRadius: 9 }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <span aria-hidden style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flex: 'none' }}>{row.icon}</span>
+                  <span style={row.breakAll ? { wordBreak: 'break-all' } : undefined}>{row.label}</span>
                 </a>
-              )}
-              {p.linkedin_url && (
-                <a href={p.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', fontSize: 13.5 }}>
-                  <span aria-hidden style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontWeight: 700, fontSize: 13, flex: 'none' }}>in</span>
-                  <span>LinkedIn</span>
-                </a>
-              )}
-              {p.github_url && (
-                <a href={p.github_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', fontSize: 13.5 }}>
-                  <span aria-hidden style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 14, flex: 'none' }}>⎇</span>
-                  <span>GitHub</span>
-                </a>
-              )}
+              ))}
             </div>
             {isRecruiter ? (
               <button onClick={openCompose} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Email {name}</button>

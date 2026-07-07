@@ -58,7 +58,7 @@ const NotificationsBell: React.FC = () => {
   const go = (n: AppNotification) => {
     setOpen(false);
     if (n.type === 'message' && n.entity) navigate(`/messages?c=${n.entity.id}`);
-    else if (n.type === 'recruiter_approved') navigate('/recruiter/openings');
+    else if (n.type === 'recruiter_approved' || n.type === 'application') navigate('/recruiter/openings');
     else if (n.type === 'connection_request' || n.type === 'connection_accepted') navigate('/network');
     else if (n.type === 'follow') navigate(n.entity ? `/profiles/${n.entity.id}` : '/companies');
     else navigate('/feed');

@@ -20,6 +20,8 @@ import FeedPage from './pages/Feed/FeedPage.tsx';
 import MessagesPage from './pages/Messages/MessagesPage.tsx';
 import NetworkPage from './pages/Network/NetworkPage.tsx';
 import CompaniesPage from './pages/Companies/CompaniesPage.tsx';
+import CompanyProfilePage from './pages/Companies/CompanyProfilePage.tsx';
+import SearchPage from './pages/Search/SearchPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -38,6 +40,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="messages" element={<MessagesPage />} />
             <Route path="network" element={<NetworkPage />} />
             <Route path="companies" element={<CompaniesPage />} />
+            <Route path="companies/:companyUserId" element={<CompanyProfilePage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="openings" element={<OpeningsPage />} />
             <Route path="recruiter/apply" element={<RecruiterApply />} />
             <Route path="recruiter/openings" element={<RecruiterOpenings />} />

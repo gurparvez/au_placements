@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Search, Building2, MapPin } from 'lucide-react';
+import { Search, MapPin, Users, UserPlus, Check } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import companiesApi, { type Company, type Pagination } from '@/api/companies';
+import { avatarColor } from '@/utils/avatar';
 
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 };
 const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none' };
+const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
 
 const CompaniesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -58,28 +60,33 @@ const CompaniesPage: React.FC = () => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
           {companies.map((c) => (
-            <div key={c.companyUserId} style={{ ...card, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              key={c.companyUserId}
+              style={{ ...card, padding: 18, display: 'flex', flexDirection: 'column', gap: 12, transition: 'border-color .18s, box-shadow .18s, transform .18s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--primary) 35%, var(--border))'; e.currentTarget.style.boxShadow = '0 18px 34px -24px rgba(0,0,0,.42)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <Link to={`/companies/${c.companyUserId}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: 'inherit' }}>
                 {c.logo ? (
-                  <img src={c.logo} alt={c.company} style={{ width: 46, height: 46, borderRadius: 10, objectFit: 'cover', flex: 'none' }} />
+                  <img src={c.logo} alt={c.company} style={{ width: 50, height: 50, borderRadius: 12, objectFit: 'cover', flex: 'none', border: '1px solid var(--border)' }} />
                 ) : (
-                  <span style={{ width: 46, height: 46, borderRadius: 10, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flex: 'none' }}><Building2 size={22} /></span>
+                  <span aria-hidden style={{ width: 50, height: 50, borderRadius: 12, background: avatarColor(c.company), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 17, flex: 'none' }}>{companyInitials(c.company)}</span>
                 )}
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.company}</div>
-                  {c.industry && <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{c.industry}</div>}
+                  <div style={{ fontWeight: 700, fontSize: 15.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.company}</div>
+                  {c.industry && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.industry}</div>}
                 </div>
-              </div>
-              <div style={{ fontSize: 12.5, color: 'var(--text-subtle)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                {c.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {c.location}</span>}
-                <span>{c.followers ?? 0} follower{(c.followers ?? 0) === 1 ? '' : 's'}</span>
+              </Link>
+              <div style={{ fontSize: 12.5, color: 'var(--text-subtle)', display: 'flex', gap: 14, flexWrap: 'wrap', paddingBottom: 4, borderBottom: '1px solid var(--border)' }}>
+                {c.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><MapPin size={13} /> {c.location}</span>}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Users size={13} /> {c.followers ?? 0} follower{(c.followers ?? 0) === 1 ? '' : 's'}</span>
               </div>
               <button onClick={() => toggleFollow(c)}
-                style={{ marginTop: 'auto', padding: '9px 14px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
+                style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
                   border: c.is_following ? '1px solid var(--border-strong)' : 'none',
                   background: c.is_following ? 'var(--surface)' : 'var(--primary)',
                   color: c.is_following ? 'var(--text)' : '#fff' }}>
-                {c.is_following ? 'Following ✓' : '+ Follow'}
+                {c.is_following ? <><Check size={15} /> Following</> : <><UserPlus size={15} /> Follow</>}
               </button>
             </div>
           ))}

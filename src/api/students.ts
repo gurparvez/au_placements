@@ -9,6 +9,15 @@ import {
   type GetAnyStudentProfileResponse,
 } from './students.types';
 
+export interface UserSearchResult {
+  _id: string;
+  firstName: string;
+  lastName?: string;
+  auid?: string;
+  university?: string;
+  roles?: string[];
+}
+
 class StudentApi {
   private instance: AxiosInstance;
 
@@ -85,6 +94,12 @@ class StudentApi {
     const res = await this.instance.get('/api/student/all');
     // Backend returns { success, data: [...], pagination }
     return { success: res.data.success, students: res.data.data };
+  }
+
+  /* ----------------------------- Search students by name or AUID ------------------------------ */
+  async searchStudents(q: string): Promise<UserSearchResult[]> {
+    const res = await this.instance.get('/api/student/search', { params: { q } });
+    return res.data.data ?? [];
   }
 
   /* ----------------------------- Get Any Student's profile ------------------------------ */

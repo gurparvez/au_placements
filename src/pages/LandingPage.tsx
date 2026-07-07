@@ -1,21 +1,34 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Sparkles, ArrowRight, Users, Briefcase, Building2, Newspaper, MessageCircle, UserPlus,
+  GraduationCap, Search, Send,
+} from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { fetchAllStudents } from '@/context/student/studentSlice';
 import StudentCard from '@/components/StudentCard';
 import { studentToCardVM } from '@/utils/cardVM';
 
 const STATS = [
-  { num: '120+', label: 'Students placed' },
-  { num: '30+', label: 'Partner companies' },
-  { num: '2', label: 'University campuses' },
-  { num: '50+', label: 'Recruitment drives' },
+  { icon: GraduationCap, num: '120+', label: 'Students registered' },
+  { icon: Building2, num: '30+', label: 'Partner companies' },
+  { icon: Users, num: '2', label: 'University campuses' },
+  { icon: Briefcase, num: '50+', label: 'Recruitment drives' },
+];
+
+const FEATURES = [
+  { icon: Users, title: 'Rich student profiles', body: 'Showcase skills, education, projects, experience and availability in one polished profile.' },
+  { icon: Newspaper, title: 'Community feed', body: 'Post updates, mention peers, react and comment — your campus professional network.' },
+  { icon: Briefcase, title: 'Internships & jobs', body: 'Recruiters post openings; students browse and apply by field, skills and university.' },
+  { icon: Building2, title: 'Company directory', body: 'Follow companies hiring from your campus and never miss a role.' },
+  { icon: UserPlus, title: 'Connections', body: 'Connect with fellow students and grow your professional network.' },
+  { icon: MessageCircle, title: 'Direct messaging', body: 'Chat with peers and recruiters right inside the platform.' },
 ];
 
 const STEPS = [
-  { n: '1', title: 'Create your profile', body: 'Sign in with your university ID and build a rich profile in minutes — experience, projects, skills and more.' },
-  { n: '2', title: 'Get discovered', body: 'Recruiters browse the register and filter by skills, field, university and availability to find you.' },
-  { n: '3', title: 'Get hired', body: 'Get contacted directly by email about internships and roles that match your goals.' },
+  { icon: GraduationCap, n: '1', title: 'Build your profile', body: 'Sign in with your university ID and set up a rich profile in minutes — experience, projects, skills and more.' },
+  { icon: Search, n: '2', title: 'Get discovered', body: 'Recruiters browse and filter by skills, field, university and availability to find you.' },
+  { icon: Send, n: '3', title: 'Connect & get hired', body: 'Get messaged directly and apply to openings that match your goals.' },
 ];
 
 const ctaPrimary: React.CSSProperties = {
@@ -43,22 +56,24 @@ const LandingPage: React.FC = () => {
     <>
       {/* ===================== HERO ===================== */}
       <section style={{ position: 'relative', overflow: 'hidden' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px 40px' }}>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 80% at 85% -10%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 60%)' }} />
+        <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto', padding: '64px 24px 44px' }}>
           <div data-kp-hero="true" style={{ display: 'grid', gridTemplateColumns: '1.05fr .95fr', gap: 48, alignItems: 'center' }}>
             <div style={{ animation: 'kpRise .5s ease' }}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', fontSize: 12.5, fontWeight: 600, border: '1px solid var(--primary-soft-border)' }}>
-                The campus placement register
+                <Sparkles size={14} /> For Akal &amp; Eternal University
               </span>
-              <h1 style={{ fontSize: 'clamp(34px,5vw,54px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 700, margin: '18px 0 0', maxWidth: '14ch' }}>
-                Connecting talent with opportunity.
+              <h1 style={{ fontSize: 'clamp(34px,5vw,54px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 700, margin: '18px 0 0', maxWidth: '15ch' }}>
+                Where campus talent meets opportunity.
               </h1>
-              <p style={{ fontSize: 'clamp(15px,1.6vw,18px)', color: 'var(--text-muted)', margin: '18px 0 0', maxWidth: '46ch', lineHeight: 1.6 }}>
-                Graduating students of Akal &amp; Eternal University build one rich profile. Recruiters browse, filter and reach out directly. No job posts, no noise — just talent.
+              <p style={{ fontSize: 'clamp(15px,1.6vw,18px)', color: 'var(--text-muted)', margin: '18px 0 0', maxWidth: '48ch', lineHeight: 1.6 }}>
+                Build one rich profile, share your work on the feed, and connect with recruiters.
+                Companies post openings and reach out directly — internships and jobs, all in one place.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
-                <Link to="/students" style={ctaPrimary}>Browse students <span aria-hidden>→</span></Link>
+                <Link to="/students" style={ctaPrimary}>Explore students <ArrowRight size={17} /></Link>
                 {user ? (
-                  <Link to="/profiles" style={ctaOutline}>Go to your profile</Link>
+                  <Link to="/feed" style={ctaOutline}>Go to your feed</Link>
                 ) : (
                   <Link to="/login" style={ctaOutline}>Sign in</Link>
                 )}
@@ -76,9 +91,9 @@ const LandingPage: React.FC = () => {
 
             <div style={{ animation: 'kpRise .6s ease' }}>
               <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: 'var(--shadow)', padding: 22, position: 'relative' }}>
-                <span style={{ position: 'absolute', top: 18, right: 18, fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-soft)', padding: '4px 10px', borderRadius: 'var(--r-pill)' }}>Preview</span>
+                <span style={{ position: 'absolute', top: 18, right: 18, fontSize: 11, fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-soft)', padding: '4px 10px', borderRadius: 'var(--r-pill)' }}>Sample profile</span>
                 <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                  <span style={{ width: 58, height: 58, borderRadius: '50%', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 19, fontWeight: 600 }}>HK</span>
+                  <span style={{ width: 58, height: 58, borderRadius: '50%', background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 19, fontWeight: 600, boxShadow: '0 0 0 3px var(--surface), 0 0 0 4px var(--border)' }}>HK</span>
                   <div>
                     <div style={{ fontWeight: 650, fontSize: 18, letterSpacing: '-.01em' }}>Harleen Kaur</div>
                     <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Final-year CSE · Frontend &amp; React</div>
@@ -104,18 +119,38 @@ const LandingPage: React.FC = () => {
 
       {/* ===================== STATS ===================== */}
       <section style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', background: 'var(--bg-2)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '34px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 20 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '30px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 20 }}>
           {STATS.map((st) => (
-            <div key={st.label} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ fontSize: 'clamp(28px,3.4vw,38px)', fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1 }}>{st.num}</span>
-              <span style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>{st.label}</span>
+            <div key={st.label} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span aria-hidden style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><st.icon size={22} /></span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1 }}>{st.num}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{st.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===================== FEATURES ===================== */}
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '72px 24px 8px' }}>
+        <div style={{ maxWidth: 620 }}>
+          <span style={eyebrow}>Everything in one place</span>
+          <h2 style={{ fontSize: 'clamp(26px,3.4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: '12px 0 0' }}>A full campus network, not just a directory.</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 18, marginTop: 36 }}>
+          {FEATURES.map((f) => (
+            <div key={f.title} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 22, boxShadow: 'var(--shadow)' }}>
+              <span aria-hidden style={{ width: 42, height: 42, borderRadius: 11, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--primary-soft-border)' }}><f.icon size={21} /></span>
+              <h3 style={{ fontSize: 16.5, fontWeight: 650, margin: '16px 0 0', letterSpacing: '-.01em' }}>{f.title}</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '7px 0 0', lineHeight: 1.6 }}>{f.body}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ===================== HOW IT WORKS ===================== */}
-      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '72px 24px' }}>
+      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px' }}>
         <div style={{ maxWidth: 560 }}>
           <span style={eyebrow}>How it works</span>
           <h2 style={{ fontSize: 'clamp(26px,3.4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: '12px 0 0' }}>Three steps from profile to placed.</h2>
@@ -123,8 +158,11 @@ const LandingPage: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 18, marginTop: 36 }}>
           {STEPS.map((step) => (
             <div key={step.n} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 26, boxShadow: 'var(--shadow)' }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, border: '1px solid var(--primary-soft-border)' }}>{step.n}</div>
-              <h3 style={{ fontSize: 18, fontWeight: 650, margin: '18px 0 0', letterSpacing: '-.01em' }}>{step.title}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><step.icon size={20} /></div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-subtle)' }}>STEP {step.n}</span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 650, margin: '16px 0 0', letterSpacing: '-.01em' }}>{step.title}</h3>
               <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', lineHeight: 1.6 }}>{step.body}</p>
             </div>
           ))}
@@ -140,7 +178,7 @@ const LandingPage: React.FC = () => {
               <h2 style={{ fontSize: 'clamp(26px,3.4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: '12px 0 0' }}>Explore talented students.</h2>
             </div>
             <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, textDecoration: 'none' }}>
-              See all <span aria-hidden>→</span>
+              See all <ArrowRight size={15} />
             </Link>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
@@ -157,10 +195,10 @@ const LandingPage: React.FC = () => {
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.14), transparent 55%)' }} />
           <div style={{ position: 'relative', maxWidth: 620 }}>
             <h2 style={{ color: '#fff', fontSize: 'clamp(26px,4vw,40px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0, lineHeight: 1.1 }}>Your next opportunity starts with a profile.</h2>
-            <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, margin: '16px 0 0', lineHeight: 1.6 }}>It takes a few minutes to set up — and a lifetime of recruiters to find you.</p>
+            <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, margin: '16px 0 0', lineHeight: 1.6 }}>It takes a few minutes to set up — and a network of recruiters to find you.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
               {!user && <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: '#fff', color: '#0F1115', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>Sign in</Link>}
-              <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: 'rgba(255,255,255,.16)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none', border: '1px solid rgba(255,255,255,.25)' }}>Browse the register</Link>
+              <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', borderRadius: 'var(--r-ctl)', background: 'rgba(255,255,255,.16)', color: '#fff', fontWeight: 600, fontSize: 15, textDecoration: 'none', border: '1px solid rgba(255,255,255,.25)' }}>Browse the register</Link>
             </div>
           </div>
         </div>

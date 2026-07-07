@@ -75,6 +75,10 @@ class PostsApi {
     const res = await this.instance.get<FeedResponse>('/api/posts', { params });
     return res.data;
   }
+  async listByUser(userId: string, params?: { page?: number; limit?: number }): Promise<FeedResponse> {
+    const res = await this.instance.get<FeedResponse>(`/api/posts/user/${userId}`, { params });
+    return res.data;
+  }
   async create(payload: CreatePostPayload): Promise<Post> {
     if (payload.images && payload.images.length) {
       const fd = new FormData();

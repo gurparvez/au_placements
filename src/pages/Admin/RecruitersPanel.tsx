@@ -1,13 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { Plus, Check, X, RefreshCw, Search } from 'lucide-react';
+import { Plus, Check, X, RefreshCw, Search, Building2 } from 'lucide-react';
 import adminApi, {
   type RecruiterRow,
   type Pagination,
   type AdminCreateRecruiterPayload,
   type CompanySize,
 } from '@/api/admin';
+import { avatarColor, initials } from '@/utils/avatar';
+
+const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) => (
+  <span aria-hidden style={{
+    width: 32, height: 32, borderRadius: '50%', flex: 'none', display: 'inline-flex',
+    alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12,
+    background: avatarColor(`${first ?? ''} ${last ?? ''}`),
+  }}>{initials(first, last) || '?'}</span>
+);
 
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 };
 const inputStyle: React.CSSProperties = {
@@ -123,7 +132,7 @@ function CreateRecruiterModal({ onClose, onSaved }: { onClose: () => void; onSav
 
 /* ------------------------------- panel ------------------------------- */
 
-const RecruitersPanel: React.FC = () => {
+const RecruitersPanel: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
   const [rows, setRows] = useState<RecruiterRow[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -155,6 +164,7 @@ const RecruitersPanel: React.FC = () => {
       await adminApi.approveRecruiter(r.recruiter._id);
       toast.success(`${r.user.firstName} approved.`);
       load();
+      onChanged?.();
     } catch (err) {
       toast.error(extractError(err, 'Failed to approve.'));
     } finally { setActing(null); }
@@ -168,6 +178,7 @@ const RecruitersPanel: React.FC = () => {
       await adminApi.rejectRecruiter(r.recruiter._id, reason || undefined);
       toast.success(`${r.user.firstName} rejected.`);
       load();
+      onChanged?.();
     } catch (err) {
       toast.error(extractError(err, 'Failed to reject.'));
     } finally { setActing(null); }
@@ -202,11 +213,23 @@ const RecruitersPanel: React.FC = () => {
               {loading ? (
                 <tr><td colSpan={5} style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan={5} style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>No recruiters found.</td></tr>
+                <tr><td colSpan={5}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '40px 20px', color: 'var(--text-muted)' }}>
+                    <Building2 size={26} style={{ opacity: 0.5 }} />
+                    <span>{status ? `No ${status} recruiters.` : 'No recruiters found.'}</span>
+                  </div>
+                </td></tr>
               ) : (
                 rows.map((r) => (
-                  <tr key={r.user._id} style={{ borderTop: '1px solid var(--border)' }}>
-                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', textTransform: 'capitalize', fontWeight: 600 }}>{`${r.user.firstName} ${r.user.lastName ?? ''}`.trim()}</td>
+                  <tr key={r.user._id} style={{ borderTop: '1px solid var(--border)', transition: 'background .15s' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        <Avatar first={r.user.firstName} last={r.user.lastName} />
+                        <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{`${r.user.firstName} ${r.user.lastName ?? ''}`.trim()}</span>
+                      </span>
+                    </td>
                     <td style={{ padding: '12px 14px', color: 'var(--text-muted)' }}>{r.user.email || '—'}</td>
                     <td style={{ padding: '12px 14px' }}>{r.recruiter?.company || '—'}</td>
                     <td style={{ padding: '12px 14px' }}><span style={statusChip(r.user.status)}>{r.user.status}</span></td>
