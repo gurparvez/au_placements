@@ -28,10 +28,10 @@ const selectStyle: React.CSSProperties = {
 
 // Select with a chevron affordance (native select is appearance:none).
 const FilterSelect: React.FC<{
-  value: string; onChange: (v: string) => void; label: string; style?: React.CSSProperties; children: React.ReactNode;
-}> = ({ value, onChange, label, style, children }) => (
-  <div style={{ position: 'relative', display: 'inline-flex' }}>
-    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} style={{ ...selectStyle, ...style }}>
+  value: string; onChange: (v: string) => void; label: string; full?: boolean; style?: React.CSSProperties; children: React.ReactNode;
+}> = ({ value, onChange, label, full, style, children }) => (
+  <div style={{ position: 'relative', display: full ? 'flex' : 'inline-flex', width: full ? '100%' : undefined }}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} style={{ ...selectStyle, ...(full ? { width: '100%', background: 'var(--bg-2)' } : {}), ...style }}>
       {children}
     </select>
     <ChevronDown size={15} style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-subtle)' }} />
@@ -41,6 +41,12 @@ const inputStyle: React.CSSProperties = {
   width: '100%', padding: '11px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
   background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
 };
+const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div style={{ marginBottom: 14 }}>
+    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</label>
+    {children}
+  </div>
+);
 const monthOf = (d?: string) => (d ? String(d).slice(0, 7) : '');
 
 const StudentsPage: React.FC = () => {
@@ -164,81 +170,102 @@ const StudentsPage: React.FC = () => {
     </>
   );
 
-  return (
-    <section style={{ width: '100%', padding: `36px ${PADX} 80px` }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <span aria-hidden style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
-            <Users size={24} />
-          </span>
-          <div>
-            <h1 style={{ fontSize: 'clamp(26px,4vw,34px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>Explore students</h1>
-            <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '6px 0 0' }}>
-              <strong style={{ color: 'var(--text)', fontWeight: 650 }}>{filtered.length}</strong> of {total} students match your filters
-            </p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}><SlidersHorizontal size={15} /> Skills</button>
-          <button onClick={clearAll} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text-muted)', fontWeight: 550, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>Clear filters</button>
-        </div>
+  const anyActive = !!(q || skills.length || university !== 'Any' || opportunity !== 'Any' || field !== 'Any' || exp !== 'Any' || from || to);
+
+  // All filter controls, shared by the desktop rail and the mobile sheet.
+  const renderFilters = () => (
+    <>
+      <div style={{ position: 'relative', marginBottom: 16 }}>
+        <Search size={16} aria-hidden style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, headline, field…" aria-label="Search students" style={{ ...inputStyle, paddingLeft: 36 }} />
       </div>
 
-      {/* Filters — grouped in a bar */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 22, alignItems: 'center', padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
-          <Search size={16} aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, headline, skill, field…" aria-label="Search students" style={{ ...inputStyle, paddingLeft: 38 }} />
-        </div>
-        <FilterSelect value={university} onChange={setUniversity} label="University">
-          {UNIVERSITIES.map((u) => <option key={u} value={u}>{u === 'Any' ? 'University' : u}</option>)}
+      <Labeled label="University">
+        <FilterSelect full value={university} onChange={setUniversity} label="University">
+          {UNIVERSITIES.map((u) => <option key={u} value={u}>{u === 'Any' ? 'Any university' : u}</option>)}
         </FilterSelect>
-        <FilterSelect value={opportunity} onChange={setOpportunity} label="Opportunity">
-          {OPPORTUNITIES.map((o) => <option key={o} value={o}>{o === 'Any' ? 'Opportunity' : o}</option>)}
+      </Labeled>
+      <Labeled label="Looking for">
+        <FilterSelect full value={opportunity} onChange={setOpportunity} label="Opportunity">
+          {OPPORTUNITIES.map((o) => <option key={o} value={o}>{o === 'Any' ? 'Any opportunity' : o}</option>)}
         </FilterSelect>
-        <FilterSelect value={field} onChange={setField} label="Preferred field" style={{ maxWidth: 190 }}>
-          {fields.map((f) => <option key={f} value={f}>{f === 'Any' ? 'Field' : f}</option>)}
+      </Labeled>
+      <Labeled label="Preferred field">
+        <FilterSelect full value={field} onChange={setField} label="Preferred field">
+          {fields.map((f) => <option key={f} value={f}>{f === 'Any' ? 'Any field' : f}</option>)}
         </FilterSelect>
-        <FilterSelect value={exp} onChange={setExp} label="Experience">
-          {EXP_RANGES.map((er) => <option key={er.v} value={er.v}>{er.l}</option>)}
+      </Labeled>
+      <Labeled label="Experience">
+        <FilterSelect full value={exp} onChange={setExp} label="Experience">
+          {EXP_RANGES.map((er) => <option key={er.v} value={er.v}>{er.v === 'Any' ? 'Any experience' : er.l}</option>)}
         </FilterSelect>
+      </Labeled>
+      <Labeled label="Availability">
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-subtle)', whiteSpace: 'nowrap' }}>Available</span>
-          <FilterSelect value={from} onChange={setFrom} label="Available from" style={{ fontSize: 13.5 }}>
-            <option value="">Any month</option>
+          <FilterSelect full value={from} onChange={setFrom} label="Available from" style={{ fontSize: 13 }}>
+            <option value="">From</option>
             {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
           </FilterSelect>
           <span aria-hidden style={{ color: 'var(--text-subtle)' }}>→</span>
-          <FilterSelect value={to} onChange={setTo} label="Available until" style={{ fontSize: 13.5 }}>
-            <option value="">Any month</option>
+          <FilterSelect full value={to} onChange={setTo} label="Available until" style={{ fontSize: 13 }}>
+            <option value="">Until</option>
             {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
           </FilterSelect>
         </div>
+      </Labeled>
+
+      <div style={{ borderTop: '1px solid var(--border)', margin: '6px 0 14px' }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontWeight: 650, fontSize: 13.5 }}>Skills</span>
+        {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 12.5, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
+      </div>
+      <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" aria-label="Search skills" style={{ ...inputStyle, padding: '9px 12px', fontSize: 13.5, marginBottom: 10 }} />
+      {skills.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+          {skills.map((name) => (
+            <button key={name} onClick={() => toggleSkill(name)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 550, padding: '4px 9px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-soft-border)', cursor: 'pointer' }}>
+              {name} <span aria-hidden>×</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div style={{ maxHeight: 300, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 1, margin: '0 -6px' }}>
+        <SkillList />
+      </div>
+    </>
+  );
+
+  return (
+    <section style={{ width: '100%', padding: `36px ${PADX} 80px` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <span aria-hidden style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+          <Users size={24} />
+        </span>
+        <div>
+          <h1 style={{ fontSize: 'clamp(24px,4vw,32px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>Explore students</h1>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '5px 0 0' }}>Discover talent across Akal &amp; Eternal University.</p>
+        </div>
       </div>
 
-      {/* Body: skill sidebar + results */}
-      <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: '264px 1fr', gap: 26, marginTop: 26, alignItems: 'start' }}>
-        <aside data-kp-show="desktop" style={{ position: 'sticky', top: 96, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 18, boxShadow: 'var(--shadow)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontWeight: 650, fontSize: 15 }}>Filter by skill</span>
-            {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 12.5, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
+      {/* Layout: filter rail + results */}
+      <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 26, marginTop: 26, alignItems: 'start' }}>
+        <aside data-kp-show="desktop" style={{ position: 'sticky', top: 84, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 18, boxShadow: 'var(--shadow)', maxHeight: 'calc(100vh - 104px)', overflow: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <span style={{ fontWeight: 700, fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 7 }}><SlidersHorizontal size={16} /> Filters</span>
+            {anyActive && <button onClick={clearAll} style={{ fontSize: 12.5, color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>}
           </div>
-          <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" aria-label="Search skills" style={{ ...inputStyle, padding: '9px 12px', fontSize: 13.5, marginBottom: 12 }} />
-          {skills.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-              {skills.map((name) => (
-                <button key={name} onClick={() => toggleSkill(name)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 550, padding: '4px 9px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-soft-border)', cursor: 'pointer' }}>
-                  {name} <span aria-hidden>×</span>
-                </button>
-              ))}
-            </div>
-          )}
-          <div style={{ maxHeight: 360, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 1, margin: '0 -6px' }}>
-            <SkillList />
-          </div>
+          {renderFilters()}
         </aside>
 
         <div>
+          {/* Results toolbar */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
+              <strong style={{ color: 'var(--text)', fontWeight: 650 }}>{filtered.length}</strong> {filtered.length === 1 ? 'student' : 'students'}{filtered.length !== total ? ` of ${total}` : ''}
+            </p>
+            <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '9px 15px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer' }}><SlidersHorizontal size={15} /> Filters{anyActive ? ' •' : ''}</button>
+          </div>
           {loading && !allStudents ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -277,21 +304,20 @@ const StudentsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile filter sheet */}
+      {/* Mobile filter sheet — all filters */}
       {sheet && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 310 }}>
           <div onClick={() => setSheet(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.5)', animation: 'kpFade .15s ease' }} />
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '80vh', background: 'var(--bg-2)', borderTopLeftRadius: 18, borderTopRightRadius: 18, borderTop: '1px solid var(--border)', padding: 18, display: 'flex', flexDirection: 'column', animation: 'kpPop .2s ease' }}>
-            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border-strong)', margin: '0 auto 14px' }} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <span style={{ fontWeight: 650, fontSize: 16 }}>Filter by skill</span>
-              {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 13, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '86vh', background: 'var(--bg-2)', borderTopLeftRadius: 18, borderTopRightRadius: 18, borderTop: '1px solid var(--border)', padding: 18, display: 'flex', flexDirection: 'column', animation: 'kpPop .2s ease' }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border-strong)', margin: '0 auto 14px', flex: 'none' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flex: 'none' }}>
+              <span style={{ fontWeight: 700, fontSize: 16 }}>Filters</span>
+              {anyActive && <button onClick={clearAll} style={{ fontSize: 13, color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, background: 'none', border: 'none' }}>Clear all</button>}
             </div>
-            <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" style={{ ...inputStyle, background: 'var(--surface)', marginBottom: 12 }} />
-            <div style={{ overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <SkillList box={18} font={14} />
+            <div style={{ overflow: 'auto', flex: 1, margin: '0 -2px', padding: '0 2px' }}>
+              {renderFilters()}
             </div>
-            <button onClick={() => setSheet(false)} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none' }}>Show {filtered.length} results</button>
+            <button onClick={() => setSheet(false)} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', flex: 'none' }}>Show {filtered.length} results</button>
           </div>
         </div>
       )}
