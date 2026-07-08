@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { Plus, Pencil, Trash2, Search, Shield, RefreshCw, Users, Building2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Shield, RefreshCw, Users, Building2, UserCheck } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import adminApi, {
   type AdminUser,
@@ -224,7 +224,7 @@ const AdminPage: React.FC = () => {
 
   const isAdmin = !!user?.roles?.includes('admin');
 
-  const [tab, setTab] = useState<'users' | 'recruiters'>('users');
+  const [tab, setTab] = useState<'users' | 'recruiters' | 'approvals'>('users');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -313,7 +313,7 @@ const AdminPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, margin: '20px 0 4px', borderBottom: '1px solid var(--border)' }}>
-        {([['users', Users], ['recruiters', Building2]] as const).map(([t, Icon]) => (
+        {([['users', Users], ['recruiters', Building2], ['approvals', UserCheck]] as const).map(([t, Icon]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -327,7 +327,7 @@ const AdminPage: React.FC = () => {
             }}
           >
             <Icon size={16} /> {t}
-            {t === 'recruiters' && !!pendingCount && (
+            {t === 'approvals' && !!pendingCount && (
               <span style={{
                 minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -339,7 +339,9 @@ const AdminPage: React.FC = () => {
       </div>
 
       {tab === 'recruiters' ? (
-        <div style={{ marginTop: 18 }}><RecruitersPanel onChanged={loadPending} /></div>
+        <div style={{ marginTop: 18 }}><RecruitersPanel mode="active" onChanged={loadPending} /></div>
+      ) : tab === 'approvals' ? (
+        <div style={{ marginTop: 18 }}><RecruitersPanel mode="approvals" onChanged={loadPending} /></div>
       ) : (
       <>
       <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 16px' }}>

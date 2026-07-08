@@ -156,10 +156,16 @@ const StudentProfilePage: React.FC = () => {
   const authUser = useAppSelector((s) => s.auth.user);
 
   const [pwOpen, setPwOpen] = useState(false);
+  const isRecruiter = !!authUser?.roles?.includes('recruiter');
+
+  // A recruiter's profile is their company profile — send them there, not the student form.
+  useEffect(() => {
+    if (isRecruiter && authUser) navigate(`/companies/${authUser._id}`, { replace: true });
+  }, [isRecruiter, authUser, navigate]);
 
   useEffect(() => {
-    if (authUser) dispatch(fetchStudentProfile());
-  }, [dispatch, authUser]);
+    if (authUser && !isRecruiter) dispatch(fetchStudentProfile());
+  }, [dispatch, authUser, isRecruiter]);
 
   const handleLogout = async () => {
     try {

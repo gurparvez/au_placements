@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, ChevronDown, SlidersHorizontal, Users } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/context/hooks';
-import { fetchAllStudents } from '@/context/student/studentSlice';
+import studentApi from '@/api/students';
 import { skillsApi } from '@/api/skills';
 import StudentCard from '@/components/StudentCard';
 import { studentToCardVM } from '@/utils/cardVM';
 import { FILTER_SKILLS } from '@/utils/skills';
 
-const PAGE = 9;
+const PAGE = 12;
 const PADX = 'clamp(20px,3vw,48px)';
 const UNIVERSITIES = ['Any', 'Akal University', 'Eternal University'];
 const OPPORTUNITIES = ['Any', 'Internship', 'Job'];
@@ -26,7 +25,6 @@ const selectStyle: React.CSSProperties = {
   background: 'var(--surface-2)', color: 'var(--text)', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
 };
 
-// Select with a chevron affordance (native select is appearance:none).
 const FilterSelect: React.FC<{
   value: string; onChange: (v: string) => void; label: string; full?: boolean; style?: React.CSSProperties; children: React.ReactNode;
 }> = ({ value, onChange, label, full, style, children }) => (
@@ -47,13 +45,9 @@ const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({ label
     {children}
   </div>
 );
-const monthOf = (d?: string) => (d ? String(d).slice(0, 7) : '');
 
 const StudentsPage: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { allStudents, loading } = useAppSelector((s) => s.student);
-
-  const [backendSkills, setBackendSkills] = useState<string[]>([]);
+  // ---- filters ----
   const [q, setQ] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [university, setUniversity] = useState('Any');
@@ -63,12 +57,19 @@ const StudentsPage: React.FC = () => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [skillQuery, setSkillQuery] = useState('');
-  const [visible, setVisible] = useState(PAGE);
   const [sheet, setSheet] = useState(false);
 
-  useEffect(() => {
-    if (!allStudents) dispatch(fetchAllStudents());
-  }, [dispatch, allStudents]);
+  // ---- results (server-side) ----
+  const [results, setResults] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const reqId = useRef(0);
+
+  // ---- filter option data ----
+  const [backendSkills, setBackendSkills] = useState<string[]>([]);
+  const [fieldOpts, setFieldOpts] = useState<string[]>([]);
 
   useEffect(() => {
     const c = new AbortController();
@@ -76,13 +77,47 @@ const StudentsPage: React.FC = () => {
       try {
         const res = await skillsApi.getAllSkills({ signal: c.signal });
         setBackendSkills((res.skills ?? []).map((s) => s.displayName || s.name).filter(Boolean));
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
     })();
+    studentApi.filterMeta().then((m) => setFieldOpts(m.fields || [])).catch(() => {});
     return () => c.abort();
   }, []);
 
+  const buildParams = () => ({
+    q: q.trim() || undefined,
+    skills: skills.length ? skills.join(',') : undefined,
+    university: university !== 'Any' ? university : undefined,
+    opportunity: opportunity === 'Internship' ? 'internship' : opportunity === 'Job' ? 'job' : undefined,
+    field: field !== 'Any' ? field : undefined,
+    exp: exp !== 'Any' ? exp : undefined,
+    from: from || undefined,
+    to: to || undefined,
+  });
+
+  const runFetch = async (pageNum: number, replace: boolean) => {
+    const id = ++reqId.current;
+    if (replace) setLoading(true); else setLoadingMore(true);
+    try {
+      const res = await studentApi.browse({ ...buildParams(), page: pageNum, limit: PAGE });
+      if (id !== reqId.current) return; // a newer request superseded this one
+      setTotal(res.pagination.total);
+      setResults((prev) => (replace ? res.students : [...prev, ...res.students]));
+      setPage(pageNum);
+    } catch {
+      if (id === reqId.current && replace) { setResults([]); setTotal(0); }
+    } finally {
+      if (id === reqId.current) { setLoading(false); setLoadingMore(false); }
+    }
+  };
+
+  // Debounced re-fetch (page 1) whenever any filter changes.
+  useEffect(() => {
+    const t = setTimeout(() => runFetch(1, true), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, skills, university, opportunity, field, exp, from, to]);
+
+  // ---- derived option lists ----
   const allSkills = useMemo(() => {
     const seen = new Set<string>();
     const out: string[] = [];
@@ -92,12 +127,7 @@ const StudentsPage: React.FC = () => {
     });
     return out;
   }, [backendSkills]);
-
-  const fields = useMemo(() => {
-    const set = new Set<string>();
-    (allStudents ?? []).forEach((s: any) => s.preferred_field && set.add(s.preferred_field));
-    return ['Any', ...Array.from(set)];
-  }, [allStudents]);
+  const fields = useMemo(() => ['Any', ...fieldOpts], [fieldOpts]);
 
   const monthOpts = useMemo(() => {
     const out: { v: string; l: string }[] = [];
@@ -109,51 +139,15 @@ const StudentsPage: React.FC = () => {
     return out;
   }, []);
 
-  const filtered = useMemo(() => {
-    const list = allStudents ?? [];
-    const qq = q.trim().toLowerCase();
-    return list.filter((s: any) => {
-      const sn: string[] = Array.isArray(s.skills) ? s.skills.map((x: any) => x?.displayName || x?.name || '').filter(Boolean) : [];
-      if (qq) {
-        const hay = [s.user?.firstName, s.user?.lastName, s.headline, s.preferred_field, sn.join(' ')].join(' ').toLowerCase();
-        if (hay.indexOf(qq) < 0) return false;
-      }
-      if (skills.length) {
-        const low = sn.map((x) => x.toLowerCase());
-        if (!skills.every((k) => low.indexOf(k.toLowerCase()) >= 0)) return false;
-      }
-      if (university !== 'Any' && s.user?.university !== university) return false;
-      if (opportunity !== 'Any') {
-        const t = opportunity.toLowerCase() === 'internship' ? 'internship' : 'job';
-        if ((s.looking_for || {}).type !== t) return false;
-      }
-      if (field !== 'Any' && s.preferred_field !== field) return false;
-      if (exp !== 'Any') {
-        const e = s.total_experience || 0;
-        const ok = exp === '0-6' ? e < 6 : exp === '6-12' ? e >= 6 && e < 12 : exp === '12-24' ? e >= 12 && e < 24 : e >= 24;
-        if (!ok) return false;
-      }
-      if (from || to) {
-        const lf = s.looking_for || {};
-        const af = monthOf(lf.from_date);
-        const at = monthOf(lf.to_date) || '9999-12';
-        if (from && at < from) return false;
-        if (to && af > to) return false;
-      }
-      return true;
-    });
-  }, [allStudents, q, skills, university, opportunity, field, exp, from, to]);
-
-  useEffect(() => setVisible(PAGE), [q, skills, university, opportunity, field, exp, from, to]);
-
   const toggleSkill = (sk: string) => setSkills((p) => (p.indexOf(sk) >= 0 ? p.filter((x) => x !== sk) : p.concat([sk])));
   const clearAll = () => {
     setQ(''); setSkills([]); setUniversity('Any'); setOpportunity('Any'); setField('Any'); setExp('Any'); setFrom(''); setTo(''); setSkillQuery('');
   };
 
-  const cards = filtered.slice(0, visible).map(studentToCardVM);
-  const total = (allStudents ?? []).length;
+  const cards = results.map(studentToCardVM);
   const skillRows = allSkills.filter((s) => s.toLowerCase().indexOf(skillQuery.toLowerCase()) >= 0);
+  const anyActive = !!(q || skills.length || university !== 'Any' || opportunity !== 'Any' || field !== 'Any' || exp !== 'Any' || from || to);
+  const hasMore = results.length < total;
 
   const SkillList = ({ box = 16, font = 13.5 }: { box?: number; font?: number }) => (
     <>
@@ -169,8 +163,6 @@ const StudentsPage: React.FC = () => {
       {skillRows.length === 0 && <div style={{ padding: '14px 10px', fontSize: 13, color: 'var(--text-subtle)' }}>No skills found.</div>}
     </>
   );
-
-  const anyActive = !!(q || skills.length || university !== 'Any' || opportunity !== 'Any' || field !== 'Any' || exp !== 'Any' || from || to);
 
   // All filter controls, shared by the desktop rail and the mobile sheet.
   const renderFilters = () => (
@@ -262,11 +254,12 @@ const StudentsPage: React.FC = () => {
           {/* Results toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
             <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
-              <strong style={{ color: 'var(--text)', fontWeight: 650 }}>{filtered.length}</strong> {filtered.length === 1 ? 'student' : 'students'}{filtered.length !== total ? ` of ${total}` : ''}
+              {loading ? 'Searching…' : <><strong style={{ color: 'var(--text)', fontWeight: 650 }}>{total}</strong> {total === 1 ? 'student' : 'students'}</>}
             </p>
             <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '9px 15px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer' }}><SlidersHorizontal size={15} /> Filters{anyActive ? ' •' : ''}</button>
           </div>
-          {loading && !allStudents ? (
+
+          {loading && results.length === 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 18 }}>
@@ -282,21 +275,23 @@ const StudentsPage: React.FC = () => {
                 </div>
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : results.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '64px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
               <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto', color: 'var(--text-subtle)' }}>⌕</div>
               <h3 style={{ fontSize: 19, fontWeight: 650, margin: '18px 0 0' }}>No students found</h3>
               <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>Try changing or clearing your filters.</p>
-              <button onClick={clearAll} style={{ marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Clear all filters</button>
+              {anyActive && <button onClick={clearAll} style={{ marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Clear all filters</button>}
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18, opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
                 {cards.map((vm) => <StudentCard key={vm.id} vm={vm} />)}
               </div>
-              {filtered.length > visible && (
+              {hasMore && (
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-                  <button onClick={() => setVisible((v) => v + PAGE)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer' }}>Load more students</button>
+                  <button onClick={() => runFetch(page + 1, false)} disabled={loadingMore} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer', opacity: loadingMore ? 0.7 : 1 }}>
+                    {loadingMore ? 'Loading…' : `Load more (${total - results.length} more)`}
+                  </button>
                 </div>
               )}
             </>
@@ -317,7 +312,7 @@ const StudentsPage: React.FC = () => {
             <div style={{ overflow: 'auto', flex: 1, margin: '0 -2px', padding: '0 2px' }}>
               {renderFilters()}
             </div>
-            <button onClick={() => setSheet(false)} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', flex: 'none' }}>Show {filtered.length} results</button>
+            <button onClick={() => setSheet(false)} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', flex: 'none' }}>Show {total} results</button>
           </div>
         </div>
       )}

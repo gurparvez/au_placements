@@ -12,8 +12,8 @@ const fullName = (u: { firstName?: string; lastName?: string }) => `${u.firstNam
 const FeedPage: React.FC = () => {
   const user = useAppSelector((s) => s.auth.user);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [content, setContent] = useState('');
@@ -30,11 +30,12 @@ const FeedPage: React.FC = () => {
   };
   const removeImage = (i: number) => setImages((prev) => prev.filter((_, idx) => idx !== i));
 
-  const load = useCallback(async (p: number, replace: boolean) => {
+  const load = useCallback(async (cur: string | null, replace: boolean) => {
     setLoading(true);
     try {
-      const res = await postsApi.feed({ page: p, limit: 10 });
-      setTotalPages(res.pagination.totalPages);
+      const res = await postsApi.feed({ cursor: cur ?? undefined, limit: 10 });
+      setCursor(res.nextCursor);
+      setHasMore(!!res.nextCursor);
       setPosts((prev) => (replace ? res.data : [...prev, ...res.data]));
     } catch {
       toast.error('Could not load the feed.');
@@ -43,7 +44,7 @@ const FeedPage: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => { load(1, true); }, [load]);
+  useEffect(() => { load(null, true); }, [load]);
 
   const submit = async () => {
     if (!content.trim() && images.length === 0) return;
@@ -61,7 +62,7 @@ const FeedPage: React.FC = () => {
     }
   };
 
-  const reloadFirst = () => { setPage(1); load(1, true); };
+  const reloadFirst = () => { load(null, true); };
   const removeFromList = (id: string) => setPosts((prev) => prev.filter((p) => p._id !== id));
 
   return (
@@ -126,9 +127,9 @@ const FeedPage: React.FC = () => {
         <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>No posts yet. Be the first to share something.</div>
       )}
 
-      {page < totalPages && (
+      {hasMore && (
         <div style={{ textAlign: 'center', marginTop: 18 }}>
-          <button onClick={() => { const next = page + 1; setPage(next); load(next, false); }} disabled={loading} style={{ padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer' }}>
+          <button onClick={() => load(cursor, false)} disabled={loading} style={{ padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer' }}>
             {loading ? 'Loading…' : 'Load more'}
           </button>
         </div>

@@ -9,21 +9,21 @@ import { REACTION_META, REACTION_ORDER } from './reactions';
 import { renderRichText } from './richText';
 import MentionTextarea from './MentionTextarea';
 
-const fullName = (u: { firstName?: string; lastName?: string }) => `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim();
+const fullName = (u?: { firstName?: string; lastName?: string } | null) => `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim();
 const timeLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
-const Avatar: React.FC<{ u: { firstName?: string; lastName?: string }; size?: number }> = ({ u, size = 42 }) => {
+const Avatar: React.FC<{ u?: { firstName?: string; lastName?: string } | null; size?: number }> = ({ u, size = 42 }) => {
   const name = fullName(u);
   return (
     <span aria-hidden style={{ width: size, height: size, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: size / 2.6, color: '#fff', background: avatarColor(name) }}>
-      {initials(u.firstName, u.lastName) || 'U'}
+      {initials(u?.firstName, u?.lastName) || 'U'}
     </span>
   );
 };
 
 // Links to a profile when the author is a student (public profiles exist for students).
-const ProfileLink: React.FC<{ u: PostAuthor; style?: React.CSSProperties; children: React.ReactNode }> = ({ u, style, children }) => {
-  if (u.roles?.includes('student')) {
+const ProfileLink: React.FC<{ u?: PostAuthor | null; style?: React.CSSProperties; children: React.ReactNode }> = ({ u, style, children }) => {
+  if (u && u.roles?.includes('student')) {
     return (
       <Link
         to={`/profiles/${u._id}`}
@@ -62,7 +62,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
   const [shareQuote, setShareQuote] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const canManage = !!currentUser && (currentUser._id === p.author._id || currentUser.roles?.includes('admin'));
+  const canManage = !!currentUser && (currentUser._id === p.author?._id || currentUser.roles?.includes('admin'));
   const requireAuth = () => {
     if (!currentUser) { toast.error('Sign in to interact with posts.'); return false; }
     return true;
@@ -297,7 +297,7 @@ const CommentRow: React.FC<{
   onReply?: () => void;
   onDelete: () => void;
 }> = ({ c, currentUser, canModerate, onReact, onReply, onDelete }) => {
-  const isAuthorOrAdmin = !!currentUser && (currentUser._id === c.author._id || currentUser.roles?.includes('admin'));
+  const isAuthorOrAdmin = !!currentUser && (currentUser._id === c.author?._id || currentUser.roles?.includes('admin'));
   const canDelete = isAuthorOrAdmin || !!canModerate;
   const liked = !!c.my_reaction;
   return (

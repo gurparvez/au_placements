@@ -49,6 +49,7 @@ export interface Comment {
 
 export interface Pagination { page: number; limit: number; total: number; totalPages: number; }
 export interface FeedResponse { success: boolean; data: Post[]; pagination: Pagination; }
+export interface CursorFeedResponse { success: boolean; data: Post[]; nextCursor: string | null; }
 
 export interface PostMedia {
   type: 'image' | 'video';
@@ -71,8 +72,8 @@ class PostsApi {
     this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
   }
 
-  async feed(params?: { page?: number; limit?: number }): Promise<FeedResponse> {
-    const res = await this.instance.get<FeedResponse>('/api/posts', { params });
+  async feed(params?: { cursor?: string; limit?: number }): Promise<CursorFeedResponse> {
+    const res = await this.instance.get<CursorFeedResponse>('/api/posts', { params });
     return res.data;
   }
   async listByUser(userId: string, params?: { page?: number; limit?: number }): Promise<FeedResponse> {

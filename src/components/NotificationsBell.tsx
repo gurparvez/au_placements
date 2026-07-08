@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import notificationsApi, { type AppNotification } from '@/api/notifications';
+import { getSocket } from '@/lib/socket';
 
 const fullName = (u?: { firstName?: string; lastName?: string }) =>
   u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Someone';
@@ -27,12 +28,19 @@ const NotificationsBell: React.FC = () => {
     try { setUnread(await notificationsApi.unreadCount()); } catch { /* ignore */ }
   }, []);
 
-  // Poll unread count every 30s.
+  // Real-time: bump the badge the instant a notification arrives.
+  // The 30s poll stays as a fallback in case the socket is disconnected.
   useEffect(() => {
     refreshCount();
     const t = setInterval(refreshCount, 30000);
-    return () => clearInterval(t);
-  }, [refreshCount]);
+    const s = getSocket();
+    const onNew = () => {
+      refreshCount();
+      if (open) notificationsApi.list().then(({ items }) => setItems(items)).catch(() => {});
+    };
+    s.on('notification:new', onNew);
+    return () => { clearInterval(t); s.off('notification:new', onNew); };
+  }, [refreshCount, open]);
 
   // Close on outside click.
   useEffect(() => {

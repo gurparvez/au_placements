@@ -18,6 +18,21 @@ export interface UserSearchResult {
   roles?: string[];
 }
 
+export interface BrowseParams {
+  q?: string;
+  skills?: string;        // comma-separated display names
+  university?: string;
+  opportunity?: string;   // 'internship' | 'job'
+  field?: string;
+  exp?: string;           // '0-6' | '6-12' | '12-24' | '24+'
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface BrowsePagination { page: number; limit: number; total: number; totalPages: number; }
+
 class StudentApi {
   private instance: AxiosInstance;
 
@@ -94,6 +109,17 @@ class StudentApi {
     const res = await this.instance.get('/api/student/all');
     // Backend returns { success, data: [...], pagination }
     return { success: res.data.success, students: res.data.data };
+  }
+
+  /* -------------------- Browse (server-side filter + paginate) ------------------ */
+  async browse(params: BrowseParams): Promise<{ students: any[]; pagination: BrowsePagination }> {
+    const res = await this.instance.get('/api/student/browse', { params });
+    return { students: res.data.data, pagination: res.data.pagination };
+  }
+
+  async filterMeta(): Promise<{ fields: string[] }> {
+    const res = await this.instance.get('/api/student/filters');
+    return res.data.data;
   }
 
   /* ----------------------------- Search students by name or AUID ------------------------------ */

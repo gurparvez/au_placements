@@ -33,7 +33,6 @@ const btnGhost: React.CSSProperties = {
 };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
 const SIZES: CompanySize[] = ['1-10', '11-50', '51-200', '201-500', '500+'];
-const STATUSES = ['pending', 'active', 'rejected', 'suspended'] as const;
 
 function extractError(err: unknown, fallback: string): string {
   if (axios.isAxiosError(err)) {
@@ -132,11 +131,15 @@ function CreateRecruiterModal({ onClose, onSaved }: { onClose: () => void; onSav
 
 /* ------------------------------- panel ------------------------------- */
 
-const RecruitersPanel: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
+const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () => void }> = ({ mode = 'active', onChanged }) => {
+  // Each tab is locked to a status: the roster shows active recruiters,
+  // Approvals shows pending requests awaiting review.
+  const status = mode === 'approvals' ? 'pending' : 'active';
+  const isApprovals = mode === 'approvals';
+
   const [rows, setRows] = useState<RecruiterRow[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<string>('pending');
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -145,7 +148,7 @@ const RecruitersPanel: React.FC<{ onChanged?: () => void }> = ({ onChanged }) =>
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.listRecruiters({ page, limit: 20, status: status || undefined, q: q.trim() || undefined });
+      const res = await adminApi.listRecruiters({ page, limit: 20, status, q: q.trim() || undefined });
       setRows(res.data);
       setPagination(res.pagination);
     } catch (err) {
@@ -191,12 +194,8 @@ const RecruitersPanel: React.FC<{ onChanged?: () => void }> = ({ onChanged }) =>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (setPage(1), load())} placeholder="Search by name or email" style={{ ...inputStyle, paddingLeft: 36 }} />
         </div>
-        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}>
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
         <button onClick={load} style={btnGhost} aria-label="Refresh"><RefreshCw size={15} /></button>
-        <button onClick={() => setModalOpen(true)} style={btnPrimary}><Plus size={16} /> New recruiter</button>
+        {!isApprovals && <button onClick={() => setModalOpen(true)} style={btnPrimary}><Plus size={16} /> New recruiter</button>}
       </div>
 
       <div style={{ ...card, overflow: 'hidden' }}>
@@ -216,7 +215,7 @@ const RecruitersPanel: React.FC<{ onChanged?: () => void }> = ({ onChanged }) =>
                 <tr><td colSpan={5}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '40px 20px', color: 'var(--text-muted)' }}>
                     <Building2 size={26} style={{ opacity: 0.5 }} />
-                    <span>{status ? `No ${status} recruiters.` : 'No recruiters found.'}</span>
+                    <span>{isApprovals ? 'No pending requests.' : 'No active recruiters yet.'}</span>
                   </div>
                 </td></tr>
               ) : (
@@ -234,16 +233,17 @@ const RecruitersPanel: React.FC<{ onChanged?: () => void }> = ({ onChanged }) =>
                     <td style={{ padding: '12px 14px' }}>{r.recruiter?.company || '—'}</td>
                     <td style={{ padding: '12px 14px' }}><span style={statusChip(r.user.status)}>{r.user.status}</span></td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'right' }}>
-                      {r.user.status !== 'active' && (
+                      {isApprovals && (
                         <button onClick={() => approve(r)} disabled={acting === r.recruiter?._id} style={{ ...btnGhost, color: 'var(--primary)', borderColor: 'var(--primary)', marginRight: 6 }}>
                           <Check size={14} /> Approve
                         </button>
                       )}
-                      {r.user.status !== 'rejected' && (
+                      {isApprovals && (
                         <button onClick={() => reject(r)} disabled={acting === r.recruiter?._id} style={{ ...btnGhost, color: 'var(--danger)', borderColor: 'var(--danger)' }}>
                           <X size={14} /> Reject
                         </button>
                       )}
+                      {!isApprovals && <span style={{ color: 'var(--text-subtle)', fontSize: 12.5 }}>—</span>}
                     </td>
                   </tr>
                 ))

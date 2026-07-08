@@ -62,6 +62,12 @@ const CreateProfile: React.FC = () => {
   const navigate = useNavigate();
 
   const { loading } = useAppSelector((s) => s.student);
+  const authUser = useAppSelector((s) => s.auth.user);
+
+  // Recruiters don't have a student profile — their profile is the company profile.
+  useEffect(() => {
+    if (authUser?.roles?.includes('recruiter')) navigate(`/companies/${authUser._id}`, { replace: true });
+  }, [authUser, navigate]);
 
   // ---------------- BASIC INFO ----------------
   const [headline, setHeadline] = useState('');

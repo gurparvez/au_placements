@@ -156,8 +156,8 @@ const Navbar: React.FC = () => {
                     )}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profiles')}>
-                    <UserIcon size={16} /> View profile
+                  <DropdownMenuItem onClick={() => navigate(user.roles?.includes('recruiter') ? `/companies/${user._id}` : '/profiles')}>
+                    <UserIcon size={16} /> {user.roles?.includes('recruiter') ? 'Company profile' : 'View profile'}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/network')}>
                     <Users size={16} /> My network

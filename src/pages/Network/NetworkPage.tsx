@@ -24,6 +24,7 @@ const Avatar: React.FC<{ u?: { firstName?: string; lastName?: string } }> = ({ u
 );
 
 const PersonRow: React.FC<{ entry: ConnectionEntry; right: React.ReactNode }> = ({ entry, right }) => (
+  !entry.user ? null :
   <div
     style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderTop: '1px solid var(--border)', transition: 'background .15s' }}
     onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}

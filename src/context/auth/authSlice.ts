@@ -43,6 +43,9 @@ export const fetchCurrentUser = createAsyncThunk<UserData>(
 
 export const logoutUser = createAsyncThunk<void, void>('auth/logout', async () => {
   await authApi.logout();
+  // Drop the real-time connection so the next login re-authenticates the handshake.
+  const { disconnectSocket } = await import('@/lib/socket');
+  disconnectSocket();
 });
 
 export const updateUserDetails = createAsyncThunk<UpdateDetailsResponse, UpdateDetailsPayload>(

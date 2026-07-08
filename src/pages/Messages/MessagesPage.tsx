@@ -5,6 +5,7 @@ import { Send, MessagesSquare, ArrowLeft } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import messagesApi, { type Conversation, type Message } from '@/api/messages';
 import { avatarColor, initials } from '@/utils/avatar';
+import { getSocket } from '@/lib/socket';
 
 const fullName = (u?: { firstName?: string; lastName?: string }) => (u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'User');
 const isStudent = (u?: { roles?: string[] }) => !!u?.roles?.includes('student');
@@ -52,9 +53,22 @@ const MessagesPage: React.FC = () => {
   useEffect(() => {
     if (!activeId) { setThread(null); return; }
     loadThread(activeId);
-    const t = setInterval(() => { loadThread(activeId); loadConvos(); }, 7000);
+    // Fallback poll (sockets do the heavy lifting) — relaxed from 7s to 20s.
+    const t = setInterval(() => { loadThread(activeId); loadConvos(); }, 20000);
     return () => clearInterval(t);
   }, [activeId, loadThread, loadConvos]);
+
+  // Real-time: a new message arrives → refresh the open thread and the inbox instantly.
+  useEffect(() => {
+    if (!user) return;
+    const s = getSocket();
+    const onMsg = (payload: { conversationId?: string }) => {
+      if (payload?.conversationId && payload.conversationId === activeId) loadThread(activeId);
+      loadConvos();
+    };
+    s.on('message:new', onMsg);
+    return () => { s.off('message:new', onMsg); };
+  }, [user, activeId, loadThread, loadConvos]);
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [thread?.messages.length]);
 
