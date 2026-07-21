@@ -56,6 +56,15 @@ export class SkillsApi {
     const { data } = await this.instance.post(`/api/skills`, { name });
     return data.data;
   }
+
+  async updateSkill(id: string, name: string): Promise<Skill> {
+    const { data } = await this.instance.put(`/api/skills/${id}`, { name });
+    return data.data;
+  }
+
+  async deleteSkill(id: string): Promise<void> {
+    await this.instance.delete(`/api/skills/${id}`);
+  }
 }
 
 export const skillsApi = new SkillsApi();

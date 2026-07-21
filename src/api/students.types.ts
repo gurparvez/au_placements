@@ -68,6 +68,13 @@ export interface CreateStudentProfilePayload {
 
   preferred_field?: string;
 
+  // Academic record used for TPC reporting (department / course / batch cohorts).
+  department?: string;
+  course?: string;
+  batch_year?: number;
+  cgpa?: number;
+  backlogs?: number;
+
   skills?: string[];
   education?: EducationPayload[];
 
@@ -120,6 +127,13 @@ export interface StudentProfileResponse {
   linkedin_url: string;
   preferred_field: string;
   github_url: string;
+
+  department?: string;
+  course?: any;
+  batch_year?: number;
+  cgpa?: number;
+  backlogs?: number;
+
   resume_link: string;
 
   looking_for: {

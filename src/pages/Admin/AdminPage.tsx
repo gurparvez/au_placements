@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { Plus, Pencil, Trash2, Search, Shield, RefreshCw, Users, Building2, UserCheck } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Shield, RefreshCw, Users, Building2, UserCheck, LayoutDashboard, Award, Settings, GraduationCap, Layers } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import adminApi, {
   type AdminUser,
@@ -12,6 +12,11 @@ import adminApi, {
   type University,
 } from '@/api/admin';
 import RecruitersPanel from './RecruitersPanel';
+import DashboardPanel from './DashboardPanel';
+import PlacementsPanel from './PlacementsPanel';
+import TpoPanel from './TpoPanel';
+import ReferencePanel from './ReferencePanel';
+import analyticsApi from '@/api/analytics';
 import { avatarColor, initials } from '@/utils/avatar';
 
 /* ------------------------------ helpers ------------------------------ */
@@ -63,12 +68,12 @@ const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) =>
 
 type FormState = {
   auid: string; password: string; firstName: string; lastName: string;
-  email: string; phone: string; university: University; roles: Role[];
+  email: string; phone: string; university: University; gender: '' | 'male' | 'female' | 'other'; roles: Role[];
 };
 
 const emptyForm: FormState = {
   auid: '', password: '', firstName: '', lastName: '',
-  email: '', phone: '', university: 'Akal University', roles: ['student'],
+  email: '', phone: '', university: 'Akal University', gender: '', roles: ['student'],
 };
 
 function UserFormModal({
@@ -85,6 +90,7 @@ function UserFormModal({
           auid: editing.auid ?? '', password: '', firstName: editing.firstName,
           lastName: editing.lastName ?? '', email: editing.email ?? '',
           phone: editing.phone ?? '', university: editing.university ?? 'Akal University',
+          gender: (editing.gender ?? '') as FormState['gender'],
           roles: editing.roles?.length ? editing.roles : ['student'],
         }
       : emptyForm
@@ -114,6 +120,7 @@ function UserFormModal({
           email: form.email.trim() || undefined,
           phone: form.phone.trim() || undefined,
           university: form.university,
+          gender: form.gender || undefined,
           roles: form.roles,
         };
         if (form.password) payload.password = form.password;
@@ -128,6 +135,7 @@ function UserFormModal({
           email: form.email.trim() || undefined,
           phone: form.phone.trim() || undefined,
           university: form.university,
+          gender: form.gender || undefined,
           roles: form.roles,
         };
         await adminApi.createUser(payload);
@@ -181,6 +189,15 @@ function UserFormModal({
             </select>
           </div>
           <div>
+            <label style={labelStyle}>Gender <span style={{ fontWeight: 400 }}>(for NIRF reporting)</span></label>
+            <select value={form.gender} onChange={(e) => set('gender', e.target.value as FormState['gender'])} style={{ ...inputStyle, cursor: 'pointer' }}>
+              <option value="">Not recorded</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
             <label style={labelStyle}>{isEdit ? 'New password' : 'Password'}</label>
             <input type="password" value={form.password} onChange={(e) => set('password', e.target.value)}
               placeholder={isEdit ? 'Leave blank to keep' : 'Min 8 characters'} style={inputStyle} />
@@ -215,6 +232,90 @@ function UserFormModal({
   );
 }
 
+/* ----------------------- academic record modal ----------------------- */
+
+/**
+ * TPO-owned fields. Students cannot edit these — CGPA and backlogs drive every
+ * eligibility check, and readiness scores are the only leading indicators the
+ * dashboard has.
+ */
+function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    cgpa: '', backlogs: '', department: '', batch_year: '',
+    aptitude_score: '', mock_interviews: '', mock_interview_score: '', training_attendance: '',
+    resume_verified: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    const payload: Record<string, unknown> = {};
+    // Only send fields the TPO actually filled in — blanks must not wipe data.
+    for (const [k, v] of Object.entries(form)) {
+      if (typeof v === 'boolean') { payload[k] = v; continue; }
+      if (v !== '') payload[k] = k === 'department' ? v : Number(v);
+    }
+    setSaving(true);
+    try {
+      await analyticsApi.updateStudentRecord(user._id, payload);
+      toast.success('Academic record updated.');
+      onSaved();
+      onClose();
+    } catch (err) {
+      toast.error(extractError(err, 'Failed to update record.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const num = (k: keyof typeof form, label: string, extra?: React.InputHTMLAttributes<HTMLInputElement>) => (
+    <div>
+      <label style={labelStyle}>{label}</label>
+      <input type="number" value={form[k] as string} onChange={(e) => set(k, e.target.value)} style={inputStyle} {...extra} />
+    </div>
+  );
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
+      <div style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Academic record</h2>
+        <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+          {user.firstName} (AUID {user.auid}). Leave a field blank to keep its current value.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Department</label>
+            <input value={form.department} onChange={(e) => set('department', e.target.value)} style={inputStyle} />
+          </div>
+          {num('batch_year', 'Batch year', { min: 1990, max: 2100 })}
+          {num('cgpa', 'CGPA (verified)', { min: 0, max: 10, step: '0.01' })}
+          {num('backlogs', 'Active backlogs', { min: 0 })}
+          {num('aptitude_score', 'Aptitude score (0–100)', { min: 0, max: 100 })}
+          {num('mock_interviews', 'Mock interviews attended', { min: 0 })}
+          {num('mock_interview_score', 'Mock score (0–10)', { min: 0, max: 10, step: '0.1' })}
+          {num('training_attendance', 'Training attendance %', { min: 0, max: 100 })}
+          <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 10 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 13.5 }}>
+              <input type="checkbox" checked={form.resume_verified} onChange={(e) => set('resume_verified', e.target.checked)}
+                style={{ width: 16, height: 16, cursor: 'pointer' }} />
+              Resume verified
+            </label>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22 }}>
+          <button onClick={onClose} style={btnGhost}>Cancel</button>
+          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Saving…' : 'Save record'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------ page ------------------------------ */
 
 const AdminPage: React.FC = () => {
@@ -224,7 +325,7 @@ const AdminPage: React.FC = () => {
 
   const isAdmin = !!user?.roles?.includes('admin');
 
-  const [tab, setTab] = useState<'users' | 'recruiters' | 'approvals'>('users');
+  const [tab, setTab] = useState<'dashboard' | 'placements' | 'policy' | 'reference' | 'users' | 'recruiters' | 'approvals'>('dashboard');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
@@ -232,6 +333,7 @@ const AdminPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [recordFor, setRecordFor] = useState<AdminUser | null>(null);
   const [pendingCount, setPendingCount] = useState<number | null>(null);
 
   const loadPending = useCallback(async () => {
@@ -297,7 +399,8 @@ const AdminPage: React.FC = () => {
   }
 
   return (
-    <section style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px 80px' }}>
+    // The dashboard has far more to show than the CRUD tables — give it room.
+    <section style={{ maxWidth: tab === 'dashboard' || tab === 'policy' || tab === 'reference' ? 1320 : 1100, margin: '0 auto', padding: '40px 24px 80px', transition: 'max-width .2s ease' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 12, background: 'var(--primary-soft)', color: 'var(--primary)' }}>
           <Shield size={22} />
@@ -305,7 +408,7 @@ const AdminPage: React.FC = () => {
         <div style={{ flex: 1, minWidth: 200 }}>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-.02em' }}>Admin</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
-            Manage users and review recruiter requests.
+            Placement analytics, user management, and recruiter approvals.
           </p>
         </div>
         {tab === 'users' && <button onClick={openCreate} style={btnPrimary}><Plus size={16} /> New user</button>}
@@ -313,7 +416,7 @@ const AdminPage: React.FC = () => {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, margin: '20px 0 4px', borderBottom: '1px solid var(--border)' }}>
-        {([['users', Users], ['recruiters', Building2], ['approvals', UserCheck]] as const).map(([t, Icon]) => (
+        {([['dashboard', LayoutDashboard], ['placements', Award], ['policy', Settings], ['reference', Layers], ['users', Users], ['recruiters', Building2], ['approvals', UserCheck]] as const).map(([t, Icon]) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -338,7 +441,15 @@ const AdminPage: React.FC = () => {
         ))}
       </div>
 
-      {tab === 'recruiters' ? (
+      {tab === 'dashboard' ? (
+        <DashboardPanel />
+      ) : tab === 'placements' ? (
+        <PlacementsPanel />
+      ) : tab === 'policy' ? (
+        <TpoPanel />
+      ) : tab === 'reference' ? (
+        <ReferencePanel />
+      ) : tab === 'recruiters' ? (
         <div style={{ marginTop: 18 }}><RecruitersPanel mode="active" onChanged={loadPending} /></div>
       ) : tab === 'approvals' ? (
         <div style={{ marginTop: 18 }}><RecruitersPanel mode="approvals" onChanged={loadPending} /></div>
@@ -401,6 +512,13 @@ const AdminPage: React.FC = () => {
                       </span>
                     </td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'right' }}>
+                      {u.roles.includes('student') && (
+                        <button onClick={() => setRecordFor(u)} aria-label="Edit academic record"
+                          title="Academic record (CGPA, backlogs, readiness)"
+                          style={{ ...btnGhost, padding: 8, marginRight: 6 }}>
+                          <GraduationCap size={15} />
+                        </button>
+                      )}
                       <button onClick={() => openEdit(u)} aria-label="Edit user" style={{ ...btnGhost, padding: 8, marginRight: 6 }}><Pencil size={15} /></button>
                       <button onClick={() => remove(u)} aria-label="Delete user"
                         style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }}
@@ -432,6 +550,7 @@ const AdminPage: React.FC = () => {
       )}
 
       {modalOpen && <UserFormModal editing={editing} onClose={() => setModalOpen(false)} onSaved={load} />}
+      {recordFor && <RecordModal user={recordFor} onClose={() => setRecordFor(null)} onSaved={load} />}
       </>
       )}
     </section>

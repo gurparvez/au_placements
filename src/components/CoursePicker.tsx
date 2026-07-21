@@ -10,9 +10,12 @@ interface CoursePickerProps {
   value?: string; // The selected course NAME (for display)
   onSelect: (course: Course) => void; // Passes full object back to parent
   error?: string;
+  /** When false, the "Create …" affordance is hidden — pick from the list only.
+   *  Creating courses is admin-only server-side anyway, so students get false. */
+  allowCreate?: boolean;
 }
 
-const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) => {
+const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error, allowCreate = true }) => {
   const [query, setQuery] = useState(value || '');
   const [searchResults, setSearchResults] = useState<Course[]>([]);
   const [loading, setLoading] = useState(false);
@@ -146,14 +149,20 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error }) =
               ))}
 
               {searchResults.length === 0 && (
-                <button
-                  type="button"
-                  onClick={handleCreateStep1}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none"
-                >
-                  <Plus className="h-4 w-4 shrink-0" aria-hidden />
-                  Create &ldquo;{query}&rdquo;
-                </button>
+                allowCreate ? (
+                  <button
+                    type="button"
+                    onClick={handleCreateStep1}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none"
+                  >
+                    <Plus className="h-4 w-4 shrink-0" aria-hidden />
+                    Create &ldquo;{query}&rdquo;
+                  </button>
+                ) : (
+                  <div className="text-muted-foreground px-3 py-2 text-sm">
+                    No matching course. Ask the placement cell if yours is missing.
+                  </div>
+                )
               )}
             </div>
           )}

@@ -43,6 +43,21 @@ export class CoursesApi {
     // Backend returns { success, data: course }
     return { success: data.success, course: data.data };
   }
+
+  // GET /api/courses — full list (admin reference management + dropdowns)
+  async listCourses(limit = 100): Promise<Course[]> {
+    const { data } = await this.instance.get(`/api/courses`, { params: { limit } });
+    return Array.isArray(data.data) ? data.data : [];
+  }
+
+  async updateCourse(id: string, data: { name?: string; category?: string }): Promise<Course> {
+    const res = await this.instance.put(`/api/courses/${id}`, data);
+    return res.data.data;
+  }
+
+  async deleteCourse(id: string): Promise<void> {
+    await this.instance.delete(`/api/courses/${id}`);
+  }
 }
 
 export const coursesApi = new CoursesApi();

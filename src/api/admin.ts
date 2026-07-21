@@ -16,6 +16,7 @@ export interface AdminUser {
   email?: string;
   phone?: string;
   university?: University;
+  gender?: 'male' | 'female' | 'other';
   roles: Role[];
   status?: UserStatus;
   createdAt?: string;
@@ -71,6 +72,7 @@ export interface CreateUserPayload {
   email?: string;
   phone?: string;
   university: University;
+  gender?: 'male' | 'female' | 'other';
   roles?: Role[];
 }
 

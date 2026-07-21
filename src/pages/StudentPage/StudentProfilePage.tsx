@@ -26,6 +26,7 @@ import ExperienceSection from './components/ExperienceSection';
 import ProjectsSection from './components/ProjectSection';
 import SkillsSection from './components/SkillsSection';
 import EducationSection from './components/EducationSection';
+import AcademicSection from './components/AcademicSection';
 import CertificatesSection from './components/CertificatesSection';
 
 const StatusScreen: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -240,6 +241,7 @@ const StudentProfilePage: React.FC = () => {
       <div className="mx-auto w-full max-w-[1080px] space-y-4 px-6 pt-24 pb-16">
         <ProfileHeader />
         <AboutSection />
+        <AcademicSection />
         <ExperienceSection />
         <EducationSection />
         <ProjectsSection />

@@ -23,18 +23,47 @@ export interface Opening {
   apply_url?: string;
   apply_by?: string;
   status: OpeningStatus;
+  min_cgpa?: number;
+  max_backlogs?: number;
+  eligible_departments?: string[];
+  eligible_batches?: number[];
+  allow_placed?: boolean;
+  tier?: OpeningTier;
+  ctc_lpa?: number;
+  rounds?: { name: string; order: number }[];
   application_count?: number;
   has_applied?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+/** Hiring pipeline stages, in order. */
+export const APPLICATION_STATUSES = [
+  'applied', 'reviewed', 'shortlisted', 'interviewed', 'offered', 'accepted', 'rejected',
+] as const;
+export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
+
+export const ROUND_RESULTS = ['pending', 'cleared', 'failed', 'absent'] as const;
+export type RoundResult = (typeof ROUND_RESULTS)[number];
+
+export interface ApplicantRound {
+  name: string;
+  order: number;
+  result: RoundResult;
+  date?: string;
+  notes?: string;
+}
+
 export interface Applicant {
   _id: string;
-  status: string;
+  status: ApplicationStatus;
+  rounds?: ApplicantRound[];
+  current_round?: number;
   appliedAt: string;
   student: { _id: string; firstName?: string; lastName?: string; auid?: string; university?: string } | null;
 }
+
+export type OpeningTier = 'regular' | 'core' | 'dream';
 
 export interface OpeningPayload {
   title: string;
@@ -49,6 +78,14 @@ export interface OpeningPayload {
   apply_url?: string;
   apply_by?: string;
   company?: string;
+  min_cgpa?: number;
+  max_backlogs?: number;
+  eligible_departments?: string[];
+  eligible_batches?: number[];
+  allow_placed?: boolean;
+  tier?: OpeningTier;
+  ctc_lpa?: number;
+  rounds?: { name: string; order: number }[];
 }
 
 export interface Pagination {
@@ -112,6 +149,46 @@ class OpeningsApi {
 
   async applicants(id: string): Promise<Applicant[]> {
     const res = await this.instance.get<{ success: boolean; data: Applicant[] }>(`/api/openings/${id}/applicants`);
+    return res.data.data;
+  }
+
+  /** Record a selection-round outcome. Keeps the flat status in sync server-side. */
+  async setRoundResult(
+    openingId: string,
+    applicationId: string,
+    order: number,
+    result: RoundResult,
+    notes?: string
+  ): Promise<{ _id: string; status: ApplicationStatus; current_round: number; rounds: ApplicantRound[] }> {
+    const res = await this.instance.patch(
+      `/api/openings/${openingId}/applicants/${applicationId}/round`,
+      { order, result, notes }
+    );
+    return res.data.data;
+  }
+
+  /** Why can (or can't) the signed-in student apply? */
+  async eligibility(openingId: string): Promise<{ eligible: boolean; reasons: { code: string; message: string }[] }> {
+    const res = await this.instance.get(`/api/openings/${openingId}/eligibility`);
+    return res.data.data;
+  }
+
+  /** TPO: cumulative eligibility funnel for this opening. */
+  async waterfall(openingId: string): Promise<unknown> {
+    const res = await this.instance.get(`/api/openings/${openingId}/waterfall`);
+    return res.data.data;
+  }
+
+  /** Move an applicant along the hiring pipeline. Notifies the student. */
+  async setApplicantStatus(
+    openingId: string,
+    applicationId: string,
+    status: ApplicationStatus
+  ): Promise<{ _id: string; status: ApplicationStatus }> {
+    const res = await this.instance.patch<{ success: boolean; data: { _id: string; status: ApplicationStatus } }>(
+      `/api/openings/${openingId}/applicants/${applicationId}`,
+      { status }
+    );
     return res.data.data;
   }
 }

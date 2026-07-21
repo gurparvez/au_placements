@@ -5,17 +5,78 @@ import axios from 'axios';
 import { Plus, Pencil, Trash2, Briefcase, Users, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '@/context/hooks';
-import openingsApi, { type Opening, type OpeningPayload, type University, type Applicant } from '@/api/openings';
+import openingsApi, {
+  APPLICATION_STATUSES,
+  type ApplicationStatus,
+  type Opening,
+  type OpeningPayload,
+  type University,
+  ROUND_RESULTS,
+  type Applicant,
+  type RoundResult,
+} from '@/api/openings';
 import type { Skill } from '@/api/skills';
 import SkillPicker from '@/components/SkillPicker';
+import departmentsApi, { type Department } from '@/api/departments';
 import { avatarColor, initials } from '@/utils/avatar';
 
 const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
 
 /* --------------------------- applicants modal --------------------------- */
 
+/** Colour cue per pipeline stage, so a long list scans at a glance. */
+const ROUND_TONE: Record<RoundResult, string> = {
+  pending: 'var(--text-subtle)',
+  cleared: '#22c55e',
+  failed: 'var(--danger)',
+  absent: '#f59e0b',
+};
+
+const STATUS_TONE: Record<string, string> = {
+  applied: 'var(--text-muted)',
+  reviewed: '#06b6d4',
+  shortlisted: '#f59e0b',
+  interviewed: '#a855f7',
+  offered: '#22c55e',
+  accepted: '#22c55e',
+  rejected: 'var(--danger)',
+};
+
 function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () => void }) {
   const [rows, setRows] = useState<Applicant[] | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  const updateStatus = async (applicationId: string, status: ApplicationStatus) => {
+    const prev = rows;
+    // Optimistic: reflect the choice immediately, roll back if the call fails.
+    setRows((r) => r?.map((x) => (x._id === applicationId ? { ...x, status } : x)) ?? r);
+    setSavingId(applicationId);
+    try {
+      await openingsApi.setApplicantStatus(opening._id, applicationId, status);
+      toast.success(`Marked ${status}. The student has been notified.`);
+    } catch (err) {
+      setRows(prev ?? null);
+      toast.error(extractError(err, 'Could not update the application.'));
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const updateRound = async (a: Applicant, order: number, result: RoundResult) => {
+    const prev = rows;
+    setRows((r) => r?.map((x) => x._id !== a._id ? x : {
+      ...x, rounds: (x.rounds ?? []).map((rd) => rd.order === order ? { ...rd, result } : rd),
+    }) ?? r);
+    try {
+      const updated = await openingsApi.setRoundResult(opening._id, a._id, order, result);
+      // The server also moves the flat status (a failed round ends the application).
+      setRows((r) => r?.map((x) => x._id === a._id ? { ...x, status: updated.status, rounds: updated.rounds, current_round: updated.current_round } : x) ?? r);
+    } catch (err) {
+      setRows(prev ?? null);
+      toast.error(extractError(err, 'Could not record the round result.'));
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -30,7 +91,7 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div style={{ position: 'relative', width: 'min(520px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
+      <div style={{ position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Applicants</h2>
@@ -49,7 +110,8 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
             </div>
           ) : (
             rows.map((a) => (
-              <div key={a._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderTop: '1px solid var(--border)' }}>
+              <div key={a._id} style={{ padding: '11px 0', borderTop: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span aria-hidden style={{ width: 38, height: 38, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, background: avatarColor(`${a.student?.firstName ?? ''} ${a.student?.lastName ?? ''}`) }}>{initials(a.student?.firstName, a.student?.lastName) || '?'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {a.student ? (
@@ -57,7 +119,57 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
                   ) : <span style={{ fontWeight: 650, fontSize: 14, color: 'var(--text-muted)' }}>Unknown</span>}
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.student?.auid ? `AUID ${a.student.auid}` : ''}{a.student?.university ? `${a.student?.auid ? ' · ' : ''}${a.student.university.replace(' University', '')}` : ''}</div>
                 </div>
-                <span style={{ fontSize: 12, color: 'var(--text-subtle)', flex: 'none' }}>{fmt(a.appliedAt)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{fmt(a.appliedAt)}</span>
+                  <select
+                    value={a.status}
+                    disabled={savingId === a._id}
+                    onChange={(e) => updateStatus(a._id, e.target.value as ApplicationStatus)}
+                    aria-label="Application status"
+                    style={{
+                      padding: '5px 8px', borderRadius: 'var(--r-ctl)', fontSize: 12, fontWeight: 600,
+                      textTransform: 'capitalize', cursor: 'pointer',
+                      border: `1px solid color-mix(in srgb, ${STATUS_TONE[a.status] ?? 'var(--text-muted)'} 34%, transparent)`,
+                      background: `color-mix(in srgb, ${STATUS_TONE[a.status] ?? 'var(--text-muted)'} 12%, transparent)`,
+                      color: STATUS_TONE[a.status] ?? 'var(--text-muted)',
+                      opacity: savingId === a._id ? 0.6 : 1,
+                    }}
+                  >
+                    {APPLICATION_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {!!a.rounds?.length && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 9, paddingLeft: 50 }}>
+                  {a.rounds.map((rd) => (
+                    <label
+                      key={rd.order}
+                      title={rd.notes || rd.name}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 4px 3px 9px',
+                        borderRadius: 999, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                        border: `1px solid color-mix(in srgb, ${ROUND_TONE[rd.result]} 32%, transparent)`,
+                        background: `color-mix(in srgb, ${ROUND_TONE[rd.result]} 11%, transparent)`,
+                        color: ROUND_TONE[rd.result],
+                      }}
+                    >
+                      {rd.order}. {rd.name}
+                      <select
+                        value={rd.result}
+                        onChange={(e) => updateRound(a, rd.order, e.target.value as RoundResult)}
+                        aria-label={`${rd.name} result`}
+                        style={{
+                          border: 'none', background: 'transparent', color: 'inherit',
+                          fontSize: 11.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
+                        }}
+                      >
+                        {ROUND_RESULTS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </label>
+                  ))}
+                </div>
+              )}
               </div>
             ))
           )}
@@ -93,13 +205,25 @@ interface FormState {
   title: string; description: string; type: 'internship' | 'job'; work_mode: '' | 'onsite' | 'remote' | 'hybrid';
   location: string; skills: string[]; eligible_universities: University[]; min_experience: string;
   stipend_or_salary: string; apply_url: string; apply_by: string;
+  min_cgpa: string; max_backlogs: string; eligible_departments: string;
+  eligible_batches: string; allow_placed: boolean;
+  tier: 'regular' | 'core' | 'dream'; ctc_lpa: string;
+  rounds: string[];
 }
+
+/** Default selection pipeline, mirroring DEFAULT_ROUNDS on the server. */
+const DEFAULT_ROUNDS = ['Pre-placement talk', 'Aptitude test', 'Technical interview', 'HR interview'];
 
 const emptyForm: FormState = {
   company: '',
   title: '', description: '', type: 'internship', work_mode: '', location: '', skills: [],
   eligible_universities: [], min_experience: '', stipend_or_salary: '', apply_url: '', apply_by: '',
+  min_cgpa: '', max_backlogs: '', eligible_departments: '', eligible_batches: '', allow_placed: false,
+  tier: 'regular', ctc_lpa: '', rounds: DEFAULT_ROUNDS,
 };
+
+/** Comma/newline separated text → trimmed list. */
+const parseList = (v: string) => v.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
 
 /* --------------------------- form modal --------------------------- */
 
@@ -116,12 +240,35 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
           min_experience: editing.min_experience != null ? String(editing.min_experience) : '',
           stipend_or_salary: editing.stipend_or_salary ?? '', apply_url: editing.apply_url ?? '',
           apply_by: toInputDate(editing.apply_by),
+          min_cgpa: editing.min_cgpa != null ? String(editing.min_cgpa) : '',
+          max_backlogs: editing.max_backlogs != null ? String(editing.max_backlogs) : '',
+          eligible_departments: (editing.eligible_departments ?? []).join(', '),
+          eligible_batches: (editing.eligible_batches ?? []).join(', '),
+          allow_placed: !!editing.allow_placed,
+          tier: editing.tier ?? 'regular',
+          ctc_lpa: editing.ctc_lpa != null ? String(editing.ctc_lpa) : '',
+          rounds: (editing.rounds ?? []).length ? editing.rounds!.map((r) => r.name) : DEFAULT_ROUNDS,
         }
       : emptyForm
   );
   const [saving, setSaving] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => ({ ...f, [k]: v }));
   const initialSkills: Skill[] = editing?.skills || [];
+
+  // Official department list — eligibility only matches exact names, so this
+  // must come from the same source students pick from, never free text.
+  useEffect(() => {
+    departmentsApi.list().then(setDepartments).catch(() => { /* selector stays empty */ });
+  }, []);
+
+  const selectedDepts = form.eligible_departments.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+  const toggleDept = (name: string) =>
+    setForm((f) => {
+      const cur = f.eligible_departments.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
+      const next = cur.includes(name) ? cur.filter((x) => x !== name) : [...cur, name];
+      return { ...f, eligible_departments: next.join(', ') };
+    });
 
   const toggleUni = (u: University) =>
     setForm((f) => ({ ...f, eligible_universities: f.eligible_universities.includes(u) ? f.eligible_universities.filter((x) => x !== u) : [...f.eligible_universities, u] }));
@@ -145,6 +292,15 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
         stipend_or_salary: form.stipend_or_salary.trim() || undefined,
         apply_url: form.apply_url.trim() || undefined,
         apply_by: form.apply_by || undefined,
+
+        min_cgpa: form.min_cgpa ? Number(form.min_cgpa) : undefined,
+        max_backlogs: form.max_backlogs ? Number(form.max_backlogs) : undefined,
+        eligible_departments: parseList(form.eligible_departments),
+        eligible_batches: parseList(form.eligible_batches).map(Number).filter((n) => !Number.isNaN(n)),
+        allow_placed: form.allow_placed,
+        tier: form.tier,
+        ctc_lpa: form.ctc_lpa ? Number(form.ctc_lpa) : undefined,
+        rounds: form.rounds.filter((r) => r.trim()).map((name, i) => ({ name: name.trim(), order: i + 1 })),
       };
       if (isEdit && editing) {
         await openingsApi.update(editing._id, payload);
@@ -199,6 +355,87 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
           <div style={{ gridColumn: '1 / -1' }}>
             <SkillPicker label="Required skills" selected={form.skills} setSelected={(s) => set('skills', s)} initialData={initialSkills} />
           </div>
+          <div style={{ gridColumn: '1 / -1', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+            <h3 style={{ margin: '0 0 3px', fontSize: 13.5, fontWeight: 700 }}>Eligibility criteria</h3>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>
+              Enforced server-side. Ineligible students are told exactly which criterion they failed.
+            </p>
+          </div>
+          <div><label style={label}>Minimum CGPA</label><input type="number" min={0} max={10} step="0.1" value={form.min_cgpa} onChange={(e) => set('min_cgpa', e.target.value)} placeholder="e.g. 7.0" style={input} /></div>
+          <div><label style={label}>Max active backlogs</label><input type="number" min={0} value={form.max_backlogs} onChange={(e) => set('max_backlogs', e.target.value)} placeholder="e.g. 0" style={input} /></div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={label}>Eligible departments <span style={{ fontWeight: 400 }}>(none selected = open to all)</span></label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {departments.length === 0 ? (
+                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Loading departments…</span>
+              ) : (
+                departments.map((d) => {
+                  const on = selectedDepts.includes(d.name);
+                  return (
+                    <button
+                      key={d._id}
+                      type="button"
+                      onClick={() => toggleDept(d.name)}
+                      style={{
+                        padding: '6px 11px', borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                        border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
+                        background: on ? 'var(--primary-soft)' : 'transparent',
+                        color: on ? 'var(--primary)' : 'var(--text-muted)',
+                      }}
+                    >
+                      {d.code || d.name}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+          <div><label style={label}>Eligible batches</label><input value={form.eligible_batches} onChange={(e) => set('eligible_batches', e.target.value)} placeholder="e.g. 2027, 2028" style={input} /></div>
+          <div>
+            <label style={label}>Package tier</label>
+            <select value={form.tier} onChange={(e) => set('tier', e.target.value as FormState['tier'])} style={{ ...input, cursor: 'pointer', textTransform: 'capitalize' }}>
+              <option value="regular">Regular</option>
+              <option value="core">Core</option>
+              <option value="dream">Dream</option>
+            </select>
+          </div>
+          <div><label style={label}>Package (LPA)</label><input type="number" min={0} step="0.5" value={form.ctc_lpa} onChange={(e) => set('ctc_lpa', e.target.value)} placeholder="e.g. 12" style={input} /></div>
+          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 13, paddingBottom: 10 }}>
+              <input type="checkbox" checked={form.allow_placed} onChange={(e) => set('allow_placed', e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
+              Open to already-placed students
+            </label>
+          </div>
+
+          <div style={{ gridColumn: '1 / -1', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+            <label style={label}>Selection rounds</label>
+            <p style={{ margin: '0 0 9px', fontSize: 12, color: 'var(--text-muted)' }}>
+              Recorded per applicant, so the placement cell can see which round candidates fail at.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {form.rounds.map((r, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ width: 22, flex: 'none', fontSize: 12, color: 'var(--text-subtle)', fontWeight: 600 }}>{i + 1}.</span>
+                  <input
+                    value={r}
+                    onChange={(e) => set('rounds', form.rounds.map((x, j) => (j === i ? e.target.value : x)))}
+                    placeholder="Round name"
+                    style={input}
+                  />
+                  <button type="button" onClick={() => set('rounds', form.rounds.filter((_, j) => j !== i))}
+                    aria-label="Remove round" style={{ ...btnGhost, padding: 8, flex: 'none' }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {form.rounds.length < 10 && (
+                <button type="button" onClick={() => set('rounds', [...form.rounds, ''])} style={{ ...btnGhost, alignSelf: 'flex-start' }}>
+                  <Plus size={14} /> Add round
+                </button>
+              )}
+            </div>
+          </div>
+
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={label}>Eligible universities</label>
             <div style={{ display: 'flex', gap: 10 }}>
