@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, BadgeCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { loginUser } from '@/context/auth/authSlice';
 
@@ -14,6 +14,16 @@ const fieldStyle = (err?: string): React.CSSProperties => ({
   background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
 });
 
+// The left panel always sits over a dark photo, so its accents are fixed
+// light-on-dark regardless of the app theme.
+const PANEL_BRASS = '#d8b25a';
+
+const PROOF: [string, string][] = [
+  ['Verified by your university', 'Recruiters trust the register.'],
+  ['Visible across the whole network', 'Akal & Eternal, one directory.'],
+  ['Yours to edit anytime', 'Keep it fresh as you grow.'],
+];
+
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -21,65 +31,85 @@ const LoginPage: React.FC = () => {
 
   const [errors, setErrors] = useState<Errors>({});
   const [banner, setBanner] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const [siRoll, setSiRoll] = useState('');
   const [siPw, setSiPw] = useState('');
   const [siShow, setSiShow] = useState(false);
 
   const submitSignin = async () => {
+    if (submitting) return;
     const er: Errors = {};
     if (!siRoll.trim()) er.siRoll = 'Enter your AUID or email.';
-    if (!siPw) er.siPw = 'Enter your password';
+    if (!siPw) er.siPw = 'Enter your password.';
     setErrors(er);
-    if (Object.keys(er).length) { setBanner('Please fix the highlighted fields.'); return; }
+    if (Object.keys(er).length) {
+      setBanner('Please fix the highlighted fields.');
+      document.getElementById(er.siRoll ? 'si-roll' : 'si-pw')?.focus();
+      return;
+    }
     setBanner('');
-    const res = await dispatch(loginUser({ identifier: siRoll.trim(), password: siPw.trim() }));
-    if (loginUser.fulfilled.match(res)) {
-      const roles = res.payload.data.user.roles || [];
-      const dest = roles.includes('admin') ? '/admin' : roles.includes('recruiter') ? '/students' : '/profiles';
-      navigate(dest, { replace: true });
+    setSubmitting(true);
+    try {
+      const res = await dispatch(loginUser({ identifier: siRoll.trim(), password: siPw.trim() }));
+      if (loginUser.fulfilled.match(res)) {
+        const roles = res.payload.data.user.roles || [];
+        const dest = roles.includes('admin') ? '/admin' : roles.includes('recruiter') ? '/students' : '/profiles';
+        navigate(dest, { replace: true });
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <section style={{ maxWidth: 1080, margin: '0 auto', padding: '40px 24px 80px' }}>
-      <div data-kp-split="true" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, overflow: 'hidden', boxShadow: 'var(--shadow)', minHeight: 560 }}>
-        {/* Left panel */}
-        <div data-kp-show="desktop" style={{ background: 'var(--primary)', padding: 44, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(110% 90% at 100% 0%, rgba(255,255,255,.16), transparent 55%)' }} />
+    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
+      <div
+        data-kp-split="true"
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, overflow: 'hidden', boxShadow: 'var(--shadow)', minHeight: 580 }}
+      >
+        {/* ---------------- Left: editorial register panel ---------------- */}
+        <div
+          data-kp-show="desktop"
+          style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 44 }}
+        >
+          <img src="/baru_sahib.jpg" alt="" aria-hidden loading="lazy" width={1200} height={1600} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(165deg, rgba(9,11,16,.82) 0%, rgba(9,11,16,.9) 55%, rgba(9,11,16,.96) 100%)' }} />
+
+          {/* Top: identity */}
           <div style={{ position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-                <circle cx="20" cy="20" r="19" fill="#fff" />
-                <rect x="11.5" y="11.5" width="17" height="17" rx="2.5" transform="rotate(45 20 20)" fill="var(--primary)" />
-                <circle cx="20" cy="20" r="4.4" fill="#fff" />
-              </svg>
+              <img src="/logo2.png" alt="Kalgidhar Trust" width={30} height={30} style={{ display: 'block', objectFit: 'contain', borderRadius: 7 }} />
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Kalgidhar Placements</span>
             </div>
-            <h2 style={{ color: '#fff', fontSize: 30, letterSpacing: '-.02em', fontWeight: 700, margin: '48px 0 0', lineHeight: 1.15 }}>One profile.<br />Seen by every recruiter.</h2>
+            <div style={{ height: 2, width: 40, background: PANEL_BRASS, borderRadius: 2, margin: '30px 0 14px' }} />
+            <span className="ledger-label" style={{ color: PANEL_BRASS }}>The Akal &amp; Eternal Register</span>
+            <div className="font-display" style={{ color: '#fff', fontSize: 32, letterSpacing: '-.02em', fontWeight: 500, margin: '12px 0 0', lineHeight: 1.12, maxWidth: '16ch', textWrap: 'balance' }}>
+              One profile. Seen by every recruiter.
+            </div>
           </div>
-          <ul style={{ position: 'relative', listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {[
-              ['Verified by your university', 'Recruiters trust the register.'],
-              ['Visible across the whole network', 'Akal & Eternal, one directory.'],
-              ['Yours to edit anytime', 'Keep it fresh as you grow.'],
-            ].map(([t, s]) => (
-              <li key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', color: '#fff' }}>
-                <span aria-hidden style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,255,255,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', fontSize: 13 }}>✓</span>
+
+          {/* Bottom: proof ledger */}
+          <ul style={{ position: 'relative', listStyle: 'none', padding: 0, margin: 0 }}>
+            {PROOF.map(([t, s], i) => (
+              <li key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 0', borderTop: i ? '1px solid rgba(255,255,255,.14)' : 'none' }}>
+                <BadgeCheck size={18} aria-hidden style={{ color: PANEL_BRASS, flex: 'none', marginTop: 1 }} />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14.5 }}>{t}</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,.78)' }}>{s}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14.5, color: '#fff' }}>{t}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,.74)' }}>{s}</div>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Form panel */}
+        {/* ---------------- Right: sign-in form ---------------- */}
         <div style={{ padding: 'clamp(28px,4vw,44px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>Sign in</h1>
-            <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '8px 0 0' }}>
+            <div className="brass-rule" style={{ marginBottom: 14 }} />
+            <span className="ledger-label">Sign in to the register</span>
+            <h1 className="font-display" style={{ fontSize: 30, fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Sign in</h1>
+            <p style={{ textAlign: 'left', fontSize: 13.5, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.55 }}>
               Accounts are created by your placement office. Contact an administrator if you need access.
             </p>
           </div>
@@ -95,7 +125,19 @@ const LoginPage: React.FC = () => {
               <label htmlFor="si-roll" style={labelStyle}>AUID or Email</label>
               <div style={{ position: 'relative' }}>
                 <User size={16} aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
-                <input id="si-roll" value={siRoll} onChange={(e) => setSiRoll(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Students: AUID · Recruiters: email" style={{ ...fieldStyle(errors.siRoll), paddingLeft: 38 }} />
+                <input
+                  id="si-roll"
+                  name="identifier"
+                  autoComplete="username"
+                  spellCheck={false}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  value={siRoll}
+                  onChange={(e) => setSiRoll(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitSignin()}
+                  placeholder="Students: AUID · Recruiters: email"
+                  style={{ ...fieldStyle(errors.siRoll), paddingLeft: 38 }}
+                />
               </div>
               {errors.siRoll && <div style={errStyle}>{errors.siRoll}</div>}
             </div>
@@ -103,12 +145,38 @@ const LoginPage: React.FC = () => {
               <label htmlFor="si-pw" style={labelStyle}>Password</label>
               <div style={{ position: 'relative' }}>
                 <Lock size={16} aria-hidden style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
-                <input id="si-pw" type={siShow ? 'text' : 'password'} value={siPw} onChange={(e) => setSiPw(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submitSignin()} placeholder="Your password" style={{ ...fieldStyle(errors.siPw), paddingLeft: 38, paddingRight: 44 }} />
-                <button onClick={() => setSiShow((v) => !v)} aria-label="Show or hide password" style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', display: 'flex', padding: 4 }}>{siShow ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+                <input
+                  id="si-pw"
+                  name="password"
+                  type={siShow ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={siPw}
+                  onChange={(e) => setSiPw(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitSignin()}
+                  placeholder="Your password"
+                  style={{ ...fieldStyle(errors.siPw), paddingLeft: 38, paddingRight: 44 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setSiShow((v) => !v)}
+                  aria-label={siShow ? 'Hide password' : 'Show password'}
+                  aria-pressed={siShow}
+                  style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', display: 'flex', padding: 4 }}
+                >
+                  {siShow ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
               {errors.siPw && <div style={errStyle}>{errors.siPw}</div>}
             </div>
-            <button onClick={submitSignin} style={{ marginTop: 6, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none' }}>Sign in</button>
+            <button
+              onClick={submitSignin}
+              disabled={submitting}
+              style={{ marginTop: 6, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: submitting ? 'not-allowed' : 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}
+              onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = 'var(--primary-hover)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
+            >
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </button>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 0' }}>
               Are you a recruiter?{' '}
               <Link to="/recruiter/apply" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Apply for access</Link>

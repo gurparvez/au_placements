@@ -1,19 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { MessageCircle, Users2, UserCheck, UserPlus, Building2, MapPin, ArrowUpRight } from 'lucide-react';
+import { MessageCircle, UserCheck, UserPlus, Building2, MapPin, ArrowUpRight } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import connectionsApi, { type ConnectionEntry, type PendingLists } from '@/api/connections';
 import companiesApi, { type Company } from '@/api/companies';
 import messagesApi from '@/api/messages';
 import { avatarColor, initials } from '@/utils/avatar';
+import { Reveal } from '@/components/motion';
 
 const fullName = (u?: { firstName?: string; lastName?: string }) => (u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'User');
 const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
 
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' };
-const btnGhost: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 600, fontSize: 13, cursor: 'pointer' };
-const btnPrimary: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' };
+const btnGhost: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' };
+const btnPrimary: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' };
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 
 type Tab = 'connections' | 'requests' | 'following';
 
@@ -91,8 +96,8 @@ const NetworkPage: React.FC = () => {
     catch { toast.error('Could not unfollow.'); }
   };
 
-  if (!initialized) return <section style={{ maxWidth: 720, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Loading…</section>;
-  if (!user) return <section style={{ maxWidth: 720, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Redirecting…</section>;
+  if (!initialized) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
+  if (!user) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
 
   const incoming = pending.incoming.length;
   const requestsTotal = pending.incoming.length + pending.outgoing.length;
@@ -104,18 +109,15 @@ const NetworkPage: React.FC = () => {
   ];
 
   return (
-    <section style={{ maxWidth: 720, margin: '0 auto', padding: '32px 20px 80px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-        <span aria-hidden style={{ width: 44, height: 44, borderRadius: 12, flex: 'none', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Users2 size={22} />
-        </span>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>My network</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
-            {conns.length} connection{conns.length === 1 ? '' : 's'} · following {following.length} compan{following.length === 1 ? 'y' : 'ies'}
-          </p>
-        </div>
-      </div>
+    <section style={{ padding: '32px clamp(20px,10vw,112px) 80px' }}>
+      <Reveal>
+        <div className="brass-rule" style={{ marginBottom: 14 }} />
+        <span className="ledger-label" style={{ color: 'var(--brass)' }}>My network</span>
+        <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>My network</h1>
+        <p style={{ margin: '10px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
+          <span className="data">{conns.length}</span> connection{conns.length === 1 ? '' : 's'} · following <span className="data">{following.length}</span> compan{following.length === 1 ? 'y' : 'ies'}
+        </p>
+      </Reveal>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, margin: '22px 0 20px', borderBottom: '1px solid var(--border)' }}>
@@ -133,9 +135,9 @@ const NetworkPage: React.FC = () => {
             }}
           >
             {t.icon} {t.label}
-            <span style={{ fontSize: 12.5, color: 'var(--text-subtle)', fontWeight: 600 }}>{t.count}</span>
+            <span className="data" style={{ fontSize: 12.5, color: 'var(--text-subtle)', fontWeight: 600 }}>{t.count}</span>
             {t.badge ? (
-              <span style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)', color: '#fff' }}>{t.badge}</span>
+              <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)', color: '#fff' }}>{t.badge}</span>
             ) : null}
           </button>
         ))}
@@ -143,23 +145,26 @@ const NetworkPage: React.FC = () => {
 
       {/* Connections */}
       {tab === 'connections' && (
+        <Reveal>
         <div style={card}>
           {conns.length === 0 ? (
-            <EmptyState icon={<UserCheck size={26} />}>No connections yet. Visit a profile and tap Connect.</EmptyState>
+            <EmptyState icon={<UserCheck size={26} />}>No connections yet. Connect from a profile.</EmptyState>
           ) : (
             conns.map((e) => (
               <PersonRow key={e.connectionId} entry={e} right={<>
-                <button onClick={() => message(e.user._id)} style={{ ...btnPrimary, display: 'inline-flex', alignItems: 'center', gap: 6 }}><MessageCircle size={14} /> Message</button>
-                <button onClick={() => withdraw(e.user._id)} style={btnGhost}>Remove</button>
+                <button onClick={() => message(e.user._id)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, display: 'inline-flex', alignItems: 'center', gap: 6 }}><MessageCircle size={14} /> Message</button>
+                <button onClick={() => withdraw(e.user._id)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>Remove</button>
               </>} />
             ))
           )}
         </div>
+        </Reveal>
       )}
 
       {/* Requests */}
       {tab === 'requests' && (
-        requestsTotal === 0 ? (
+        <Reveal>
+        {requestsTotal === 0 ? (
           <div style={card}><EmptyState icon={<UserPlus size={26} />}>No pending requests.</EmptyState></div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -168,8 +173,8 @@ const NetworkPage: React.FC = () => {
                 <div style={{ padding: '14px 14px 4px', fontWeight: 700, fontSize: 14 }}>Incoming <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({pending.incoming.length})</span></div>
                 {pending.incoming.map((e) => (
                   <PersonRow key={e.connectionId} entry={e} right={<>
-                    <button onClick={() => respond(e.connectionId, true)} style={btnPrimary}>Accept</button>
-                    <button onClick={() => respond(e.connectionId, false)} style={btnGhost}>Ignore</button>
+                    <button onClick={() => respond(e.connectionId, true)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}>Accept</button>
+                    <button onClick={() => respond(e.connectionId, false)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>Ignore</button>
                   </>} />
                 ))}
               </div>
@@ -178,16 +183,18 @@ const NetworkPage: React.FC = () => {
               <div style={card}>
                 <div style={{ padding: '14px 14px 4px', fontWeight: 700, fontSize: 14 }}>Sent <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({pending.outgoing.length})</span></div>
                 {pending.outgoing.map((e) => (
-                  <PersonRow key={e.connectionId} entry={e} right={<button onClick={() => withdraw(e.user._id)} style={btnGhost}>Withdraw</button>} />
+                  <PersonRow key={e.connectionId} entry={e} right={<button onClick={() => withdraw(e.user._id)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>Withdraw</button>} />
                 ))}
               </div>
             )}
           </div>
-        )
+        )}
+        </Reveal>
       )}
 
       {/* Following */}
       {tab === 'following' && (
+        <Reveal>
         <div style={card}>
           {following.length === 0 ? (
             <EmptyState icon={<Building2 size={26} />}>
@@ -214,13 +221,14 @@ const NetworkPage: React.FC = () => {
                   </div>
                 </Link>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => navigate(`/companies/${c.companyUserId}`)} style={{ ...btnGhost, display: 'inline-flex', alignItems: 'center', gap: 5 }}>View <ArrowUpRight size={13} /></button>
-                  <button onClick={() => unfollow(c.companyUserId)} style={btnGhost}>Unfollow</button>
+                  <button onClick={() => navigate(`/companies/${c.companyUserId}`)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, display: 'inline-flex', alignItems: 'center', gap: 5 }}>View <ArrowUpRight size={13} /></button>
+                  <button onClick={() => unfollow(c.companyUserId)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>Unfollow</button>
                 </div>
               </div>
             ))
           )}
         </div>
+        </Reveal>
       )}
     </section>
   );

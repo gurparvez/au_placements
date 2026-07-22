@@ -4,6 +4,7 @@ import { Search, Loader2, Users, Building2, MapPin, ArrowUpRight } from 'lucide-
 import studentApi, { type UserSearchResult } from '@/api/students';
 import companiesApi, { type Company } from '@/api/companies';
 import { avatarColor, initials } from '@/utils/avatar';
+import { Reveal } from '@/components/motion';
 
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' };
 const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
@@ -11,7 +12,7 @@ const fullName = (r: UserSearchResult) => `${r.firstName} ${r.lastName ?? ''}`.t
 
 const SectionTitle: React.FC<{ icon: React.ReactNode; label: string; count: number }> = ({ icon, label, count }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px 10px', color: 'var(--text-muted)', fontSize: 12.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-    {icon} {label} <span style={{ color: 'var(--text-subtle)' }}>{count}</span>
+    <span style={{ color: 'var(--brass)', display: 'inline-flex' }}>{icon}</span> {label} <span className="data" style={{ color: 'var(--text-subtle)' }}>{count}</span>
   </div>
 );
 
@@ -59,16 +60,13 @@ const SearchPage: React.FC = () => {
   const nothing = searched && !loading && people.length === 0 && companies.length === 0;
 
   return (
-    <section style={{ maxWidth: 720, margin: '0 auto', padding: '32px 20px 80px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 20 }}>
-        <span aria-hidden style={{ width: 44, height: 44, borderRadius: 12, flex: 'none', background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Search size={22} />
-        </span>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>Search</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>Find students by name or AUID, and companies by name.</p>
-        </div>
-      </div>
+    <section style={{ padding: '32px clamp(20px,10vw,112px) 80px' }}>
+      <Reveal>
+        <div className="brass-rule" style={{ marginBottom: 14 }} />
+        <span className="ledger-label" style={{ color: 'var(--brass)' }}>Search the register</span>
+        <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Search</h1>
+        <p style={{ margin: '10px 0 20px', fontSize: 13.5, color: 'var(--text-muted)' }}>Search by name, AUID, or company.</p>
+      </Reveal>
 
       <div style={{ position: 'relative', marginBottom: 24 }}>
         <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
@@ -93,6 +91,7 @@ const SearchPage: React.FC = () => {
           <p style={{ margin: '10px 0 0', fontSize: 14 }}>No people or companies match “{q.trim()}”.</p>
         </div>
       ) : (
+        <Reveal>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 26 }}>
           {/* People */}
           {people.length > 0 && (
@@ -156,6 +155,7 @@ const SearchPage: React.FC = () => {
             </div>
           )}
         </div>
+        </Reveal>
       )}
     </section>
   );

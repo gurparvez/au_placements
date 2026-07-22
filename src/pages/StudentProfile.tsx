@@ -16,11 +16,18 @@ import { toast } from 'sonner';
 import { avatarColor, initials } from '@/utils/avatar';
 import ProfilePosts from '@/components/ProfilePosts';
 import { rangeYears, fmtMonth, availLabel, yearOf } from '@/utils/dates';
+import { Reveal, AnimatedNumber } from '@/components/motion';
 
 const CATEGORY: Record<string, string> = { high_school: 'High School', ug: 'Undergraduate', pg: 'Postgraduate', diploma: 'Diploma', phd: 'PhD', other: 'Other' };
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow)' };
-const h2: React.CSSProperties = { fontSize: 17, fontWeight: 650, margin: '0 0 16px' };
+const h2: React.CSSProperties = { fontFamily: 'var(--font-display)', fontSize: 19, fontWeight: 500, letterSpacing: '-.01em', margin: '0 0 16px' };
 const skBlock = (st: React.CSSProperties) => <span data-kp-sk="true" style={st} />;
+
+// Hover feedback for the inline-styled primary buttons/links.
+const primaryHover = {
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = 'var(--primary-hover)'; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = 'var(--primary)'; },
+};
 
 function contactHref(s: any) {
   const subj = encodeURIComponent('Opportunity via AU Placements: Profile Selection');
@@ -31,7 +38,7 @@ function contactHref(s: any) {
 }
 
 const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <section style={{ maxWidth: 1080, margin: '0 auto', padding: '24px 24px 80px' }}>
+  <section style={{ padding: '24px clamp(20px,10vw,112px) 80px' }}>
     <Link to="/students" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500 }}>
       <ArrowLeft size={15} /> Back to students
     </Link>
@@ -107,7 +114,7 @@ const PublicStudentProfile: React.FC = () => {
         <div style={{ marginTop: 40, textAlign: 'center', padding: '64px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
           <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto', color: 'var(--text-subtle)' }}>?</div>
           <h2 style={{ fontSize: 21, fontWeight: 700, margin: '18px 0 0' }}>Profile not found</h2>
-          <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0' }}>This student may have removed their profile, or the link is incorrect.</p>
+          <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0' }}>Profile removed or link incorrect.</p>
           <Link to="/students" style={{ display: 'inline-flex', marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Back to register</Link>
         </div>
       </Shell>
@@ -186,8 +193,8 @@ const PublicStudentProfile: React.FC = () => {
 
   const Section: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
     <div style={{ ...card, padding: 24 }}>
-      <h2 style={{ ...h2, display: 'flex', alignItems: 'center', gap: 8 }}>
-        {icon && <span style={{ color: 'var(--primary)', display: 'inline-flex' }}>{icon}</span>}
+      <h2 style={{ ...h2, display: 'flex', alignItems: 'center', gap: 9 }}>
+        {icon && <span style={{ color: 'var(--brass)', display: 'inline-flex' }}>{icon}</span>}
         {title}
       </h2>
       {children}
@@ -197,10 +204,12 @@ const PublicStudentProfile: React.FC = () => {
   return (
     <Shell>
       {/* Masthead */}
-      <div style={{ ...card, marginTop: 16, padding: 0, overflow: 'hidden' }}>
-        {/* cover band */}
-        <div aria-hidden style={{ height: 108, position: 'relative', background: 'linear-gradient(120deg, var(--primary-soft), var(--surface-2))' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(80% 150% at 10% 0%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%)' }} />
+      <Reveal style={{ marginTop: 16 }}>
+      <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+        {/* cover band — editorial register masthead */}
+        <div style={{ height: 108, position: 'relative', overflow: 'hidden', background: 'linear-gradient(120deg, var(--surface-2), var(--surface-3))', borderBottom: '2px solid var(--brass)' }}>
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(70% 140% at 8% 0%, color-mix(in srgb, var(--brass) 14%, transparent), transparent 62%)' }} />
+          <span className="ledger-label" style={{ position: 'absolute', top: 14, left: 22 }}>The Akal &amp; Eternal Register</span>
         </div>
 
         <div style={{ padding: 'clamp(16px,3vw,26px)', paddingTop: 0 }}>
@@ -216,15 +225,15 @@ const PublicStudentProfile: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
-                <h1 style={{ fontSize: 'clamp(23px,3.4vw,30px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0, textTransform: 'capitalize' }}>{name}</h1>
-                {u.verified && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 'var(--r-pill)', background: 'var(--success-soft)', color: 'var(--success)' }}><BadgeCheck size={13} /> Verified</span>}
+                <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(26px,3.6vw,34px)', letterSpacing: '-.02em', fontWeight: 500, margin: 0, textTransform: 'capitalize' }}>{name}</h1>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--brass)', border: '1px solid var(--brass-line)' }}><BadgeCheck size={13} /> {u.verified ? 'Verified' : 'On the register'}</span>
               </div>
               {p.headline && <p style={{ fontSize: 15.5, color: 'var(--text)', margin: '6px 0 0' }}>{p.headline}</p>}
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 12, fontSize: 13.5, color: 'var(--text-muted)' }}>
                 {u.university && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><GraduationCap size={15} /> {u.university}</span>}
                 {p.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><MapPin size={15} /> {p.location}</span>}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Briefcase size={15} /> {p.total_experience || 0} mo experience</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Briefcase size={15} /> <AnimatedNumber value={p.total_experience || 0} suffix=" mo experience" /></span>
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14 }}>
@@ -238,9 +247,9 @@ const PublicStudentProfile: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 170, marginTop: 16 }}>
               {isRecruiter ? (
-                <button onClick={openCompose} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}><Mail size={16} /> Contact</button>
+                <button onClick={openCompose} {...primaryHover} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}><Mail size={16} /> Contact</button>
               ) : (
-                <a href={contactHref(cs)} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}><Mail size={16} /> Contact</a>
+                <a href={contactHref(cs)} {...primaryHover} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background .18s ease' }}><Mail size={16} /> Contact</a>
               )}
               {connectButton()}
               {canMessage && (
@@ -251,17 +260,21 @@ const PublicStudentProfile: React.FC = () => {
           </div>
         </div>
       </div>
+      </Reveal>
 
       {/* Body */}
       <div data-kp-split="true" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 18, marginTop: 18, alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
           {p.about?.trim() && (
+            <Reveal delay={0.04}>
             <Section title="About" icon={<UserIcon size={17} />}>
               <p style={{ fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{p.about}</p>
             </Section>
+            </Reveal>
           )}
 
           {(p.experience || []).length > 0 && (
+            <Reveal delay={0.06}>
             <Section title="Experience" icon={<Briefcase size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 {p.experience.map((ex: any, i: number) => (
@@ -279,9 +292,11 @@ const PublicStudentProfile: React.FC = () => {
                 ))}
               </div>
             </Section>
+            </Reveal>
           )}
 
           {resolved && resolved.length > 0 && (
+            <Reveal delay={0.08}>
             <Section title="Projects" icon={<FolderGit2 size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {resolved.map((pr: any, i: number) => (
@@ -304,9 +319,11 @@ const PublicStudentProfile: React.FC = () => {
                 ))}
               </div>
             </Section>
+            </Reveal>
           )}
 
           {(p.education || []).length > 0 && (
+            <Reveal delay={0.1}>
             <Section title="Education" icon={<GraduationCap size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {p.education.map((ed: any, i: number) => {
@@ -340,9 +357,11 @@ const PublicStudentProfile: React.FC = () => {
                 })}
               </div>
             </Section>
+            </Reveal>
           )}
 
           {(p.certificates || []).length > 0 && (
+            <Reveal delay={0.12}>
             <Section title="Licenses & certifications" icon={<Award size={17} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {p.certificates.map((c: any, i: number) => (
@@ -357,26 +376,31 @@ const PublicStudentProfile: React.FC = () => {
                 ))}
               </div>
             </Section>
+            </Reveal>
           )}
 
           {(p.skills || []).length > 0 && (
+            <Reveal delay={0.12}>
             <Section title="Skills" icon={<Wrench size={17} />}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                 {p.skills.map((s: any, i: number) => <span key={i} style={{ fontSize: 12.5, padding: '5px 11px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)' }}>{s.displayName || s.name}</span>)}
               </div>
             </Section>
+            </Reveal>
           )}
 
           {studentId && (
+            <Reveal delay={0.12}>
             <Section title="Posts" icon={<Newspaper size={17} />}>
               <ProfilePosts userId={studentId} />
             </Section>
+            </Reveal>
           )}
         </div>
 
         <aside style={{ display: 'flex', flexDirection: 'column', gap: 18, position: 'sticky', top: 84 }}>
           <div style={{ ...card, padding: 22 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 650, margin: '0 0 14px' }}>Contact</h2>
+            <h2 style={{ ...h2, fontSize: 16, margin: '0 0 14px' }}>Contact</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {[
                 { href: contactHref(cs), icon: <Mail size={15} />, label: u.email, breakAll: true },
@@ -397,9 +421,9 @@ const PublicStudentProfile: React.FC = () => {
               ))}
             </div>
             {isRecruiter ? (
-              <button onClick={openCompose} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Email {name}</button>
+              <button onClick={openCompose} {...primaryHover} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>Email {name}</button>
             ) : (
-              <a href={contactHref(cs)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Email {name}</a>
+              <a href={contactHref(cs)} {...primaryHover} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background .18s ease' }}>Email {name}</a>
             )}
           </div>
         </aside>
@@ -411,7 +435,7 @@ const PublicStudentProfile: React.FC = () => {
           <div style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
             <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Email {name}</h2>
             <p style={{ margin: '6px 0 16px', fontSize: 13, color: 'var(--text-muted)' }}>
-              Sent through Kalgidhar Placements. {name} can reply directly to your email.
+              Replies go directly to your email.
             </p>
             <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' }}>Subject</label>
             <input

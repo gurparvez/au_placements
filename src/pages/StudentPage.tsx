@@ -1,13 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, ChevronDown, SlidersHorizontal, Users } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import studentApi from '@/api/students';
 import { skillsApi } from '@/api/skills';
 import StudentCard from '@/components/StudentCard';
 import { studentToCardVM } from '@/utils/cardVM';
 import { FILTER_SKILLS } from '@/utils/skills';
+import { Reveal, AnimatedNumber } from '@/components/motion';
+import { SelectField } from '@/components/ui/select-field';
 
 const PAGE = 12;
-const PADX = 'clamp(20px,3vw,48px)';
+const PADX = 'clamp(20px,10vw,112px)';
 const UNIVERSITIES = ['Any', 'Akal University', 'Eternal University'];
 const OPPORTUNITIES = ['Any', 'Internship', 'Job'];
 const EXP_RANGES = [
@@ -19,26 +21,15 @@ const EXP_RANGES = [
 ];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const selectStyle: React.CSSProperties = {
-  appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', backgroundImage: 'none',
-  padding: '10px 34px 10px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)',
-  background: 'var(--surface-2)', color: 'var(--text)', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
-};
-
-const FilterSelect: React.FC<{
-  value: string; onChange: (v: string) => void; label: string; full?: boolean; style?: React.CSSProperties; children: React.ReactNode;
-}> = ({ value, onChange, label, full, style, children }) => (
-  <div style={{ position: 'relative', display: full ? 'flex' : 'inline-flex', width: full ? '100%' : undefined }}>
-    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label} style={{ ...selectStyle, ...(full ? { width: '100%', background: 'var(--bg-2)' } : {}), ...style }}>
-      {children}
-    </select>
-    <ChevronDown size={15} style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-subtle)' }} />
-  </div>
-);
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '11px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
   background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
 };
+// Hover feedback for inline-styled buttons.
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div style={{ marginBottom: 14 }}>
     <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</label>
@@ -173,36 +164,28 @@ const StudentsPage: React.FC = () => {
       </div>
 
       <Labeled label="University">
-        <FilterSelect full value={university} onChange={setUniversity} label="University">
-          {UNIVERSITIES.map((u) => <option key={u} value={u}>{u === 'Any' ? 'Any university' : u}</option>)}
-        </FilterSelect>
+        <SelectField aria-label="University" value={university} onChange={setUniversity}
+          options={UNIVERSITIES.map((u) => ({ value: u, label: u === 'Any' ? 'Any university' : u }))} />
       </Labeled>
       <Labeled label="Looking for">
-        <FilterSelect full value={opportunity} onChange={setOpportunity} label="Opportunity">
-          {OPPORTUNITIES.map((o) => <option key={o} value={o}>{o === 'Any' ? 'Any opportunity' : o}</option>)}
-        </FilterSelect>
+        <SelectField aria-label="Opportunity" value={opportunity} onChange={setOpportunity}
+          options={OPPORTUNITIES.map((o) => ({ value: o, label: o === 'Any' ? 'Any opportunity' : o }))} />
       </Labeled>
       <Labeled label="Preferred field">
-        <FilterSelect full value={field} onChange={setField} label="Preferred field">
-          {fields.map((f) => <option key={f} value={f}>{f === 'Any' ? 'Any field' : f}</option>)}
-        </FilterSelect>
+        <SelectField aria-label="Preferred field" value={field} onChange={setField}
+          options={fields.map((f) => ({ value: f, label: f === 'Any' ? 'Any field' : f }))} />
       </Labeled>
       <Labeled label="Experience">
-        <FilterSelect full value={exp} onChange={setExp} label="Experience">
-          {EXP_RANGES.map((er) => <option key={er.v} value={er.v}>{er.v === 'Any' ? 'Any experience' : er.l}</option>)}
-        </FilterSelect>
+        <SelectField aria-label="Experience" value={exp} onChange={setExp}
+          options={EXP_RANGES.map((er) => ({ value: er.v, label: er.v === 'Any' ? 'Any experience' : er.l }))} />
       </Labeled>
       <Labeled label="Availability">
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FilterSelect full value={from} onChange={setFrom} label="Available from" style={{ fontSize: 13 }}>
-            <option value="">From</option>
-            {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-          </FilterSelect>
+          <SelectField aria-label="Available from" value={from} onChange={setFrom}
+            options={[{ value: '', label: 'From' }, ...monthOpts.map((o) => ({ value: o.v, label: o.l }))]} />
           <span aria-hidden style={{ color: 'var(--text-subtle)' }}>→</span>
-          <FilterSelect full value={to} onChange={setTo} label="Available until" style={{ fontSize: 13 }}>
-            <option value="">Until</option>
-            {monthOpts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-          </FilterSelect>
+          <SelectField aria-label="Available until" value={to} onChange={setTo}
+            options={[{ value: '', label: 'Until' }, ...monthOpts.map((o) => ({ value: o.v, label: o.l }))]} />
         </div>
       </Labeled>
 
@@ -230,15 +213,14 @@ const StudentsPage: React.FC = () => {
 
   return (
     <section style={{ width: '100%', padding: `36px ${PADX} 80px` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <span aria-hidden style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
-          <Users size={24} />
-        </span>
-        <div>
-          <h1 style={{ fontSize: 'clamp(24px,4vw,32px)', letterSpacing: '-.02em', fontWeight: 700, margin: 0 }}>Explore students</h1>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '5px 0 0' }}>Discover talent across Akal &amp; Eternal University.</p>
-        </div>
-      </div>
+      <Reveal>
+        <div className="brass-rule" style={{ marginBottom: 14 }} />
+        <span className="ledger-label" style={{ color: 'var(--brass)' }}>The Akal &amp; Eternal Register</span>
+        <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', letterSpacing: '-.02em', fontWeight: 500, margin: '10px 0 0' }}>Explore the register</h1>
+        <p style={{ textAlign: 'left', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', maxWidth: '56ch', lineHeight: 1.6 }}>
+          Filter talent by skills, field, and availability.
+        </p>
+      </Reveal>
 
       {/* Layout: filter rail + results */}
       <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 26, marginTop: 26, alignItems: 'start' }}>
@@ -254,7 +236,7 @@ const StudentsPage: React.FC = () => {
           {/* Results toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
             <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
-              {loading ? 'Searching…' : <><strong style={{ color: 'var(--text)', fontWeight: 650 }}>{total}</strong> {total === 1 ? 'student' : 'students'}</>}
+              {loading ? 'Searching…' : <><strong className="data" style={{ color: 'var(--text)', fontWeight: 700 }}><AnimatedNumber value={total} /></strong> {total === 1 ? 'student in the register' : 'students in the register'}</>}
             </p>
             <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '9px 15px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer' }}><SlidersHorizontal size={15} /> Filters{anyActive ? ' •' : ''}</button>
           </div>
@@ -280,17 +262,19 @@ const StudentsPage: React.FC = () => {
               <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto', color: 'var(--text-subtle)' }}>⌕</div>
               <h3 style={{ fontSize: 19, fontWeight: 650, margin: '18px 0 0' }}>No students found</h3>
               <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>Try changing or clearing your filters.</p>
-              {anyActive && <button onClick={clearAll} style={{ marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' }}>Clear all filters</button>}
+              {anyActive && <button onClick={clearAll} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>Clear all filters</button>}
             </div>
           ) : (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18, opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
-                {cards.map((vm) => <StudentCard key={vm.id} vm={vm} />)}
-              </div>
+              <Reveal>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18, opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
+                  {cards.map((vm) => <StudentCard key={vm.id} vm={vm} />)}
+                </div>
+              </Reveal>
               {hasMore && (
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-                  <button onClick={() => runFetch(page + 1, false)} disabled={loadingMore} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer', opacity: loadingMore ? 0.7 : 1 }}>
-                    {loadingMore ? 'Loading…' : `Load more (${total - results.length} more)`}
+                  <button onClick={() => runFetch(page + 1, false)} disabled={loadingMore} {...hoverBg('var(--surface-2)', 'var(--surface)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer', opacity: loadingMore ? 0.7 : 1, transition: 'background .18s ease' }}>
+                    {loadingMore ? 'Loading…' : `Load more (${(total - results.length).toLocaleString()} more)`}
                   </button>
                 </div>
               )}
@@ -312,7 +296,7 @@ const StudentsPage: React.FC = () => {
             <div style={{ overflow: 'auto', flex: 1, margin: '0 -2px', padding: '0 2px' }}>
               {renderFilters()}
             </div>
-            <button onClick={() => setSheet(false)} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', flex: 'none' }}>Show {total} results</button>
+            <button onClick={() => setSheet(false)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', flex: 'none', transition: 'background .18s ease' }}>Show {total.toLocaleString()} results</button>
           </div>
         </div>
       )}

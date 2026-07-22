@@ -5,9 +5,14 @@ import { Search, MapPin, Users, UserPlus, Check } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import companiesApi, { type Company, type Pagination } from '@/api/companies';
 import { avatarColor } from '@/utils/avatar';
+import { Reveal } from '@/components/motion';
 
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 };
 const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none' };
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
 
 const CompaniesPage: React.FC = () => {
@@ -41,16 +46,20 @@ const CompaniesPage: React.FC = () => {
   };
 
   return (
-    <section style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px 80px' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>Companies</h1>
-      <p style={{ color: 'var(--text-muted)', marginTop: 8, fontSize: 14 }}>Follow companies to stay close to recruiters hiring from your universities.</p>
+    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
+      <Reveal>
+        <div className="brass-rule" style={{ marginBottom: 14 }} />
+        <span className="ledger-label" style={{ color: 'var(--brass)' }}>Recruiting partners</span>
+        <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Companies</h1>
+        <p style={{ textAlign: 'left', color: 'var(--text-muted)', marginTop: 10, fontSize: 15, maxWidth: '56ch', lineHeight: 1.6 }}>Follow companies recruiting from our universities.</p>
+      </Reveal>
 
       <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 20px' }}>
         <div style={{ position: 'relative', flex: 1 }}>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search companies" style={{ ...inputStyle, paddingLeft: 36 }} />
         </div>
-        <button type="submit" style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer' }}>Search</button>
+        <button type="submit" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' }}>Search</button>
       </form>
 
       {loading ? (
@@ -58,6 +67,7 @@ const CompaniesPage: React.FC = () => {
       ) : companies.length === 0 ? (
         <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>No companies yet.</div>
       ) : (
+        <Reveal delay={0.05}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
           {companies.map((c) => (
             <div
@@ -82,7 +92,9 @@ const CompaniesPage: React.FC = () => {
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Users size={13} /> {c.followers ?? 0} follower{(c.followers ?? 0) === 1 ? '' : 's'}</span>
               </div>
               <button onClick={() => toggleFollow(c)}
-                style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
+                onMouseEnter={(e) => (e.currentTarget.style.background = c.is_following ? 'var(--surface-2)' : 'var(--primary-hover)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = c.is_following ? 'var(--surface)' : 'var(--primary)')}
+                style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', transition: 'background .18s ease',
                   border: c.is_following ? '1px solid var(--border-strong)' : 'none',
                   background: c.is_following ? 'var(--surface)' : 'var(--primary)',
                   color: c.is_following ? 'var(--text)' : '#fff' }}>
@@ -91,6 +103,7 @@ const CompaniesPage: React.FC = () => {
             </div>
           ))}
         </div>
+        </Reveal>
       )}
 
       {pagination && pagination.totalPages > 1 && (

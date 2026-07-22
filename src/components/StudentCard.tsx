@@ -3,10 +3,15 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight, CalendarClock } from 'lucide-react';
 import type { CardVM } from '@/utils/cardVM';
 
-const onHover = (lift: boolean) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+/* Each card carries a faint wash of its own avatar hue — distinct from the page
+   background in both themes (the mix base is the theme's surface token). */
+const tintOf = (hue: string, amount: number) => `color-mix(in srgb, ${hue} ${amount}%, var(--surface))`;
+
+const onHover = (lift: boolean, hue: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.transform = lift ? 'translateY(-4px)' : 'none';
-  e.currentTarget.style.borderColor = lift ? 'color-mix(in srgb, var(--primary) 40%, var(--border))' : 'var(--border)';
+  e.currentTarget.style.borderColor = lift ? `color-mix(in srgb, ${hue} 45%, var(--border))` : 'var(--border)';
   e.currentTarget.style.boxShadow = lift ? '0 20px 38px -22px rgba(0,0,0,.45)' : 'var(--shadow)';
+  e.currentTarget.style.background = tintOf(hue, lift ? 17 : 10);
 };
 
 export default function StudentCard({ vm }: { vm: CardVM }) {
@@ -14,21 +19,23 @@ export default function StudentCard({ vm }: { vm: CardVM }) {
     <Link
       to={vm.href}
       aria-label={`View profile of ${vm.name}`}
-      onMouseEnter={onHover(true)}
-      onMouseLeave={onHover(false)}
+      onMouseEnter={onHover(true, vm.avatarBg)}
+      onMouseLeave={onHover(false, vm.avatarBg)}
       style={{
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
         padding: 18,
-        background: 'var(--surface)',
+        height: '100%',
+        boxSizing: 'border-box',
+        background: tintOf(vm.avatarBg, 10),
         border: '1px solid var(--border)',
         borderRadius: 'var(--r-card)',
         textDecoration: 'none',
         color: 'var(--text)',
         boxShadow: 'var(--shadow)',
-        transition: 'border-color .18s, box-shadow .18s, transform .18s',
+        transition: 'border-color .18s, box-shadow .18s, transform .18s, background .18s',
       }}
     >
       {/* header: avatar + name + arrow */}

@@ -24,6 +24,25 @@ const Avatar: React.FC<{ u?: { firstName?: string; lastName?: string }; size?: n
   </span>
 );
 
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
+
+// One-pane-at-a-time on phones: track a narrow viewport so we can collapse the
+// two-pane grid and reveal the "Back" affordance (purely presentational).
+const useIsNarrow = (max = 760) => {
+  const [narrow, setNarrow] = useState<boolean>(() => typeof window !== 'undefined' && window.matchMedia(`(max-width: ${max}px)`).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${max}px)`);
+    const onChange = () => setNarrow(mq.matches);
+    mq.addEventListener('change', onChange);
+    setNarrow(mq.matches);
+    return () => mq.removeEventListener('change', onChange);
+  }, [max]);
+  return narrow;
+};
+
 const MessagesPage: React.FC = () => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -36,6 +55,7 @@ const MessagesPage: React.FC = () => {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isNarrow = useIsNarrow();
 
   const loadConvos = useCallback(async () => {
     try { setConvos(await messagesApi.listConversations()); } catch { /* ignore */ }
@@ -73,6 +93,7 @@ const MessagesPage: React.FC = () => {
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [thread?.messages.length]);
 
   const openConvo = (id: string) => { setActiveId(id); setParams({ c: id }); };
+  const goBack = () => { setActiveId(null); setParams({}); };
 
   const send = async () => {
     if (!activeId || !text.trim()) return;
@@ -86,22 +107,26 @@ const MessagesPage: React.FC = () => {
     finally { setSending(false); }
   };
 
-  if (!initialized) return <section style={{ maxWidth: 980, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Loading…</section>;
-  if (!user) return <section style={{ maxWidth: 980, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Redirecting…</section>;
+  if (!initialized) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
+  if (!user) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
 
   const other = thread?.conversation.other ?? undefined;
 
   return (
-    <section style={{ maxWidth: 980, margin: '0 auto', padding: '24px 16px 40px' }}>
+    <section style={{ padding: '24px clamp(20px,10vw,112px) 40px' }}>
       <div
         style={{
           background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
-          display: 'grid', gridTemplateColumns: '320px 1fr', height: 'min(72vh, 640px)', overflow: 'hidden',
+          display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '320px 1fr', height: 'min(72vh, 640px)', overflow: 'hidden',
         }}
       >
         {/* ---------------- conversation list ---------------- */}
-        <div style={{ borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', minWidth: 0, ...(activeId ? { } : {}) }}>
-          <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: 17 }}>Messages</div>
+        {(!isNarrow || !activeId) && (
+        <div style={{ borderRight: isNarrow ? 'none' : '1px solid var(--border)', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)' }}>
+            <span className="ledger-label" style={{ color: 'var(--brass)', display: 'block', marginBottom: 3 }}>Inbox</span>
+            <span className="font-display" style={{ fontWeight: 500, fontSize: 20, letterSpacing: '-.02em' }}>Messages</span>
+          </div>
           <div style={{ flex: 1, overflow: 'auto' }}>
             {convos.length === 0 ? (
               <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13.5 }}>No conversations yet. Start one from a profile.</div>
@@ -128,7 +153,7 @@ const MessagesPage: React.FC = () => {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 2 }}>
                         <span style={{ fontSize: 12.5, color: c.unread > 0 ? 'var(--text)' : 'var(--text-muted)', fontWeight: c.unread > 0 ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.last_message?.text || 'No messages yet'}</span>
-                        {c.unread > 0 && <span style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--primary)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{c.unread}</span>}
+                        {c.unread > 0 && <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--primary)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{c.unread}</span>}
                       </div>
                     </div>
                   </button>
@@ -137,19 +162,28 @@ const MessagesPage: React.FC = () => {
             )}
           </div>
         </div>
+        )}
 
         {/* ---------------- thread ---------------- */}
+        {(!isNarrow || !!activeId) && (
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {!thread ? (
-            <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <MessagesSquare size={40} style={{ opacity: 0.5 }} />
-              <div style={{ marginTop: 10, fontSize: 14 }}>Select a conversation to start chatting</div>
-            </div>
+            <>
+              {isNarrow && (
+                <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--border)' }}>
+                  <button onClick={goBack} aria-label="Back" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', cursor: 'pointer', transition: 'background .18s ease' }}><ArrowLeft size={16} /></button>
+                </div>
+              )}
+              <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <MessagesSquare size={40} style={{ opacity: 0.5 }} />
+                <div style={{ marginTop: 10, fontSize: 14 }}>Select a conversation to start chatting</div>
+              </div>
+            </>
           ) : (
             <>
               {/* thread header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderBottom: '1px solid var(--border)' }}>
-                <button onClick={() => { setActiveId(null); setParams({}); }} aria-label="Back" style={{ display: 'none', width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', cursor: 'pointer' }}><ArrowLeft size={16} /></button>
+                <button onClick={goBack} aria-label="Back" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ display: isNarrow ? 'inline-flex' : 'none', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', cursor: 'pointer', transition: 'background .18s ease' }}><ArrowLeft size={16} /></button>
                 {other && isStudent(other) ? (
                   <Link to={`/profiles/${other._id}`} style={{ textDecoration: 'none' }}><Avatar u={other} size={38} /></Link>
                 ) : (
@@ -193,13 +227,14 @@ const MessagesPage: React.FC = () => {
                   placeholder="Write a message…"
                   style={{ flex: 1, padding: '12px 16px', borderRadius: 999, border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none' }}
                 />
-                <button onClick={send} disabled={sending || !text.trim()} aria-label="Send" style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', opacity: sending || !text.trim() ? 0.5 : 1 }}>
+                <button onClick={send} disabled={sending || !text.trim()} aria-label="Send" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', transition: 'background .18s ease', opacity: sending || !text.trim() ? 0.5 : 1 }}>
                   <Send size={18} />
                 </button>
               </div>
             </>
           )}
         </div>
+        )}
       </div>
     </section>
   );

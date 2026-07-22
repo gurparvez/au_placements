@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MessageSquare, Repeat2, Trash2, CornerDownRight, Archive, ArchiveRestore } from 'lucide-react';
@@ -61,6 +61,14 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
   const [shareOpen, setShareOpen] = useState(false);
   const [shareQuote, setShareQuote] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Close the repost dialog on Escape (keyboard users).
+  useEffect(() => {
+    if (!shareOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) setShareOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [shareOpen, busy]);
 
   const canManage = !!currentUser && (currentUser._id === p.author?._id || currentUser.roles?.includes('admin'));
   const requireAuth = () => {
@@ -217,7 +225,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
 
       {/* action bar */}
       <div style={{ display: 'flex', gap: 6, marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-        <div style={{ position: 'relative', flex: 1 }} onMouseEnter={() => setShowReactions(true)} onMouseLeave={() => setShowReactions(false)}>
+        <div style={{ position: 'relative', flex: 1 }} onMouseEnter={() => setShowReactions(true)} onMouseLeave={() => setShowReactions(false)} onFocus={() => setShowReactions(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowReactions(false); }}>
           <button onClick={() => react(p.my_reaction || 'like')} style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13.5, color: myReactionMeta ? 'var(--primary)' : 'var(--text-muted)' }}>
             <span>{myReactionMeta ? myReactionMeta.emoji : '👍'}</span> {myReactionMeta ? myReactionMeta.label : 'React'}
           </button>
@@ -274,7 +282,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
       {shareOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={() => setShareOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-          <div style={{ ...card, position: 'relative', width: 'min(520px,100%)' }}>
+          <div role="dialog" aria-modal="true" aria-label="Repost" style={{ ...card, position: 'relative', width: 'min(520px,100%)' }}>
             <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700 }}>Repost</h3>
             <textarea value={shareQuote} onChange={(e) => setShareQuote(e.target.value)} rows={3} placeholder="Add a thought (optional)…" style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'vertical' }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
