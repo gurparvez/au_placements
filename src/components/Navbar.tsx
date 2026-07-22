@@ -1,63 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/context/hooks';
-import { Sun, Moon, User as UserIcon, LogOut, MessageCircle, Users, Menu } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
+import { Link, useLocation } from 'react-router-dom';
+import { useAppSelector } from '@/context/hooks';
+import { Menu } from 'lucide-react';
 import { initials } from '@/utils/avatar';
-import NotificationsBell from '@/components/NotificationsBell';
 import Sidebar from '@/components/Sidebar';
-import { logoutUser, clearAuth } from '@/context/auth/authSlice';
-import { clearStudentState } from '@/context/student/studentSlice';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
+/* Two marks, one visible at a time — CSS (data-kp-logo) swaps them with the theme */
+const logoImgStyle: React.CSSProperties = { objectFit: 'contain', borderRadius: 10, flex: 'none', transition: 'transform .25s cubic-bezier(.16,1,.3,1)' };
 const LogoMark = ({ size = 46 }: { size?: number }) => (
-  <img
-    src="/logo2.png"
-    alt="Kalgidhar Trust"
-    width={size}
-    height={size}
-    style={{ display: 'block', objectFit: 'contain', borderRadius: 10, flex: 'none', transition: 'transform .25s cubic-bezier(.16,1,.3,1)' }}
-  />
+  <>
+    <img data-kp-logo="light" src="/logo_light.png" alt="Kalgidhar Trust" width={size} height={size} style={logoImgStyle} />
+    <img data-kp-logo="dark" src="/logo2.png" alt="Kalgidhar Trust" width={size} height={size} style={logoImgStyle} />
+  </>
 );
-
-const iconBtn: React.CSSProperties = {
-  width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center',
-  justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)',
-  background: 'var(--surface-2)', border: '1px solid var(--border)', textDecoration: 'none',
-};
 
 const Navbar: React.FC = () => {
   const headerRef = useRef<HTMLElement>(null);
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
   const user = useAppSelector((s) => s.auth.user);
   const loading = useAppSelector((s) => s.auth.loading);
-  const { theme, setTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const isDark =
-    theme === 'dark' ||
-    (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-  const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser()).unwrap();
-    } catch (err) {
-      console.error('Logout error:', err);
-    } finally {
-      dispatch(clearAuth());
-      dispatch(clearStudentState());
-      navigate('/');
-    }
-  };
 
   useEffect(() => {
     const onScroll = () => {
@@ -71,8 +33,6 @@ const Navbar: React.FC = () => {
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  const me = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
   return (
     <>
@@ -89,32 +49,20 @@ const Navbar: React.FC = () => {
           transition: 'border-color .2s ease, box-shadow .2s ease',
         }}
       >
-        <div style={{ width: '100%', padding: '0 clamp(20px,3vw,48px)', height: 76, display: 'flex', alignItems: 'center', gap: 14 }}>
-          {/* Menu button toggles the sliding sidebar */}
-          <button
-            data-sidebar-toggle
-            onClick={() => setSidebarOpen((o) => !o)}
-            aria-label="Toggle menu"
-            style={{ ...iconBtn, color: 'var(--text)' }}
-          >
-            <Menu size={19} />
-          </button>
-
+        <div style={{ width: '100%', padding: '0 12px 0 clamp(20px,3vw,48px)', height: 76, display: 'flex', alignItems: 'center', gap: 14 }}>
           <Link
             to="/"
             aria-label="Kalgidhar Placements home"
             style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none', color: 'var(--text)', flex: 'none' }}
             onMouseEnter={(e) => {
               const line = e.currentTarget.querySelector<HTMLElement>('[data-kp-logo-line]');
-              const img = e.currentTarget.querySelector<HTMLElement>('img');
               if (line) line.style.width = '100%';
-              if (img) img.style.transform = 'scale(1.07) rotate(-3deg)';
+              e.currentTarget.querySelectorAll<HTMLElement>('img').forEach((img) => { img.style.transform = 'scale(1.07) rotate(-3deg)'; });
             }}
             onMouseLeave={(e) => {
               const line = e.currentTarget.querySelector<HTMLElement>('[data-kp-logo-line]');
-              const img = e.currentTarget.querySelector<HTMLElement>('img');
               if (line) line.style.width = '0';
-              if (img) img.style.transform = 'none';
+              e.currentTarget.querySelectorAll<HTMLElement>('img').forEach((img) => { img.style.transform = 'none'; });
             }}
           >
             <LogoMark />
@@ -139,6 +87,7 @@ const Navbar: React.FC = () => {
               { to: '/openings', label: 'Openings' },
               { to: '/companies', label: 'Companies' },
               ...(user ? [{ to: '/network', label: 'Network' }] : []),
+              { to: '/about', label: 'About' },
             ].map(({ to, label, exact }) => {
               const active = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
               return (
@@ -169,70 +118,44 @@ const Navbar: React.FC = () => {
             })}
           </nav>
 
-          <div style={{ marginLeft: 22, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              aria-label="Toggle dark mode"
-              title="Toggle theme"
-              style={iconBtn}
-            >
-              {isDark ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
-
-            {user && (
-              <>
-                <Link to="/messages" aria-label="Messages" style={iconBtn}>
-                  <MessageCircle size={17} />
-                </Link>
-                <NotificationsBell />
-              </>
-            )}
-
+          <div style={{ marginLeft: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
             {loading ? (
-              <span data-kp-sk="true" style={{ width: 34, height: 34, borderRadius: '50%' }} aria-hidden />
-            ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    aria-label="Account menu"
+              <span data-kp-sk="true" style={{ width: 38, height: 38, borderRadius: '50%' }} aria-hidden />
+            ) : (
+              <>
+                {!user && (
+                  <Link
+                    to="/login"
                     style={{
-                      width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', fontWeight: 600, fontSize: 14, color: '#fff', background: 'var(--primary)',
-                      flex: 'none', cursor: 'pointer', border: '2px solid var(--bg-2)', boxShadow: '0 0 0 1px var(--border)',
+                      display: 'inline-flex', alignItems: 'center', padding: '9px 17px', borderRadius: 'var(--r-ctl)',
+                      background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 550, fontSize: 14, textDecoration: 'none',
                     }}
                   >
-                    {initials(user.firstName, user.lastName) || 'U'}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" sideOffset={10} className="z-300 min-w-48">
-                  <DropdownMenuLabel>
-                    <span style={{ display: 'block', textTransform: 'capitalize' }}>{me || 'Your account'}</span>
-                    {user.auid && (
-                      <span style={{ display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--text-muted)' }}>AUID {user.auid}</span>
-                    )}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate(user.roles?.includes('recruiter') ? `/companies/${user._id}` : '/profiles')}>
-                    <UserIcon size={16} /> {user.roles?.includes('recruiter') ? 'Company profile' : 'View profile'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/network')}>
-                    <Users size={16} /> My network
-                  </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-                    <LogOut size={16} /> Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link
-                to="/login"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', padding: '9px 17px', borderRadius: 'var(--r-ctl)',
-                  background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 550, fontSize: 14, textDecoration: 'none',
-                }}
-              >
-                Sign in
-              </Link>
+                    Sign in
+                  </Link>
+                )}
+                {/* Single toggle — the account initial opens the drawer with all actions inside */}
+                <button
+                  data-sidebar-toggle
+                  onClick={() => setSidebarOpen((o) => !o)}
+                  aria-label="Toggle menu"
+                  style={
+                    user
+                      ? {
+                          width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', fontWeight: 600, fontSize: 14, color: 'var(--on-primary)', background: 'var(--primary)',
+                          flex: 'none', cursor: 'pointer', border: '2px solid var(--bg-2)', boxShadow: '0 0 0 1px var(--border)',
+                        }
+                      : {
+                          width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', cursor: 'pointer', color: 'var(--text)',
+                          background: 'var(--surface-2)', border: '1px solid var(--border)',
+                        }
+                  }
+                >
+                  {user ? initials(user.firstName, user.lastName) || 'U' : <Menu size={19} />}
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -17,7 +17,9 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(h / 24)}d`;
 };
 
-const NotificationsBell: React.FC = () => {
+/* fixedPanel: used inside the drawer, where the narrow panel would clip — the
+   list drops in a fixed position over the page instead. */
+const NotificationsBell: React.FC<{ fixedPanel?: boolean }> = ({ fixedPanel }) => {
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
@@ -88,7 +90,12 @@ const NotificationsBell: React.FC = () => {
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 340, maxHeight: 420, overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', zIndex: 300 }}>
+        <div style={{
+          ...(fixedPanel
+            ? { position: 'fixed' as const, right: 12, top: 66 }
+            : { position: 'absolute' as const, right: 0, top: '100%', marginTop: 8 }),
+          width: 'min(340px, calc(100vw - 24px))', maxHeight: 420, overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', zIndex: 400,
+        }}>
           <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: 14, borderBottom: '1px solid var(--border)' }}>Notifications</div>
           {items.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13.5 }}>No notifications yet.</div>
