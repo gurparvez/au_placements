@@ -40,8 +40,9 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 const triggerBase: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8, width: '100%', minWidth: 0,
   padding: '8px 11px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
-  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 13, lineHeight: 1.2,
-  cursor: 'pointer', textAlign: 'left', font: 'inherit', fontWeight: 500,
+  background: 'var(--bg-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left',
+  /* `font` shorthand FIRST — the longhands after it must win */
+  font: 'inherit', fontSize: 13.5, lineHeight: 1.2, fontWeight: 500,
   transition: 'border-color .16s ease, background .16s ease, box-shadow .16s ease',
 };
 
@@ -375,7 +376,9 @@ export const DateField: React.FC<{
         onClick={() => (open ? setOpen(false) : openPop())}
         style={{
           display: 'flex', alignItems: 'center', gap: 8, width: '100%', minWidth: 0,
-          padding: '7px 11px', borderRadius: 'var(--r-ctl)', font: 'inherit', textAlign: 'left',
+          padding: '8px 11px', borderRadius: 'var(--r-ctl)', textAlign: 'left',
+          /* `font` shorthand FIRST — the longhands after it must win (mirrors SelectField) */
+          font: 'inherit', fontSize: 13.5, lineHeight: 1.2, fontWeight: 500,
           border: `1px solid ${open ? 'var(--primary)' : 'var(--border-strong)'}`,
           boxShadow: open ? '0 0 0 3px var(--ring-soft)' : 'none',
           background: 'var(--bg-2)', cursor: disabled ? 'not-allowed' : 'pointer',
@@ -388,7 +391,7 @@ export const DateField: React.FC<{
       >
         <Calendar size={14} aria-hidden style={{ flex: 'none', color: 'var(--text-muted)' }} />
         <span className="data" style={{
-          flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 500, letterSpacing: '.05em',
+          flex: 1, minWidth: 0,
           color: selected ? 'var(--text)' : 'var(--text-subtle)', whiteSpace: 'nowrap',
         }}>
           {selected ? `${pad2(selected.getDate())}-${pad2(selected.getMonth() + 1)}-${selected.getFullYear()}` : 'DD-MM-YYYY'}
