@@ -27,7 +27,7 @@ const inputStyle: React.CSSProperties = {
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--r-ctl)',
-  background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
 const hoverBg = (over: string, base: string) => ({
@@ -233,7 +233,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
             <span>{isApprovals ? 'No pending requests.' : 'No active recruiters yet.'}</span>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(305px,1fr))', gap: 14 }}>
+          <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
             {rows.map((r) => {
               const tone = STATUS_INK[r.user.status ?? ''] ?? 'var(--text-subtle)';
               const busy = acting === r.recruiter?._id;
@@ -259,7 +259,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
                   {/* identity band — tinted by status */}
                   <div style={{
                     display: 'flex', alignItems: 'flex-start', gap: 11, padding: '14px 16px',
-                    background: `color-mix(in srgb, ${tone} 9%, transparent)`,
+                    background: `color-mix(in srgb, ${tone} 15%, transparent)`,
                     borderBottom: '1px solid var(--border)',
                   }}>
                     <Avatar first={r.user.firstName} last={r.user.lastName} />
@@ -292,7 +292,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
                           {...hoverBg('var(--primary-hover)', 'var(--primary)')}
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 13px',
-                            borderRadius: 8, border: 'none', background: 'var(--primary)', color: '#fff',
+                            borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--on-primary)',
                             fontWeight: 600, fontSize: 12.5, cursor: 'pointer', opacity: busy ? 0.6 : 1,
                             transition: 'background .16s ease',
                           }}>

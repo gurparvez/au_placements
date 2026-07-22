@@ -23,7 +23,7 @@ const inputStyle: React.CSSProperties = {
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-  borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff',
+  borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
   fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
@@ -335,7 +335,8 @@ const InvitationsSection: React.FC = () => {
           No companies tracked yet.
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(305px,1fr))', gap: 14 }}>
+        /* Locked to 3 per row; stacks on small screens */
+        <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}>
           {rows.map((r) => (
             <div
               key={r._id}

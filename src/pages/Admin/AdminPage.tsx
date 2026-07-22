@@ -49,7 +49,7 @@ const inputStyle: React.CSSProperties = {
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-  borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff',
+  borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
   fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
@@ -413,15 +413,15 @@ const AdminPage: React.FC = () => {
   const rows = useMemo(() => users, [users]);
 
   if (!initialized) {
-    return <section style={{ padding: '60px clamp(20px,10vw,48px)', color: 'var(--text-muted)' }}>Loading…</section>;
+    return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
   }
   if (!isAdmin) {
-    return <section style={{ padding: '60px clamp(20px,10vw,48px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
+    return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
   }
 
   return (
     // The dashboard has far more to show than the CRUD tables — give it room.
-    <section style={{ padding: '40px clamp(20px,10vw,48px) 80px' }}>
+    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div className="brass-rule" style={{ marginBottom: 12 }} />
@@ -434,8 +434,12 @@ const AdminPage: React.FC = () => {
         {tab === 'users' && <button onClick={openCreate} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}><Plus size={16} /> New user</button>}
       </div>
 
-      {/* Tabs — equal-width bar spanning the full width, with a sliding brass active indicator (shared layoutId) */}
-      <div style={{ display: 'flex', gap: 4, margin: '20px 0 4px', borderBottom: '1px solid var(--border)' }}>
+      {/* Tabs — one segmented card; the active pill slides between tabs (shared layoutId) */}
+      <div style={{
+        display: 'flex', gap: 4, margin: '20px 0 4px', padding: 6, flexWrap: 'wrap',
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow-sm)',
+      }}>
         {([['dashboard', LayoutDashboard], ['placements', Award], ['policy', Settings], ['reference', Layers], ['users', Users], ['recruiters', Building2], ['approvals', UserCheck]] as const).map(([t, Icon]) => {
           const active = tab === t;
           return (
@@ -446,28 +450,31 @@ const AdminPage: React.FC = () => {
               onMouseLeave={(e) => { if (!active) { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; } }}
               style={{
                 position: 'relative', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-                padding: '11px 8px', border: 'none', cursor: 'pointer',
-                background: active ? 'var(--surface-2)' : 'transparent', borderRadius: '9px 9px 0 0',
-                fontWeight: active ? 600 : 550, fontSize: 13.5, textTransform: 'capitalize',
-                whiteSpace: 'nowrap', color: active ? 'var(--text)' : 'var(--text-muted)',
+                padding: '10px 8px', border: 'none', cursor: 'pointer', minWidth: 110,
+                background: 'transparent', borderRadius: 'var(--r-ctl)',
+                fontWeight: active ? 700 : 600, fontSize: 13.5, textTransform: 'capitalize',
+                whiteSpace: 'nowrap', color: active ? 'var(--pri-ink)' : 'var(--text-muted)',
                 transition: 'color .18s ease, background .18s ease',
               }}
             >
-              <Icon size={16} /> {t}
-              {t === 'approvals' && !!pendingCount && (
-                <span className="data" style={{
-                  minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'color-mix(in srgb, orange 18%, transparent)', color: 'orange',
-                }}>{pendingCount}</span>
-              )}
               {active && (
                 <motion.span
                   layoutId="admin-tab"
-                  style={{ position: 'absolute', left: 10, right: 10, bottom: -1, height: 2, background: 'var(--brass)', borderRadius: 2 }}
+                  aria-hidden
+                  style={{ position: 'absolute', inset: 0, background: 'var(--pri-soft)', borderRadius: 'var(--r-ctl)' }}
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               )}
+              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <Icon size={16} /> {t}
+                {t === 'approvals' && !!pendingCount && (
+                  <span className="data" style={{
+                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'color-mix(in srgb, orange 18%, transparent)', color: 'orange',
+                  }}>{pendingCount}</span>
+                )}
+              </span>
             </button>
           );
         })}
@@ -518,7 +525,7 @@ const AdminPage: React.FC = () => {
                     <span>{q ? 'No users match your search.' : 'No users yet.'}</span>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(305px,1fr))', gap: 14 }}>
+                  <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
                     {rows.map((u) => {
                       const isAdminUser = u.roles.includes('admin');
                       const tone = isAdminUser ? 'var(--primary)' : 'var(--text-subtle)';

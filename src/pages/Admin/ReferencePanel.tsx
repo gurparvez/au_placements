@@ -19,7 +19,7 @@ const inputStyle: React.CSSProperties = {
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px',
-  borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff',
+  borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
   fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };

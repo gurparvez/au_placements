@@ -319,33 +319,40 @@ const DashboardPanel: React.FC = () => {
     <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 16, opacity: loading ? 0.6 : 1, transition: 'opacity .2s' }}>
       <FilterBar filters={filters} options={options} onChange={setFilters} updatedAt={data.generated_at} onRefresh={load} />
 
-      {/* section sub-tabs — spread equally across the bar, sliding brass indicator */}
-      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', borderBottom: '1px solid var(--border)' }}>
+      {/* section sub-tabs — same segmented card as the top tabs, sliding active pill */}
+      <div style={{
+        display: 'flex', gap: 4, flexWrap: 'wrap', padding: 6,
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow-sm)',
+      }}>
         {SECTIONS.map(([s, label, Icon]) => {
           const active = section === s;
           return (
             <button
               key={s}
               onClick={() => setSection(s)}
-              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--surface-2)'; }}
-              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.color = 'var(--text)'; } }}
+              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; } }}
               style={{
                 position: 'relative', flex: 1, minWidth: 130, display: 'inline-flex', alignItems: 'center',
-                justifyContent: 'center', gap: 7, padding: '11px 8px', border: 'none', cursor: 'pointer',
-                background: active ? 'var(--surface-2)' : 'transparent', borderRadius: '9px 9px 0 0',
-                fontWeight: active ? 650 : 550, fontSize: 13.5, marginBottom: -1,
-                color: active ? 'var(--text)' : 'var(--text-muted)',
+                justifyContent: 'center', gap: 7, padding: '10px 8px', border: 'none', cursor: 'pointer',
+                background: 'transparent', borderRadius: 'var(--r-ctl)',
+                fontWeight: active ? 700 : 600, fontSize: 13.5,
+                color: active ? 'var(--pri-ink)' : 'var(--text-muted)',
                 transition: 'color .18s ease, background .18s ease',
               }}
             >
-              <Icon size={16} /> {label}
               {active && (
                 <motion.span
                   layoutId="admin-subtab"
-                  style={{ position: 'absolute', left: 12, right: 12, bottom: -1, height: 2, borderRadius: 2, background: 'var(--brass)' }}
+                  aria-hidden
+                  style={{ position: 'absolute', inset: 0, background: 'var(--pri-soft)', borderRadius: 'var(--r-ctl)' }}
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               )}
+              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <Icon size={16} /> {label}
+              </span>
             </button>
           );
         })}
