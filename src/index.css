@@ -11,17 +11,17 @@
    ============================================================ */
 
 @theme inline {
-  --radius: 0.875rem;
+  --radius: 1rem;
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
-  --radius-control: 9px;
-  --radius-chip: 7px;
+  --radius-control: 11px;
+  --radius-chip: 8px;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Newsreader", ui-serif, Georgia, "Times New Roman", serif;
-  --font-mono: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   /* shadcn core → prototype vars */
   --color-background: var(--bg);
@@ -70,68 +70,108 @@
   --shadow-card: var(--shadow);
 }
 
+/* ==================== TOKEN LAYER (single source of truth) ====================
+   Spec tokens first; every legacy variable name used by components is aliased to
+   them, so a [data-theme] swap (or a --pri change) reskins the site with zero
+   per-component edits. The theme provider toggles the .dark class; [data-theme]
+   attributes are honoured equivalently. */
+
 /* ------------------------------- LIGHT ------------------------------- */
-:root {
+:root,
+[data-theme='light'] {
   color-scheme: light;
-  --bg: #f6f7f9;
-  --bg-2: #ffffff;
+
+  /* spec tokens */
+  --bg: #f3f4f6;
+  --bg2: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --surface-3: #e6e9ee;
-  --text: #0f1115;
-  --text-muted: #59626e;
-  --text-subtle: #8a929e;
-  --border: #e6e8ec;
-  --border-strong: #d6dae0;
-  --primary: #2563eb;
-  --primary-hover: #1d4fd7;
-  --primary-soft: #eef3ff;
-  --primary-soft-border: #dbe6ff;
-  --on-primary: #ffffff;
-  --ring: rgba(37, 99, 235, 0.32);
-  --ring-soft: rgba(37, 99, 235, 0.32);
-  --success: #157f4b;
-  --success-soft: #e7f5ec;
-  --danger: #d23b3b;
-  --danger-soft: #fbeded;
-  --brass: #1e3a8a; /* deep navy blue — light-mode accent (dark mode keeps antique gold) */
-  --brass-soft: #e8eefb;
-  --brass-line: #b6c6ee;
-  --shadow: 0 1px 2px rgba(16, 17, 20, 0.04), 0 10px 26px -18px rgba(16, 17, 20, 0.22);
-  --r-card: 14px;
-  --r-ctl: 9px;
+  --surface2: #f7f8fa;
+  --surface3: #edeef1;
+  --text: #181b21;
+  --muted: #232830; /* almost ink — secondary text */
+  --subtle: #3d4650; /* meta/labels — dark charcoal */
+  --border: #cdd3da; /* light but visible — cards separate from the canvas without heavy lines */
+  --border2: #b3bbc5;
+  --pri: #3b82f6;
+  --on-pri: #ffffff;
+  --pri-ink: #2e6fe0;
+  --pri-soft: color-mix(in srgb, var(--pri) 17%, transparent);
+  --pri-line: color-mix(in srgb, var(--pri) 30%, transparent);
+  --ring: color-mix(in srgb, var(--pri) 26%, transparent);
+  --ok: #16a34a;
+  --ok-soft: #e7f7ec;
+  --bad: #e5484d;
+  --bad-soft: #fdecec;
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 10px 26px -18px rgba(17, 24, 39, 0.16);
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --r-card: 16px;
+  --r-ctrl: 11px;
+  --r-chip: 8px;
   --r-pill: 999px;
-  --r-chip: 7px;
+  --scroll-thumb: #d6d9de;
+
+  /* legacy aliases (referenced throughout components) */
+  --bg-2: var(--bg2);
+  --surface-2: var(--surface2);
+  --surface-3: var(--surface3);
+  --text-muted: var(--muted);
+  --text-subtle: var(--subtle);
+  --border-strong: var(--border2);
+  --primary: var(--pri);
+  --primary-hover: color-mix(in srgb, var(--pri) 88%, #ffffff);
+  --primary-soft: var(--pri-soft);
+  --primary-soft-border: var(--pri-line);
+  --on-primary: var(--on-pri);
+  --ring-soft: var(--ring);
+  --success: var(--ok);
+  --success-soft: var(--ok-soft);
+  --danger: var(--bad);
+  --danger-soft: var(--bad-soft);
+  /* the old secondary accent collapses into the single blue accent */
+  --brass: var(--pri-ink);
+  --brass-soft: var(--pri-soft);
+  --brass-line: var(--pri-line);
+  --r-ctl: var(--r-ctrl);
 }
 
+/* Theme-aware brand logo — navy Society mark in light, original mark in dark */
+img[data-kp-logo='light'] { display: block; }
+img[data-kp-logo='dark'] { display: none; }
+.dark img[data-kp-logo='light'],
+[data-theme='dark'] img[data-kp-logo='light'] { display: none; }
+.dark img[data-kp-logo='dark'],
+[data-theme='dark'] img[data-kp-logo='dark'] { display: block; }
+
 /* ------------------------------- DARK -------------------------------- */
-.dark {
+.dark,
+[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0a0c10;
-  --bg-2: #0f1217;
-  --surface: #13161c;
-  --surface-2: #191d25;
-  --surface-3: #232833;
-  --text: #eef1f5;
-  --text-muted: #9aa3af;
-  --text-subtle: #6c7480;
-  --border: #222831;
-  --border-strong: #333b46;
-  --primary: #3d82f6;
-  --primary-hover: #5a96f8;
-  --primary-soft: #15233d;
-  --primary-soft-border: #22365c;
-  --on-primary: #ffffff;
-  --ring: rgba(61, 130, 246, 0.45);
-  --ring-soft: rgba(61, 130, 246, 0.45);
-  --success: #3fb06e;
-  --success-soft: #102219;
-  --danger: #f0686a;
-  --danger-soft: #2a1416;
-  --brass: #d8b25a;
-  --brass-soft: #241d0f;
-  --brass-line: #4a3d22;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 34px -20px rgba(0, 0, 0, 0.7);
+
+  --bg: #0e1116;
+  --bg2: #141922;
+  --surface: #161c26;
+  --surface2: #1c2330;
+  --surface3: #232c3b;
+  --text: #f7f9fc;
+  --muted: #dde4ee; /* near-white secondary text */
+  --subtle: #b7c2d0; /* meta/labels — light silver */
+  --border: #232b38;
+  --border2: #333d4d;
+  --pri: #4c8dff;
+  --on-pri: #0a0e14;
+  --pri-ink: #7cabff;
+  --pri-soft: color-mix(in srgb, var(--pri) 24%, transparent);
+  --pri-line: color-mix(in srgb, var(--pri) 34%, transparent);
+  --ring: color-mix(in srgb, var(--pri) 34%, transparent);
+  --ok: #3fcf8e;
+  --ok-soft: color-mix(in srgb, #3fcf8e 16%, transparent);
+  --bad: #f26d6d;
+  --bad-soft: color-mix(in srgb, #f26d6d 16%, transparent);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 20px 44px -24px rgba(0, 0, 0, 0.8);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --scroll-thumb: #333d4d;
+  /* aliases inherit automatically — only the hover mix needs its own dark blend */
+  --primary-hover: color-mix(in srgb, var(--pri) 88%, #ffffff);
 }
 
 @layer base {
@@ -152,6 +192,7 @@
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 15px;
+    font-weight: 500; /* heavier base — thin text never blends into either background */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
@@ -173,48 +214,81 @@
     border-radius: 4px;
   }
 
+  /* Every interactive control signals interactivity — catches strays that
+     don't declare it inline. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
   ::selection {
-    background: var(--primary);
-    color: #fff;
+    background: color-mix(in srgb, var(--pri) 28%, transparent);
   }
 
-  /* Minimal icons: thinner, uniform stroke across every lucide icon, site-wide.
-     CSS stroke-width overrides lucide's stroke-width="2" presentation attribute. */
+  /* Default link ink — nothing renders browser-blue in either theme. */
+  a {
+    color: var(--pri-ink);
+  }
+  a:hover {
+    color: color-mix(in srgb, var(--pri-ink) 82%, var(--text));
+  }
+
+  /* Thin line icons, uniform stroke across every lucide icon, site-wide. */
   svg.lucide {
-    stroke-width: 1.5px;
+    stroke-width: 1.8px;
   }
 
-  /* (Date fields use the fully custom DateField calendar — no native styling needed.) */
+  /* Thin, quiet scrollbars in both themes. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-radius: 999px;
+    border: 3px solid var(--bg);
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 @layer components {
   .eyebrow {
     font-size: 12.5px;
-    font-weight: 650;
-    letter-spacing: 0.06em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--primary);
+    color: var(--pri);
   }
   .data { font-variant-numeric: tabular-nums; }
+  /* Display text is the same family, set heavy and tight — the !important wins
+     over inline serif-era weights without touching any markup. */
   .font-display {
     font-family: var(--font-display);
-    font-optical-sizing: auto;
-    letter-spacing: -0.01em;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
   }
-  /* Ledger label — small caps, tracked, for register/catalog eyebrows */
+  /* Tiny tracked label — spec: 10.5–11px, 700, .1em, subtle ink */
   .ledger-label {
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--subtle);
     font-variant-numeric: tabular-nums;
   }
-  /* Thin brass rule used to mark register/masthead sections */
+  /* Thin accent rule used to mark section openers */
   .brass-rule {
     height: 2px;
     width: 40px;
-    background: var(--brass);
+    background: var(--pri);
     border-radius: 2px;
   }
 }
