@@ -1,16 +1,30 @@
-import React, { useId, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 
 /**
- * Dependency-free SVG chart kit.
+ * Dependency-free SVG chart kit — register edition.
  *
- * Every chart is pure SVG so it inherits theme variables, scales with the
- * container, and adds no bundle weight. Charts share one palette so a series
- * keeps its colour wherever it appears on the page.
+ * Design rules (shared by every chart):
+ *  · thin marks with 4px rounded data-ends anchored to the baseline
+ *  · a 2px surface gap between adjacent fills (stack segments, pie slices)
+ *  · recessive dashed grids, muted tabular figures, selective direct labels
+ *  · a legend whenever ≥ 2 series are on screen
+ *  · staggered entrance motion (transform/opacity only; reduced-motion safe
+ *    via the global prefers-reduced-motion kill switch)
+ *
+ * The categorical palette is validated (lightness band, chroma floor, CVD
+ * adjacent-pair separation, contrast) against both light and dark surfaces —
+ * order is fixed; a series keeps its colour wherever it appears.
  */
 
 export const PALETTE = [
-  '#4f7cff', '#22c55e', '#f59e0b', '#a855f7', '#ec4899',
-  '#06b6d4', '#ef4444', '#84cc16', '#f97316', '#14b8a6',
+  '#2563eb', // blue
+  '#d97706', // amber
+  '#0d9488', // teal
+  '#a855f7', // purple
+  '#16a34a', // green
+  '#ec4899', // pink
+  '#0891b2', // cyan
+  '#ef4444', // red
 ];
 export const colorAt = (i: number) => PALETTE[i % PALETTE.length];
 
@@ -20,14 +34,32 @@ export interface Slice {
 }
 
 const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 12.5 };
+const num: React.CSSProperties = { fontVariantNumeric: 'tabular-nums' };
+/** Floating hover readout shared by the time-series charts. */
+const tip: React.CSSProperties = {
+  position: 'absolute', zIndex: 5, pointerEvents: 'none',
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9,
+  boxShadow: 'var(--shadow)', padding: '7px 10px', fontSize: 12, whiteSpace: 'nowrap',
+};
+const EASE_DELAY = (i: number, step = 40) => ({ animationDelay: `${i * step}ms` });
 
 export const ChartEmpty: React.FC<{ label: string }> = ({ label }) => (
   <div style={{
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '34px 12px', color: 'var(--text-subtle)', fontSize: 12.5, textAlign: 'center',
+    padding: '36px 14px', color: 'var(--text-subtle)', fontSize: 12.5, textAlign: 'center',
+    border: '1px dashed var(--border)', borderRadius: 10,
+    background: 'color-mix(in srgb, var(--surface-2) 40%, transparent)',
   }}>
     {label}
   </div>
+);
+
+/** Small square swatch used by every legend. */
+const Swatch: React.FC<{ color: string; line?: boolean }> = ({ color, line }) => (
+  <span style={{
+    width: line ? 14 : 8, height: line ? 3 : 8, borderRadius: 2,
+    background: color, flex: 'none',
+  }} />
 );
 
 /** Shared legend for pie/donut. */
@@ -37,7 +69,7 @@ const Legend: React.FC<{
   active: number | null;
   onHover: (i: number | null) => void;
 }> = ({ rows, total, active, onHover }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flex: 1, minWidth: 132 }}>
+  <div className="kp-chart-fade" style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 132 }}>
     {rows.map((r, i) => (
       <div
         key={r.key}
@@ -45,16 +77,17 @@ const Legend: React.FC<{
         onMouseLeave={() => onHover(null)}
         style={{
           display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5,
-          padding: '3px 6px', borderRadius: 6, cursor: 'default',
+          padding: '3px 7px', borderRadius: 6, cursor: 'default',
           background: active === i ? 'var(--surface-2)' : 'transparent',
-          transition: 'background .15s',
+          opacity: active === null || active === i ? 1 : 0.45,
+          transition: 'background .15s ease, opacity .15s ease',
         }}
       >
-        <span style={{ width: 9, height: 9, borderRadius: 3, background: colorAt(i), flex: 'none' }} />
-        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
+        <Swatch color={colorAt(i)} />
+        <span style={{ flex: 1, minWidth: 0, textTransform: 'capitalize', lineHeight: 1.35, overflowWrap: 'anywhere' }}>
           {r.key}
         </span>
-        <span style={{ color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', flex: 'none' }}>
+        <span style={{ color: 'var(--text-muted)', ...num, flex: 'none' }}>
           {r.count} · {total ? Math.round((r.count / total) * 100) : 0}%
         </span>
       </div>
@@ -64,12 +97,16 @@ const Legend: React.FC<{
 
 /* ------------------------------- Pie ------------------------------- */
 
-/** Classic filled pie. Slices lift slightly on hover. */
-export const PieChart: React.FC<{ data: Slice[]; emptyLabel: string; size?: number }> = ({
-  data, emptyLabel, size = 150,
+/** Filled pie with 2px surface gaps. Slices lift on hover; legend dims siblings.
+ *  Long tails fold into "Other" so the ring and legend stay readable. */
+export const PieChart: React.FC<{ data: Slice[]; emptyLabel: string; size?: number; maxSlices?: number; stacked?: boolean }> = ({
+  data, emptyLabel, size = 150, maxSlices = 9, stacked,
 }) => {
   const [active, setActive] = useState<number | null>(null);
-  const rows = data.filter((d) => d.count > 0);
+  const raw = data.filter((d) => d.count > 0).sort((a, b) => b.count - a.count);
+  const rows = raw.length > maxSlices
+    ? [...raw.slice(0, maxSlices - 1), { key: `Other (${raw.length - maxSlices + 1})`, count: raw.slice(maxSlices - 1).reduce((n, r) => n + r.count, 0) }]
+    : raw;
   const total = rows.reduce((n, r) => n + r.count, 0);
   if (!total) return <ChartEmpty label={emptyLabel} />;
 
@@ -81,8 +118,14 @@ export const PieChart: React.FC<{ data: Slice[]; emptyLabel: string; size?: numb
   const single = rows.length === 1;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flex: 'none', overflow: 'visible' }} role="img" aria-label="Pie chart">
+    <div style={stacked
+      ? { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }
+      : { display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+      <svg
+        className="kp-chart-pop"
+        width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+        style={{ flex: 'none', overflow: 'visible' }} role="img" aria-label="Pie chart"
+      >
         {single ? (
           <circle cx={cx} cy={cy} r={R} fill={colorAt(0)} />
         ) : (
@@ -109,9 +152,12 @@ export const PieChart: React.FC<{ data: Slice[]; emptyLabel: string; size?: numb
                 d={`M${cx},${cy} L${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${large} 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`}
                 fill={colorAt(i)}
                 stroke="var(--surface)"
-                strokeWidth={1.5}
+                strokeWidth={2}
                 transform={`translate(${ox.toFixed(2)},${oy.toFixed(2)})`}
-                style={{ transition: 'transform .18s ease' }}
+                style={{
+                  transition: 'transform .18s ease, opacity .18s ease',
+                  opacity: active === null || active === i ? 1 : 0.35,
+                }}
                 onMouseEnter={() => setActive(i)}
                 onMouseLeave={() => setActive(null)}
               >
@@ -121,35 +167,46 @@ export const PieChart: React.FC<{ data: Slice[]; emptyLabel: string; size?: numb
           })
         )}
       </svg>
-      <Legend rows={rows} total={total} active={active} onHover={setActive} />
+      <div style={stacked ? { width: '100%' } : { flex: 1, minWidth: 132, display: 'flex' }}>
+        <Legend rows={rows} total={total} active={active} onHover={setActive} />
+      </div>
     </div>
   );
 };
 
 /* ------------------------------ Donut ------------------------------ */
 
-/** Ring chart with a live centre readout. */
+/** Thin ring with 2px segment gaps and a live centre readout. `stacked` puts the legend below.
+ *  Long tails fold into "Other" so the ring and legend stay readable. */
 export const DonutChart: React.FC<{
   data: Slice[];
   emptyLabel: string;
   size?: number;
   centerLabel?: string;
-}> = ({ data, emptyLabel, size = 150, centerLabel = 'total' }) => {
+  stacked?: boolean;
+  maxSlices?: number;
+}> = ({ data, emptyLabel, size = 150, centerLabel = 'total', stacked, maxSlices = 9 }) => {
   const [active, setActive] = useState<number | null>(null);
-  const rows = data.filter((d) => d.count > 0);
+  const raw = data.filter((d) => d.count > 0).sort((a, b) => b.count - a.count);
+  const rows = raw.length > maxSlices
+    ? [...raw.slice(0, maxSlices - 1), { key: `Other (${raw.length - maxSlices + 1})`, count: raw.slice(maxSlices - 1).reduce((n, r) => n + r.count, 0) }]
+    : raw;
   const total = rows.reduce((n, r) => n + r.count, 0);
   if (!total) return <ChartEmpty label={emptyLabel} />;
 
-  const STROKE = size * 0.15;
-  const R = size / 2 - STROKE / 2 - 3;
+  const STROKE = size * 0.105;
+  const R = size / 2 - STROKE / 2 - 4;
   const C = 2 * Math.PI * R;
+  const GAP = rows.length > 1 ? 2.5 : 0; // px of arc between segments
   let offset = 0;
 
   const shown = active !== null ? rows[active] : null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flex: 'none' }} role="img" aria-label="Donut chart">
+    <div style={stacked
+      ? { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }
+      : { display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
+      <svg className="kp-chart-pop" width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flex: 'none' }} role="img" aria-label="Donut chart">
         <g transform={`translate(${size / 2},${size / 2}) rotate(-90)`}>
           {rows.map((r, i) => {
             const dash = (r.count / total) * C;
@@ -159,9 +216,12 @@ export const DonutChart: React.FC<{
                 r={R} fill="none"
                 stroke={colorAt(i)}
                 strokeWidth={active === i ? STROKE + 4 : STROKE}
-                strokeDasharray={`${dash} ${C - dash}`}
+                strokeDasharray={`${Math.max(dash - GAP, 0.6)} ${C - dash + GAP}`}
                 strokeDashoffset={-offset}
-                style={{ transition: 'stroke-width .15s ease' }}
+                style={{
+                  transition: 'stroke-width .15s ease, opacity .15s ease',
+                  opacity: active === null || active === i ? 1 : 0.35,
+                }}
                 onMouseEnter={() => setActive(i)}
                 onMouseLeave={() => setActive(null)}
               >
@@ -172,64 +232,85 @@ export const DonutChart: React.FC<{
             return seg;
           })}
         </g>
-        <text x={size / 2} y={size / 2 - 3} textAnchor="middle" style={{ fontSize: size * 0.16, fontWeight: 700, fill: 'var(--text)' }}>
+        <text x={size / 2} y={size / 2 - 2} textAnchor="middle"
+          style={{ fontSize: size * 0.18, fontWeight: 550, fill: 'var(--text)', fontFamily: 'var(--font-display)', letterSpacing: '-0.01em', ...num }}>
           {shown ? shown.count : total}
         </text>
-        <text x={size / 2} y={size / 2 + 14} textAnchor="middle" style={{ fontSize: size * 0.075, fill: 'var(--text-muted)' }}>
+        <text x={size / 2} y={size / 2 + size * 0.105} textAnchor="middle" style={{ fontSize: size * 0.068, fill: 'var(--text-muted)', textTransform: 'capitalize' }}>
           {shown ? shown.key : centerLabel}
         </text>
       </svg>
-      <Legend rows={rows} total={total} active={active} onHover={setActive} />
+      <div style={stacked ? { width: '100%' } : { flex: 1, minWidth: 132, display: 'flex' }}>
+        <Legend rows={rows} total={total} active={active} onHover={setActive} />
+      </div>
     </div>
   );
 };
 
 /* --------------------------- Vertical bars --------------------------- */
 
-/** Column chart with value labels and an axis baseline. */
+/** Column chart — thin rounded columns, staggered grow-in, muted value labels. */
 export const BarChart: React.FC<{
   data: Slice[];
   emptyLabel: string;
   height?: number;
   colorize?: boolean;
 }> = ({ data, emptyLabel, height = 170, colorize }) => {
+  const [hover, setHover] = useState<number | null>(null);
   const rows = data.filter((d) => d.count > 0 || data.every((x) => x.count === 0));
   if (!data.some((d) => d.count > 0)) return <ChartEmpty label={emptyLabel} />;
 
   const peak = Math.max(1, ...rows.map((r) => r.count));
+  const total = rows.reduce((n, r) => n + r.count, 0);
+  // Fewer categories → thicker columns, so short charts still fill their panel.
+  const colMax = rows.length <= 3 ? 150 : rows.length <= 5 ? 118 : rows.length <= 8 ? 92 : 58;
+  const barMax = rows.length <= 3 ? 104 : rows.length <= 5 ? 80 : rows.length <= 8 ? 58 : 38;
 
   return (
     <div style={{ overflowX: 'auto' }}>
       <div style={{
-        display: 'flex', alignItems: 'flex-end', gap: 10, height,
-        minWidth: Math.max(rows.length * 46, 200), padding: '18px 0 0',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 10, height,
+        minWidth: Math.max(rows.length * 38, 180), padding: '18px 0 0',
         borderBottom: '1px solid var(--border)',
       }}>
         {rows.map((r, i) => {
           const h = (r.count / peak) * 100;
+          const edge = i === 0 ? { left: 0 } : i === rows.length - 1 ? { right: 0 } : { left: '50%', transform: 'translateX(-50%)' };
           return (
-            <div key={r.key} style={{ flex: 1, minWidth: 34, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }} title={`${r.key}: ${r.count}`}>
-              <span style={{ fontSize: 11.5, fontWeight: 600, textAlign: 'center', marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+            <div key={r.key}
+              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
+              style={{ position: 'relative', flex: 1, minWidth: 28, maxWidth: colMax, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+              {hover === i && (
+                <div style={{ ...tip, top: 0, ...edge }}>
+                  <div style={{ fontWeight: 600, textTransform: 'capitalize', marginBottom: 2 }}>{r.key}</div>
+                  <div style={{ color: 'var(--text-muted)', ...num }}>
+                    <strong style={{ color: 'var(--text)' }}>{r.count}</strong>{total > 0 && <> · {Math.round((r.count / total) * 100)}%</>}
+                  </div>
+                </div>
+              )}
+              <span className="kp-chart-fade" style={{ fontSize: 11.5, fontWeight: 600, textAlign: 'center', marginBottom: 4, color: 'var(--text-muted)', ...num, animationDelay: '.3s' }}>
                 {r.count}
               </span>
-              <div style={{
-                height: `${Math.max(h, r.count > 0 ? 3 : 0)}%`,
-                borderRadius: '6px 6px 0 0',
-                background: colorize
-                  ? `linear-gradient(180deg, ${colorAt(i)}, color-mix(in srgb, ${colorAt(i)} 62%, transparent))`
-                  : 'linear-gradient(180deg, var(--primary), color-mix(in srgb, var(--primary) 55%, transparent))',
-                transition: 'height .4s ease',
-              }} />
+              <div
+                className="kp-bar kp-grow-y"
+                style={{
+                  height: `${Math.max(h, r.count > 0 ? 3 : 0)}%`,
+                  borderRadius: '4px 4px 0 0',
+                  margin: '0 auto', width: '100%', maxWidth: barMax,
+                  background: colorize ? colorAt(i) : 'var(--primary)',
+                  ...EASE_DELAY(i, 35),
+                }}
+              />
             </div>
           );
         })}
       </div>
-      <div style={{ display: 'flex', gap: 10, minWidth: Math.max(rows.length * 46, 200), marginTop: 7 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, minWidth: Math.max(rows.length * 38, 180), marginTop: 7 }}>
         {rows.map((r) => (
           <span key={r.key} style={{
-            flex: 1, minWidth: 34, fontSize: 10.5, color: 'var(--text-muted)', textAlign: 'center',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'capitalize',
-          }} title={r.key}>
+            flex: 1, minWidth: 28, maxWidth: colMax, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
+            lineHeight: 1.25, textTransform: 'capitalize', overflowWrap: 'anywhere', alignSelf: 'flex-start',
+          }}>
             {r.key}
           </span>
         ))}
@@ -255,15 +336,17 @@ export const GroupedBarChart: React.FC<{
   emptyLabel: string;
   height?: number;
 }> = ({ data, series, emptyLabel, height = 190 }) => {
+  const [hover, setHover] = useState<number | null>(null);
   if (!data.length) return <ChartEmpty label={emptyLabel} />;
   const peak = Math.max(1, ...data.flatMap((d) => series.map((s) => Number(d[s.key]) || 0)));
+  const groupMax = data.length <= 4 ? 170 : data.length <= 7 ? 124 : 96;
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 14, marginBottom: 12, flexWrap: 'wrap' }}>
         {series.map((s) => (
           <span key={s.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...muted }}>
-            <span style={{ width: 9, height: 9, borderRadius: 3, background: s.color }} />
+            <Swatch color={s.color} />
             {s.label}
           </span>
         ))}
@@ -274,32 +357,52 @@ export const GroupedBarChart: React.FC<{
           display: 'flex', alignItems: 'flex-end', gap: 16, height,
           minWidth: Math.max(data.length * 68, 240), borderBottom: '1px solid var(--border)', paddingTop: 16,
         }}>
-          {data.map((row) => (
-            <div key={row.key} style={{ flex: 1, minWidth: 52, height: '100%', display: 'flex', alignItems: 'flex-end', gap: 4 }}>
-              {series.map((s) => {
-                const v = Number(row[s.key]) || 0;
-                return (
-                  <div key={s.key} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
-                    title={`${row.key} · ${s.label}: ${v}`}>
-                    <span style={{ fontSize: 10.5, fontWeight: 600, textAlign: 'center', marginBottom: 3, color: 'var(--text-muted)' }}>
-                      {v || ''}
-                    </span>
-                    <div style={{
-                      height: `${Math.max((v / peak) * 100, v > 0 ? 3 : 0)}%`,
-                      borderRadius: '5px 5px 0 0', background: s.color, transition: 'height .4s ease',
-                    }} />
+          {data.map((row, gi) => {
+            const edge = gi === 0 ? { left: 0 } : gi === data.length - 1 ? { right: 0 } : { left: '50%', transform: 'translateX(-50%)' };
+            return (
+              <div key={row.key}
+                onMouseEnter={() => setHover(gi)} onMouseLeave={() => setHover(null)}
+                style={{ position: 'relative', flex: 1, minWidth: 52, maxWidth: groupMax, height: '100%', display: 'flex', alignItems: 'flex-end', gap: 3, margin: '0 auto' }}>
+                {hover === gi && (
+                  <div style={{ ...tip, top: 0, ...edge }}>
+                    <div style={{ fontWeight: 600, marginBottom: 3 }}>{row.key}</div>
+                    {series.map((s) => (
+                      <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', marginTop: 2 }}>
+                        <Swatch color={s.color} />
+                        <span style={{ flex: 1, paddingRight: 10 }}>{s.label}</span>
+                        <span style={{ color: 'var(--text)', fontWeight: 600, ...num }}>{Number(row[s.key]) || 0}</span>
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          ))}
+                )}
+                {series.map((s) => {
+                  const v = Number(row[s.key]) || 0;
+                  return (
+                    <div key={s.key} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                      <span className="kp-chart-fade" style={{ fontSize: 10.5, fontWeight: 600, textAlign: 'center', marginBottom: 3, color: 'var(--text-muted)', ...num, animationDelay: '.3s' }}>
+                        {v || ''}
+                      </span>
+                      <div
+                        className="kp-bar kp-grow-y"
+                        style={{
+                          height: `${Math.max((v / peak) * 100, v > 0 ? 3 : 0)}%`,
+                          borderRadius: '4px 4px 0 0', background: s.color,
+                          ...EASE_DELAY(gi, 40),
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
         <div style={{ display: 'flex', gap: 16, minWidth: Math.max(data.length * 68, 240), marginTop: 7 }}>
           {data.map((row) => (
             <span key={row.key} style={{
-              flex: 1, minWidth: 52, fontSize: 10.5, color: 'var(--text-muted)', textAlign: 'center',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }} title={row.key}>
+              flex: 1, minWidth: 52, maxWidth: groupMax, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
+              lineHeight: 1.25, overflowWrap: 'anywhere', alignSelf: 'flex-start',
+            }}>
               {row.key}
             </span>
           ))}
@@ -311,30 +414,62 @@ export const GroupedBarChart: React.FC<{
 
 /* --------------------------- Stacked bars --------------------------- */
 
-/** 100%-stacked rows — good for comparing composition across categories. */
+/** 100%-stacked rows with 2px segment gaps and a proper legend. */
 export const StackedBar: React.FC<{
   data: { key: string; parts: { label: string; value: number; color: string }[] }[];
   emptyLabel: string;
-}> = ({ data, emptyLabel }) => {
+  showLegend?: boolean;
+  /** Stretch to the parent's height, spreading rows evenly (parent must be a column flexbox). */
+  fill?: boolean;
+}> = ({ data, emptyLabel, showLegend = true, fill }) => {
+  const [hover, setHover] = useState<number | null>(null);
   if (!data.length) return <ChartEmpty label={emptyLabel} />;
+  const legend = data[0]?.parts ?? [];
+  // Muted "remainder" colours make poor ink — fall back to the muted text token.
+  const inkOf = (c: string) => (c.startsWith('var(--text') ? 'var(--text-muted)' : c);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {data.map((row) => {
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 9, ...(fill ? { flex: 1, justifyContent: 'space-between' } : {}) }}>
+      {showLegend && legend.length > 1 && (
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 1 }}>
+          {legend.map((p) => (
+            <span key={p.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...muted, fontSize: 12 }}>
+              <Swatch color={p.color} />
+              {p.label}
+            </span>
+          ))}
+        </div>
+      )}
+      {data.map((row, ri) => {
         const total = row.parts.reduce((n, p) => n + p.value, 0);
+        const active = hover === ri;
         return (
-          <div key={row.key}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 12.5 }}>
-              <span style={{ fontWeight: 550, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.key}</span>
-              <span style={{ color: 'var(--text-muted)', flex: 'none' }}>{total}</span>
+          <div key={row.key} onMouseEnter={() => setHover(ri)} onMouseLeave={() => setHover(null)} style={{ cursor: 'default' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4, fontSize: 12.5 }}>
+              <span style={{ fontWeight: active ? 650 : 550, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.key}</span>
+              {active ? (
+                <span style={{ flex: 'none', display: 'inline-flex', gap: 9, ...num }}>
+                  {row.parts.map((p) => (
+                    <span key={p.label} style={{ color: inkOf(p.color), fontWeight: 600, fontSize: 12 }}>
+                      {p.value} {p.label.toLowerCase()}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                <span style={{ color: 'var(--text-muted)', flex: 'none', ...num }}>{total}</span>
+              )}
             </div>
-            <div style={{ display: 'flex', height: 16, borderRadius: 5, overflow: 'hidden', background: 'var(--surface-2)' }}>
+            <div style={{ display: 'flex', gap: 2, height: 11, filter: active ? 'brightness(1.15)' : 'none', transition: 'filter .15s ease' }}>
               {row.parts.map((p) => (
                 p.value > 0 && (
                   <div
                     key={p.label}
-                    style={{ width: `${(p.value / (total || 1)) * 100}%`, background: p.color, transition: 'width .4s ease' }}
-                    title={`${p.label}: ${p.value}`}
+                    className="kp-grow-x"
+                    style={{
+                      width: `${(p.value / (total || 1)) * 100}%`, background: p.color,
+                      borderRadius: 3, ...EASE_DELAY(ri, 45),
+                    }}
+                    title={`${p.label}: ${p.value} of ${total} (${total ? Math.round((p.value / total) * 100) : 0}%)`}
                   />
                 )
               ))}
@@ -367,16 +502,19 @@ export const BarList: React.FC<{
             <span style={{ fontWeight: 550, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
               {r.key}
             </span>
-            <span style={{ color: 'var(--text-muted)', flex: 'none', fontVariantNumeric: 'tabular-nums' }}>
+            <span style={{ color: 'var(--text-muted)', flex: 'none', ...num }}>
               {r.count}
               {total > 0 && <span style={{ color: 'var(--text-subtle)' }}> · {Math.round((r.count / total) * 100)}%</span>}
             </span>
           </div>
-          <div style={{ height: 7, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
-            <div style={{
-              width: `${(r.count / peak) * 100}%`, height: '100%', borderRadius: 999,
-              background: colorize ? colorAt(i) : 'var(--primary)', transition: 'width .35s ease',
-            }} />
+          <div style={{ height: 6, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
+            <div
+              className="kp-grow-x"
+              style={{
+                width: `${(r.count / peak) * 100}%`, height: '100%', borderRadius: 999,
+                background: colorize ? colorAt(i) : 'var(--primary)', ...EASE_DELAY(i, 40),
+              }}
+            />
           </div>
         </div>
       ))}
@@ -386,7 +524,7 @@ export const BarList: React.FC<{
 
 /* ------------------------------ Area/line ------------------------------ */
 
-/** Smooth area chart for time series. Falls back gracefully under 2 points. */
+/** Area chart for time series: 2px line draw-in, soft fill, small point markers. */
 export const AreaChart: React.FC<{
   data: Slice[];
   emptyLabel: string;
@@ -394,6 +532,7 @@ export const AreaChart: React.FC<{
   height?: number;
 }> = ({ data, emptyLabel, color = 'var(--primary)', height = 140 }) => {
   const gid = useId().replace(/:/g, '');
+  const [hover, setHover] = useState<number | null>(null);
   if (data.length < 2) return <ChartEmpty label={emptyLabel} />;
 
   const W = 560, H = height, PAD = 8;
@@ -404,28 +543,53 @@ export const AreaChart: React.FC<{
   const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const area = `${line} L${pts[pts.length - 1][0].toFixed(1)},${H - PAD} L${pts[0][0].toFixed(1)},${H - PAD} Z`;
 
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * W;
+    const idx = Math.round((x - PAD) / stepX);
+    setHover(idx >= 0 && idx < data.length ? idx : null);
+  };
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" role="img" aria-label="Trend chart">
-        <defs>
-          <linearGradient id={`g-${gid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.34" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* horizontal guides */}
-        {[0.25, 0.5, 0.75].map((t) => (
-          <line key={t} x1={PAD} x2={W - PAD} y1={PAD + t * (H - PAD * 2)} y2={PAD + t * (H - PAD * 2)}
-            stroke="var(--border)" strokeWidth={1} strokeDasharray="3 5" />
-        ))}
-        <path d={area} fill={`url(#g-${gid})`} />
-        <path d={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        {pts.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={2.8} fill={color}>
-            <title>{`${data[i].key}: ${data[i].count}`}</title>
-          </circle>
-        ))}
-      </svg>
+      <div style={{ position: 'relative' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" role="img" aria-label="Trend chart"
+          onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+          <defs>
+            <linearGradient id={`g-${gid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.26" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* horizontal guides */}
+          {[0.25, 0.5, 0.75].map((t) => (
+            <line key={t} x1={PAD} x2={W - PAD} y1={PAD + t * (H - PAD * 2)} y2={PAD + t * (H - PAD * 2)}
+              stroke="var(--border)" strokeWidth={1} strokeDasharray="3 5" />
+          ))}
+          <path className="kp-chart-fade" style={{ animationDelay: '.4s' }} d={area} fill={`url(#g-${gid})`} />
+          <path className="kp-draw" d={line} pathLength={1} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+          {hover !== null && (
+            <line x1={pts[hover][0]} x2={pts[hover][0]} y1={PAD} y2={H - PAD} stroke="var(--text-subtle)" strokeWidth={1} strokeDasharray="2 3" />
+          )}
+          <g className="kp-chart-fade" style={{ animationDelay: '.5s' }}>
+            {pts.map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r={hover === i ? 4.2 : 2.6} fill={color}
+                stroke="var(--surface)" strokeWidth={hover === i ? 2 : 0} />
+            ))}
+          </g>
+        </svg>
+        {hover !== null && (
+          <div style={{
+            ...tip, top: 6, left: `${(pts[hover][0] / W) * 100}%`,
+            transform: hover / (data.length - 1) > 0.72 ? 'translateX(calc(-100% - 10px))' : hover / (data.length - 1) < 0.14 ? 'translateX(10px)' : 'translateX(-50%)',
+          }}>
+            <div style={{ fontWeight: 600, marginBottom: 3, textTransform: 'capitalize' }}>{data[hover].key}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)' }}>
+              <Swatch color={color} /> <span style={{ color: 'var(--text)', fontWeight: 600, ...num }}>{data[hover].count}</span>
+            </div>
+          </div>
+        )}
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', ...muted, marginTop: 2 }}>
         <span>{data[0].key}</span>
         <span>peak {peak}</span>
@@ -437,7 +601,7 @@ export const AreaChart: React.FC<{
 
 /* ------------------------------- Gauge ------------------------------- */
 
-/** Radial progress arc — one headline percentage. */
+/** Radial progress arc — one headline percentage, sweeping in on mount. */
 export const Gauge: React.FC<{
   value: number; // 0–100
   label: string;
@@ -448,19 +612,24 @@ export const Gauge: React.FC<{
   const R = size / 2 - 14;
   const C = Math.PI * R; // semicircle
   const pct = Math.max(0, Math.min(100, value));
-  const dash = (pct / 100) * C;
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setOn(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const dash = on ? (pct / 100) * C : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <svg width={size} height={size * 0.62} viewBox={`0 0 ${size} ${size * 0.62}`} role="img" aria-label={`${label}: ${pct}%`}>
         <g transform={`translate(${size / 2},${size / 2 - 8}) rotate(180)`}>
-          <circle r={R} fill="none" stroke="var(--surface-2)" strokeWidth={13}
+          <circle r={R} fill="none" stroke="var(--surface-2)" strokeWidth={11}
             strokeDasharray={`${C} ${C * 2}`} strokeLinecap="round" />
-          <circle r={R} fill="none" stroke={color} strokeWidth={13}
+          <circle r={R} fill="none" stroke={color} strokeWidth={11}
             strokeDasharray={`${dash} ${C * 2}`} strokeLinecap="round"
-            style={{ transition: 'stroke-dasharray .5s ease' }} />
+            style={{ transition: 'stroke-dasharray .9s cubic-bezier(.16,1,.3,1)' }} />
         </g>
-        <text x={size / 2} y={size / 2 - 14} textAnchor="middle" style={{ fontSize: 27, fontWeight: 700, fill: 'var(--text)' }}>
+        <text x={size / 2} y={size / 2 - 14} textAnchor="middle" style={{ fontSize: 27, fontWeight: 650, fill: 'var(--text)', ...num }}>
           {pct}%
         </text>
         <text x={size / 2} y={size / 2 + 4} textAnchor="middle" style={{ fontSize: 11, fill: 'var(--text-muted)' }}>
@@ -475,36 +644,60 @@ export const Gauge: React.FC<{
 /* ------------------------------- Funnel ------------------------------- */
 
 export const FunnelChart: React.FC<{ data: Slice[]; emptyLabel: string }> = ({ data, emptyLabel }) => {
+  const [hover, setHover] = useState<number | null>(null);
   const rows = data.filter((d) => d.key !== 'rejected');
   const rejected = data.find((d) => d.key === 'rejected');
   if (!data.some((d) => d.count > 0)) return <ChartEmpty label={emptyLabel} />;
 
   const peak = Math.max(1, ...rows.map((r) => r.count));
   const first = rows[0]?.count ?? 0;
+  // Only a true funnel (each stage ≤ the one before) gets a conversion column —
+  // otherwise "700% of invited" reads as broken to a normal person.
+  const isFunnel = first > 0 && rows.every((r, i) => i === 0 || r.count <= rows[i - 1].count);
+  // Few stages → thicker bars, and rows spread to fill the panel height.
+  const barH = rows.length <= 6 ? 30 : 22;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, justifyContent: 'space-between' }}>
       {rows.map((r, i) => (
-        <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ width: 80, flex: 'none', fontSize: 12.5, fontWeight: 550, textTransform: 'capitalize' }}>{r.key}</span>
-          <div style={{ flex: 1, height: 26, borderRadius: 6, background: 'var(--surface-2)', overflow: 'hidden', minWidth: 0 }}>
-            <div style={{
-              width: `${Math.max((r.count / peak) * 100, r.count > 0 ? 4 : 0)}%`,
-              height: '100%', borderRadius: 6, transition: 'width .4s ease',
-              background: `linear-gradient(90deg, ${colorAt(i)}, color-mix(in srgb, ${colorAt(i)} 55%, transparent))`,
-            }} />
+        <div
+          key={r.key}
+          onMouseEnter={() => setHover(i)}
+          onMouseLeave={() => setHover(null)}
+          title={isFunnel
+            ? `${r.count} of ${first} ${rows[0].key} reached “${r.key}” (${Math.round((r.count / first) * 100)}%)`
+            : `${r.key}: ${r.count}`}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10, padding: '4px 7px', borderRadius: 7,
+            background: hover === i ? 'var(--surface-2)' : 'transparent', transition: 'background .14s ease',
+          }}
+        >
+          <span style={{ width: 80, flex: 'none', fontSize: 12.5, fontWeight: hover === i ? 650 : 550, textTransform: 'capitalize' }}>{r.key}</span>
+          <div style={{ flex: 1, height: barH, borderRadius: 5, background: 'var(--surface-2)', minWidth: 0 }}>
+            <div
+              className="kp-bar kp-grow-x"
+              style={{
+                width: `${Math.max((r.count / peak) * 100, r.count > 0 ? 4 : 0)}%`,
+                height: '100%', borderRadius: 5, background: colorAt(i), ...EASE_DELAY(i, 50),
+                filter: hover === i ? 'brightness(1.12)' : 'none',
+              }}
+            />
           </div>
-          <span style={{ width: 38, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ width: 38, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: 600, ...num }}>
             {r.count}
           </span>
-          <span style={{ width: 42, flex: 'none', textAlign: 'right', fontSize: 11, color: 'var(--text-subtle)' }}>
-            {first ? `${Math.round((r.count / first) * 100)}%` : '—'}
-          </span>
+          {isFunnel && (
+            <span style={{ width: 42, flex: 'none', textAlign: 'right', fontSize: 11, color: 'var(--text-subtle)', ...num }}>
+              {`${Math.round((r.count / first) * 100)}%`}
+            </span>
+          )}
         </div>
       ))}
-      {!!rejected?.count && (
-        <div style={{ marginTop: 4, paddingTop: 10, borderTop: '1px dashed var(--border)', ...muted }}>
-          {rejected.count} rejected
+      {(isFunnel || !!rejected?.count) && (
+        <div style={{ marginTop: 6, paddingTop: 9, borderTop: '1px dashed var(--border)', fontSize: 11, color: 'var(--text-subtle)' }}>
+          {isFunnel && <>% = share of “{rows[0]?.key}” that reached each stage</>}
+          {isFunnel && !!rejected?.count && ' · '}
+          {!!rejected?.count && <span style={{ color: 'var(--danger)' }}>{rejected.count} rejected</span>}
         </div>
       )}
     </div>
@@ -532,63 +725,55 @@ export const BoxPlot: React.FC<{
 }> = ({ stats, emptyLabel, unit = 'LPA', color = '#22c55e' }) => {
   if (!stats || !stats.n) return <ChartEmpty label={emptyLabel} />;
 
-  const W = 520, H = 118, PAD = 34;
-  const lo = Math.min(stats.whisker_low, ...(stats.outliers.length ? stats.outliers : [stats.whisker_low]));
-  const hi = Math.max(stats.whisker_high, ...(stats.outliers.length ? stats.outliers : [stats.whisker_high]));
-  const span = Math.max(hi - lo, 0.001);
-  const x = (v: number) => PAD + ((v - lo) / span) * (W - PAD * 2);
-
-  const yMid = 52, boxH = 34;
+  // Scale to the usual range only — the handful of extreme values would
+  // otherwise squash the readable part into a corner. They get a sentence instead.
+  const lo = stats.whisker_low;
+  const hi = Math.max(stats.whisker_high, lo + 0.001);
+  const x = (v: number) => `${Math.max(0, Math.min(100, ((v - lo) / (hi - lo)) * 100))}%`;
 
   return (
-    <div>
-      <div style={{ overflowX: 'auto' }}>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Distribution box plot">
-          {/* whiskers */}
-          <line x1={x(stats.whisker_low)} x2={x(stats.whisker_high)} y1={yMid} y2={yMid} stroke="var(--text-subtle)" strokeWidth={1.5} />
-          <line x1={x(stats.whisker_low)} x2={x(stats.whisker_low)} y1={yMid - 11} y2={yMid + 11} stroke="var(--text-subtle)" strokeWidth={1.5} />
-          <line x1={x(stats.whisker_high)} x2={x(stats.whisker_high)} y1={yMid - 11} y2={yMid + 11} stroke="var(--text-subtle)" strokeWidth={1.5} />
+    <div className="kp-chart-fade">
+      <div style={{ position: 'relative', height: 78, margin: '4px 6px 0' }}>
+        {/* typical value, called out above its marker */}
+        <span className="data" style={{ position: 'absolute', top: 0, left: x(stats.median), transform: 'translateX(-50%)', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
+          {stats.median} {unit}
+        </span>
+        <span style={{ position: 'absolute', top: 17, left: x(stats.median), transform: 'translateX(-50%)', fontSize: 9.5, color: 'var(--text-subtle)', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+          typical
+        </span>
 
-          {/* IQR box */}
-          <rect
-            x={x(stats.q1)} y={yMid - boxH / 2}
-            width={Math.max(x(stats.q3) - x(stats.q1), 2)} height={boxH}
-            rx={4}
-            fill={`color-mix(in srgb, ${color} 22%, transparent)`}
-            stroke={color} strokeWidth={1.5}
-          />
-          {/* median */}
-          <line x1={x(stats.median)} x2={x(stats.median)} y1={yMid - boxH / 2} y2={yMid + boxH / 2} stroke={color} strokeWidth={3} />
-          {/* mean marker */}
-          <circle cx={x(stats.mean)} cy={yMid} r={3.5} fill="none" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="2 2">
-            <title>{`Mean ${stats.mean} ${unit}`}</title>
-          </circle>
+        {/* full usual range */}
+        <div style={{ position: 'absolute', top: 44, left: 0, right: 0, height: 2, background: 'var(--surface-3)', borderRadius: 2 }} />
+        {/* the middle half — where most values sit */}
+        <div
+          className="kp-grow-x"
+          title={`Middle half: ${stats.q1}–${stats.q3} ${unit}`}
+          style={{
+            position: 'absolute', top: 36, left: x(stats.q1), width: `calc(${x(stats.q3)} - ${x(stats.q1)})`,
+            height: 18, borderRadius: 9,
+            background: `color-mix(in srgb, ${color} 26%, transparent)`,
+            border: `1.5px solid ${color}`,
+          }}
+        />
+        {/* typical marker */}
+        <div title={`Typical: ${stats.median} ${unit}`} style={{ position: 'absolute', top: 32, left: x(stats.median), width: 3, height: 26, transform: 'translateX(-50%)', borderRadius: 2, background: color }} />
 
-          {stats.outliers.map((o, i) => (
-            <circle key={i} cx={x(o)} cy={yMid} r={3} fill="var(--danger)" fillOpacity={0.7}>
-              <title>{`Outlier: ${o} ${unit}`}</title>
-            </circle>
-          ))}
-
-          <text x={x(stats.median)} y={yMid - boxH / 2 - 7} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700, fill: 'var(--text)' }}>
-            {stats.median}
-          </text>
-          <text x={x(stats.whisker_low)} y={H - 8} textAnchor="start" style={{ fontSize: 10, fill: 'var(--text-muted)' }}>{stats.whisker_low}</text>
-          <text x={x(stats.whisker_high)} y={H - 8} textAnchor="end" style={{ fontSize: 10, fill: 'var(--text-muted)' }}>{stats.whisker_high}</text>
-        </svg>
+        {/* range end labels */}
+        <span className="data" style={{ position: 'absolute', bottom: 0, left: 0, fontSize: 10.5, color: 'var(--text-muted)' }}>{stats.whisker_low}</span>
+        <span style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 10, color: 'var(--text-subtle)' }}>usual range</span>
+        <span className="data" style={{ position: 'absolute', bottom: 0, right: 0, fontSize: 10.5, color: 'var(--text-muted)' }}>{stats.whisker_high}</span>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 6, ...muted }}>
-        <span><strong style={{ color: 'var(--text)' }}>Median {stats.median}</strong> {unit}</span>
-        <span>P25 {stats.q1}</span>
-        <span>P75 {stats.q3}</span>
-        <span>Mean {stats.mean}</span>
-        <span>Max {stats.max}</span>
-        <span>n={stats.n}</span>
+      {/* One plain sentence carries the whole story. */}
+      <p style={{ ...muted, margin: '12px 0 0', lineHeight: 1.6, textAlign: 'left' }}>
+        Half of the {stats.n} recorded sit between{' '}
+        <strong className="data" style={{ color: 'var(--text)' }}>{stats.q1}</strong> and{' '}
+        <strong className="data" style={{ color: 'var(--text)' }}>{stats.q3} {unit}</strong> — the typical one is{' '}
+        <strong className="data" style={{ color: 'var(--text)' }}>{stats.median} {unit}</strong> (average {stats.mean}).
         {stats.outliers.length > 0 && (
-          <span style={{ color: 'var(--danger)' }}>{stats.outliers.length} outlier{stats.outliers.length === 1 ? '' : 's'}</span>
+          <> {stats.outliers.length} {stats.outliers.length === 1 ? 'was' : 'were'} unusually high, up to <span className="data">{stats.max} {unit}</span>.</>
         )}
-      </div>
+      </p>
     </div>
   );
 };
@@ -603,7 +788,7 @@ export interface HeatCell {
   rate: number;
 }
 
-/** Department × batch placement-rate grid. Weak cells jump out immediately. */
+/** Department × batch placement-rate grid — stretches to fill its panel. */
 export const Heatmap: React.FC<{
   departments: string[];
   batches: number[];
@@ -613,40 +798,46 @@ export const Heatmap: React.FC<{
   if (!departments.length || !batches.length) return <ChartEmpty label={emptyLabel} />;
 
   const lookup = new Map(cells.map((c) => [`${c.department}|${c.batch}`, c]));
-  const shade = (rate: number) => `color-mix(in srgb, #22c55e ${Math.round(12 + (rate / 100) * 72)}%, transparent)`;
+  // Single-hue sequential ramp, capped so the ink stays readable on both themes.
+  const shade = (rate: number) => `color-mix(in srgb, #22c55e ${Math.round(10 + (rate / 100) * 62)}%, transparent)`;
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'separate', borderSpacing: 3, fontSize: 12 }}>
+      <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 3, fontSize: 12, minWidth: batches.length * 64 + 150 }}>
+        <colgroup>
+          <col style={{ width: 176 }} />
+          {batches.map((b) => <col key={b} />)}
+        </colgroup>
         <thead>
           <tr>
             <th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-subtle)', fontWeight: 600, fontSize: 11 }} />
             {batches.map((b) => (
-              <th key={b} style={{ padding: '4px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 11 }}>{b}</th>
+              <th key={b} className="data" style={{ padding: '4px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 11 }}>{b}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {departments.map((d) => (
+          {departments.map((d, di) => (
             <tr key={d}>
               <td style={{
                 padding: '4px 10px 4px 0', whiteSpace: 'nowrap', fontWeight: 550,
-                maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis',
+                overflow: 'hidden', textOverflow: 'ellipsis',
               }} title={d}>
                 {d}
               </td>
-              {batches.map((b) => {
+              {batches.map((b, bi) => {
                 const c = lookup.get(`${d}|${b}`);
                 return (
                   <td
                     key={b}
+                    className="kp-heatcell kp-chart-fade"
                     title={c ? `${d} · ${b}: ${c.placed}/${c.total} placed (${c.rate}%)` : 'No students'}
                     style={{
-                      minWidth: 54, height: 38, textAlign: 'center', borderRadius: 6,
-                      background: c ? shade(c.rate) : 'var(--surface-2)',
+                      height: 42, textAlign: 'center', borderRadius: 6,
+                      background: c ? shade(c.rate) : 'color-mix(in srgb, var(--surface-2) 55%, transparent)',
                       color: c ? 'var(--text)' : 'var(--text-subtle)',
-                      fontWeight: c ? 650 : 400, fontVariantNumeric: 'tabular-nums',
-                      border: '1px solid var(--border)',
+                      fontWeight: c ? 650 : 400, ...num,
+                      animationDelay: `${(di * batches.length + bi) * 14}ms`,
                     }}
                   >
                     {c ? `${c.rate}%` : '—'}
@@ -660,7 +851,7 @@ export const Heatmap: React.FC<{
       </table>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, ...muted }}>
         <span>0%</span>
-        <span style={{ flex: 1, maxWidth: 160, height: 8, borderRadius: 999, background: 'linear-gradient(90deg, color-mix(in srgb,#22c55e 12%,transparent), #22c55e)' }} />
+        <span style={{ flex: 1, maxWidth: 160, height: 8, borderRadius: 999, background: 'linear-gradient(90deg, color-mix(in srgb,#22c55e 10%,transparent), color-mix(in srgb,#22c55e 72%,transparent))' }} />
         <span>100% placed</span>
       </div>
     </div>
@@ -695,23 +886,22 @@ export const Waterfall: React.FC<{ steps: WaterfallStep[]; emptyLabel: string }>
           }} title={s.label}>
             {s.label}
           </span>
-          <div style={{ flex: 1, height: 24, borderRadius: 5, background: 'var(--surface-2)', overflow: 'hidden', display: 'flex', minWidth: 0 }}>
+          <div className="kp-grow-x" style={{ flex: 1, height: 22, borderRadius: 4, background: 'var(--surface-2)', overflow: 'hidden', display: 'flex', minWidth: 0, ...EASE_DELAY(i, 40) }}>
             <div style={{
               width: `${(s.count / start) * 100}%`, height: '100%',
               background: i === 0 ? 'var(--text-subtle)' : 'var(--primary)',
-              transition: 'width .4s ease',
             }} />
             {s.lost > 0 && (
               <div
-                style={{ width: `${(s.lost / start) * 100}%`, height: '100%', background: 'color-mix(in srgb, var(--danger) 55%, transparent)' }}
+                style={{ width: `${(s.lost / start) * 100}%`, height: '100%', background: 'color-mix(in srgb, var(--danger) 55%, transparent)', marginLeft: 2, borderRadius: 2 }}
                 title={`${s.lost} excluded here`}
               />
             )}
           </div>
-          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: 650, ...num }}>
             {s.count}
           </span>
-          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 11, color: s.lost ? 'var(--danger)' : 'var(--text-subtle)' }}>
+          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 11, color: s.lost ? 'var(--danger)' : 'var(--text-subtle)', ...num }}>
             {s.lost ? `−${s.lost}` : '—'}
           </span>
         </div>
@@ -727,13 +917,14 @@ export interface LineSeries {
   values: number[];
 }
 
-/** Several series on one axis — season pacing vs previous years. */
+/** Several series on one axis — the current season draws in solid, history stays dashed. */
 export const MultiLineChart: React.FC<{
   labels: string[];
   series: LineSeries[];
   emptyLabel: string;
   height?: number;
-}> = ({ labels, series, emptyLabel, height = 190 }) => {
+}> = ({ labels, series, emptyLabel, height = 200 }) => {
+  const [hover, setHover] = useState<number | null>(null);
   const usable = series.filter((s) => s.values.some((v) => v > 0));
   if (!usable.length || labels.length < 2) return <ChartEmpty label={emptyLabel} />;
 
@@ -742,51 +933,88 @@ export const MultiLineChart: React.FC<{
   const stepX = (W - PAD_L - PAD) / (labels.length - 1);
   const yOf = (v: number) => H - 26 - (v / peak) * (H - 26 - PAD);
 
+  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * W;
+    const idx = Math.round((x - PAD_L) / stepX);
+    setHover(idx >= 0 && idx < labels.length ? idx : null);
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', gap: 14, marginBottom: 10, flexWrap: 'wrap' }}>
         {usable.map((s, i) => (
           <span key={s.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...muted }}>
-            <span style={{ width: 14, height: 3, borderRadius: 2, background: colorAt(i) }} />
+            <Swatch color={colorAt(i)} line />
             {s.label}
           </span>
         ))}
       </div>
 
       <div style={{ overflowX: 'auto' }}>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Comparison over time">
-          {[0, 0.5, 1].map((t) => (
-            <g key={t}>
-              <line x1={PAD_L} x2={W - PAD} y1={yOf(peak * t)} y2={yOf(peak * t)} stroke="var(--border)" strokeDasharray="3 5" />
-              <text x={PAD_L - 5} y={yOf(peak * t) + 3} textAnchor="end" style={{ fontSize: 9.5, fill: 'var(--text-subtle)' }}>
-                {Math.round(peak * t)}
-              </text>
-            </g>
-          ))}
-
-          {usable.map((s, i) => {
-            const pts = s.values.map((v, j) => [PAD_L + j * stepX, yOf(v)] as const);
-            const d = pts.map(([x, y], j) => `${j ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-            const isLast = i === usable.length - 1;
-            return (
-              <g key={s.label}>
-                <path d={d} fill="none" stroke={colorAt(i)} strokeWidth={isLast ? 2.6 : 1.8}
-                  strokeLinejoin="round" strokeLinecap="round" strokeDasharray={isLast ? undefined : '5 4'} />
-                {pts.map(([x, y], j) => (
-                  <circle key={j} cx={x} cy={y} r={2.4} fill={colorAt(i)}>
-                    <title>{`${s.label} · ${labels[j]}: ${s.values[j]}`}</title>
-                  </circle>
-                ))}
+        <div style={{ position: 'relative' }}>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label="Comparison over time"
+            onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+            {[0, 0.5, 1].map((t) => (
+              <g key={t}>
+                <line x1={PAD_L} x2={W - PAD} y1={yOf(peak * t)} y2={yOf(peak * t)} stroke="var(--border)" strokeDasharray="3 5" />
+                <text x={PAD_L - 5} y={yOf(peak * t) + 3} textAnchor="end" style={{ fontSize: 9.5, fill: 'var(--text-subtle)', ...num }}>
+                  {Math.round(peak * t)}
+                </text>
               </g>
-            );
-          })}
+            ))}
 
-          {labels.map((l, j) => (
-            <text key={l + j} x={PAD_L + j * stepX} y={H - 8} textAnchor="middle" style={{ fontSize: 9.5, fill: 'var(--text-muted)' }}>
-              {l}
-            </text>
-          ))}
-        </svg>
+            {hover !== null && (
+              <line x1={PAD_L + hover * stepX} x2={PAD_L + hover * stepX} y1={PAD} y2={H - 26}
+                stroke="var(--text-subtle)" strokeWidth={1} strokeDasharray="2 3" />
+            )}
+
+            {usable.map((s, i) => {
+              const pts = s.values.map((v, j) => [PAD_L + j * stepX, yOf(v)] as const);
+              const d = pts.map(([x, y], j) => `${j ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+              const isLast = i === usable.length - 1;
+              return (
+                <g key={s.label}>
+                  {isLast ? (
+                    <path className="kp-draw" d={d} pathLength={1} fill="none" stroke={colorAt(i)} strokeWidth={2.4}
+                      strokeLinejoin="round" strokeLinecap="round" />
+                  ) : (
+                    <path className="kp-chart-fade" style={{ animationDelay: `${i * 120}ms` }} d={d} fill="none" stroke={colorAt(i)} strokeWidth={1.7}
+                      strokeLinejoin="round" strokeLinecap="round" strokeDasharray="5 4" />
+                  )}
+                  <g className="kp-chart-fade" style={{ animationDelay: '.45s' }}>
+                    {pts.map(([x, y], j) => (
+                      <circle key={j} cx={x} cy={y} r={hover === j ? 4 : 2.3} fill={colorAt(i)}
+                        stroke="var(--surface)" strokeWidth={hover === j ? 1.5 : 0} />
+                    ))}
+                  </g>
+                </g>
+              );
+            })}
+
+            {labels.map((l, j) => (
+              <text key={l + j} x={PAD_L + j * stepX} y={H - 8} textAnchor="middle"
+                style={{ fontSize: 9.5, fill: hover === j ? 'var(--text)' : 'var(--text-muted)', fontWeight: hover === j ? 650 : 400 }}>
+                {l}
+              </text>
+            ))}
+          </svg>
+          {hover !== null && (
+            <div style={{
+              ...tip, top: 4, left: `${((PAD_L + hover * stepX) / W) * 100}%`,
+              transform: hover / (labels.length - 1) > 0.72 ? 'translateX(calc(-100% - 10px))' : hover / (labels.length - 1) < 0.14 ? 'translateX(10px)' : 'translateX(-50%)',
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>{labels[hover]}</div>
+              {usable.map((s, i) => (
+                <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', marginTop: 2 }}>
+                  <Swatch color={colorAt(i)} />
+                  <span style={{ flex: 1, paddingRight: 10 }}>{s.label}</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 600, ...num }}>{s.values[hover]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -805,49 +1033,60 @@ export interface RateRow {
 export const RateChart: React.FC<{ data: RateRow[]; emptyLabel: string; height?: number }> = ({
   data, emptyLabel, height = 180,
 }) => {
+  const [hover, setHover] = useState<number | null>(null);
   if (!data.length) return <ChartEmpty label={emptyLabel} />;
   const peak = Math.max(1, ...data.map((d) => d.total));
+  const rateColMax = data.length <= 4 ? 140 : data.length <= 6 ? 108 : 64;
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 14, marginBottom: 10, flexWrap: 'wrap', ...muted }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 3, background: 'var(--primary)' }} /> Students
+          <Swatch color="color-mix(in srgb, var(--primary) 30%, transparent)" /> Students
         </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 3, background: '#22c55e' }} /> Placed
+          <Swatch color="#22c55e" /> Placed
         </span>
         <span>· label = placement rate</span>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
         <div style={{
-          display: 'flex', alignItems: 'flex-end', gap: 12, height,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12, height,
           minWidth: Math.max(data.length * 62, 220), borderBottom: '1px solid var(--border)', paddingTop: 20,
         }}>
-          {data.map((d) => (
-            <div key={d.key} style={{ flex: 1, minWidth: 46, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
-              title={`${d.key}: ${d.placed}/${d.total} placed`}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center', marginBottom: 4, color: d.rate >= 50 ? '#22c55e' : 'var(--text-muted)' }}>
+          {data.map((d, i) => (
+            <div key={d.key}
+              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
+              style={{ position: 'relative', flex: 1, minWidth: 46, maxWidth: rateColMax, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              {hover === i && (
+                <div style={{ ...tip, top: 0, ...(i === 0 ? { left: 0 } : i === data.length - 1 ? { right: 0 } : { left: '50%', transform: 'translateX(-50%)' }) }}>
+                  <div style={{ fontWeight: 600, marginBottom: 2 }}>{d.key}</div>
+                  <div style={{ color: 'var(--text-muted)', ...num }}>
+                    <strong style={{ color: 'var(--text)' }}>{d.placed}</strong> of {d.total} placed · {d.rate}%
+                  </div>
+                </div>
+              )}
+              <span className="kp-chart-fade" style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center', marginBottom: 4, color: d.rate >= 50 ? '#22c55e' : 'var(--text-muted)', ...num, animationDelay: '.35s' }}>
                 {d.rate}%
               </span>
-              <div style={{ position: 'relative', height: `${(d.total / peak) * 100}%`, minHeight: 4 }}>
-                <div style={{ position: 'absolute', inset: 0, borderRadius: '5px 5px 0 0', background: 'color-mix(in srgb, var(--primary) 30%, transparent)' }} />
+              <div className="kp-grow-y" style={{ position: 'relative', height: `${(d.total / peak) * 100}%`, minHeight: 4, ...EASE_DELAY(i, 35) }}>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '4px 4px 0 0', background: 'color-mix(in srgb, var(--primary) 28%, transparent)' }} />
                 <div style={{
                   position: 'absolute', left: 0, right: 0, bottom: 0,
                   height: `${d.total ? (d.placed / d.total) * 100 : 0}%`,
-                  borderRadius: '5px 5px 0 0', background: '#22c55e', transition: 'height .4s ease',
+                  borderRadius: d.placed === d.total ? '4px 4px 0 0' : 0, background: '#22c55e',
                 }} />
               </div>
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 12, minWidth: Math.max(data.length * 62, 220), marginTop: 7 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, minWidth: Math.max(data.length * 62, 220), marginTop: 7 }}>
           {data.map((d) => (
             <span key={d.key} style={{
-              flex: 1, minWidth: 46, fontSize: 10.5, color: 'var(--text-muted)', textAlign: 'center',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }} title={d.key}>
+              flex: 1, minWidth: 46, maxWidth: rateColMax, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
+              lineHeight: 1.25, overflowWrap: 'anywhere', alignSelf: 'flex-start',
+            }}>
               {d.key}
             </span>
           ))}

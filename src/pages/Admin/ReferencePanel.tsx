@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { Plus, Pencil, Trash2, Search, RefreshCw, Layers, GraduationCap, Tags, Check, X, EyeOff, Eye } from 'lucide-react';
+import { Reveal } from '@/components/motion';
 import departmentsApi, { type Department } from '@/api/departments';
 import coursesApi, { type Course } from '@/api/courses';
 import skillsApi, { type Skill } from '@/api/skills';
@@ -12,21 +13,38 @@ const card: React.CSSProperties = {
   background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
 };
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '9px 12px', borderRadius: 'var(--r-ctl)',
+  width: '100%', padding: '8px 11px', borderRadius: 'var(--r-ctl)',
   border: '1px solid var(--border-strong)', background: 'var(--bg-2)',
-  color: 'var(--text)', fontSize: 14, outline: 'none',
+  color: 'var(--text)', fontSize: 13, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 15px',
+  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff',
-  fontWeight: 600, fontSize: 13.5, cursor: 'pointer', border: 'none',
+  fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none',
+  transition: 'background .18s ease',
 };
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 const btnGhost: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 11px',
+  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 11px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
   fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
 };
 const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 12.5 };
+
+/** Tiny round icon button used inside chips. */
+const chipBtn: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: 22, height: 22, borderRadius: 999, border: 'none', background: 'none',
+  color: 'var(--text-subtle)', cursor: 'pointer', padding: 0,
+  transition: 'color .13s ease, background .13s ease',
+};
+const chipBtnHover = (color: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = color; e.currentTarget.style.background = 'var(--surface-3)'; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = 'var(--text-subtle)'; e.currentTarget.style.background = 'none'; },
+});
 
 function extractError(err: unknown, fallback: string): string {
   if (axios.isAxiosError(err)) {
@@ -37,7 +55,7 @@ function extractError(err: unknown, fallback: string): string {
   return fallback;
 }
 
-/* --------------------------- generic list shell --------------------------- */
+/* --------------------------- generic chip catalogue --------------------------- */
 
 interface RefItem {
   _id: string;
@@ -47,16 +65,15 @@ interface RefItem {
 }
 
 /**
- * One managed reference list. Each entity (departments, courses, skills) maps
- * its own records into RefItem and supplies create/rename/delete handlers, so
- * the table, search, inline-edit, and empty states are written once.
+ * One managed reference catalogue rendered as a wrapping chip cloud — every
+ * entry visible at once, no internal scrolling. Edit/deactivate/delete actions
+ * live inside each chip and reveal on hover (or keyboard focus).
  */
 function ManagedList({
-  title, subtitle, icon: Icon, items, loading, addFields, onReload,
+  title, icon: Icon, items, loading, addFields, onReload,
   onCreate, onRename, onDelete, onToggleActive,
 }: {
   title: string;
-  subtitle: string;
   icon: React.ElementType;
   items: RefItem[];
   loading: boolean;
@@ -112,24 +129,36 @@ function ManagedList({
   };
 
   return (
-    <div style={{ ...card, padding: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+    <div style={{ ...card, padding: '15px 17px' }}>
+      {/* single compact header row: identity · search · refresh · add */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
         <span style={{
-          width: 34, height: 34, flex: 'none', borderRadius: 9, display: 'inline-flex',
-          alignItems: 'center', justifyContent: 'center', background: 'var(--primary-soft)', color: 'var(--primary)',
+          width: 28, height: 28, flex: 'none', borderRadius: 8, display: 'inline-flex',
+          alignItems: 'center', justifyContent: 'center', background: 'var(--brass-soft)', color: 'var(--brass)',
         }}>
-          <Icon size={17} />
+          <Icon size={14} />
         </span>
-        <div style={{ flex: 1, minWidth: 160 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>{title} <span style={{ ...muted, fontWeight: 500 }}>· {items.length}</span></h3>
-          <p style={{ ...muted, margin: '3px 0 0' }}>{subtitle}</p>
+        <h3 className="font-display" style={{ margin: 0, fontSize: 14.5, fontWeight: 500, letterSpacing: '-.01em', flex: 'none' }}>
+          {title} <span className="data" style={{ ...muted, fontWeight: 500 }}>· {items.length}</span>
+        </h3>
+        <div style={{ position: 'relative', marginLeft: 'auto', width: 200, minWidth: 140 }}>
+          <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter…"
+            style={{ ...inputStyle, padding: '6px 10px 6px 29px', fontSize: 12.5 }} />
         </div>
-        <button onClick={() => setAdding((a) => !a)} style={btnPrimary}><Plus size={15} /> Add</button>
+        <button onClick={onReload} aria-label={`Refresh ${title.toLowerCase()}`} title="Refresh"
+          style={{ ...btnGhost, width: 30, height: 30, padding: 0, justifyContent: 'center', flex: 'none' }}>
+          <RefreshCw size={13} />
+        </button>
+        <button onClick={() => setAdding((a) => !a)} {...hoverBg('var(--primary-hover)', 'var(--primary)')}
+          style={{ ...btnPrimary, flex: 'none' }}>
+          <Plus size={13} /> Add
+        </button>
       </div>
 
       {adding && (
         <div style={{
-          display: 'flex', gap: 8, flexWrap: 'wrap', padding: 12, marginBottom: 14,
+          display: 'flex', gap: 8, flexWrap: 'wrap', padding: 10, marginBottom: 12,
           borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)',
         }}>
           <input autoFocus value={newName} onChange={(e) => setNewName(e.target.value)}
@@ -140,60 +169,61 @@ function ManagedList({
               onKeyDown={(e) => e.key === 'Enter' && submitNew()}
               placeholder={addFields.extra} style={{ ...inputStyle, flex: 1, minWidth: 100 }} />
           )}
-          <button onClick={submitNew} disabled={busy} style={btnPrimary}>{busy ? 'Adding…' : 'Add'}</button>
+          <button onClick={submitNew} disabled={busy} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}>{busy ? 'Adding…' : 'Add'}</button>
           <button onClick={() => setAdding(false)} style={btnGhost}>Cancel</button>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${title.toLowerCase()}`} style={{ ...inputStyle, paddingLeft: 34 }} />
-        </div>
-        <button onClick={onReload} style={btnGhost} aria-label="Refresh"><RefreshCw size={15} /></button>
-      </div>
-
-      <div style={{ maxHeight: 340, overflowY: 'auto', margin: '0 -18px -18px', borderTop: '1px solid var(--border)' }}>
-        {loading ? (
-          <p style={{ ...muted, padding: '26px 0', textAlign: 'center' }}>Loading…</p>
-        ) : filtered.length === 0 ? (
-          <p style={{ ...muted, padding: '30px 0', textAlign: 'center' }}>{q ? 'No matches.' : 'Nothing yet — add the first entry.'}</p>
-        ) : (
-          filtered.map((item) => (
-            <div key={item._id} style={{
-              display: 'flex', alignItems: 'center', gap: 10, padding: '10px 18px', borderTop: '1px solid var(--border)',
-              opacity: item.inactive ? 0.55 : 1,
-            }}>
+      {loading ? (
+        <p style={{ ...muted, margin: 0, padding: '14px 0' }}>Loading…</p>
+      ) : filtered.length === 0 ? (
+        <p style={{ ...muted, margin: 0, padding: '14px 0' }}>{q ? 'No matches.' : 'Nothing yet — add the first entry.'}</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(255px,1fr))', gap: 10 }}>
+          {filtered.map((item) => (
+            <div key={item._id} className="kp-chip" style={{ opacity: item.inactive ? 0.55 : 1 }}>
               {editId === item._id ? (
-                <>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') submitEdit(item._id); if (e.key === 'Escape') setEditId(null); }}
-                    style={{ ...inputStyle, flex: 1 }} />
-                  <button onClick={() => submitEdit(item._id)} disabled={busy} style={{ ...btnGhost, padding: 8, color: '#22c55e' }} aria-label="Save"><Check size={15} /></button>
-                  <button onClick={() => setEditId(null)} style={{ ...btnGhost, padding: 8 }} aria-label="Cancel"><X size={15} /></button>
-                </>
+                    style={{ ...inputStyle, width: 170, padding: '3px 9px', fontSize: 12.5, borderRadius: 999 }} />
+                  <button onClick={() => submitEdit(item._id)} disabled={busy} style={{ ...chipBtn, color: '#22c55e' }} aria-label="Save"><Check size={13} /></button>
+                  <button onClick={() => setEditId(null)} style={chipBtn} aria-label="Cancel"><X size={13} /></button>
+                </span>
               ) : (
                 <>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 600 }}>{item.label}</span>
-                    {item.sub && <span style={{ ...muted, marginLeft: 8 }}>{item.sub}</span>}
-                    {item.inactive && <span style={{ ...muted, marginLeft: 8, fontStyle: 'italic' }}>inactive</span>}
-                  </div>
-                  {onToggleActive && (
-                    <button onClick={() => onToggleActive(item)} style={{ ...btnGhost, padding: 8 }}
-                      title={item.inactive ? 'Reactivate' : 'Deactivate (hide from new selections)'}
-                      aria-label={item.inactive ? 'Reactivate' : 'Deactivate'}>
-                      {item.inactive ? <Eye size={15} /> : <EyeOff size={15} />}
-                    </button>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 0, lineHeight: 1.35, overflowWrap: 'anywhere' }}>
+                    {item.label}
+                  </span>
+                  {item.sub && (
+                    <span className="data" style={{ flex: 'none', fontSize: 10.5, fontWeight: 650, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>
+                      {item.sub}
+                    </span>
                   )}
-                  <button onClick={() => { setEditId(item._id); setEditName(item.label); }} style={{ ...btnGhost, padding: 8 }} aria-label="Rename"><Pencil size={14} /></button>
-                  <button onClick={() => remove(item)} style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }} aria-label="Delete"><Trash2 size={14} /></button>
+                  {item.inactive && <span style={{ fontSize: 10.5, fontStyle: 'italic', color: 'var(--text-subtle)' }}>inactive</span>}
+                  <span className="kp-chip-actions">
+                    {onToggleActive && (
+                      <button onClick={() => onToggleActive(item)} style={chipBtn} {...chipBtnHover('var(--text)')}
+                        title={item.inactive ? 'Reactivate' : 'Deactivate'}
+                        aria-label={`${item.inactive ? 'Reactivate' : 'Deactivate'} ${item.label}`}>
+                        {item.inactive ? <Eye size={12} /> : <EyeOff size={12} />}
+                      </button>
+                    )}
+                    <button onClick={() => { setEditId(item._id); setEditName(item.label); }} style={chipBtn} {...chipBtnHover('var(--text)')}
+                      aria-label={`Rename ${item.label}`} title="Rename">
+                      <Pencil size={12} />
+                    </button>
+                    <button onClick={() => remove(item)} style={chipBtn} {...chipBtnHover('var(--danger)')}
+                      aria-label={`Delete ${item.label}`} title="Delete">
+                      <Trash2 size={12} />
+                    </button>
+                  </span>
                 </>
               )}
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -230,23 +260,22 @@ const ReferencePanel: React.FC = () => {
   useEffect(() => { loadDepts(); loadCourses(); loadSkills(); }, [loadDepts, loadCourses, loadSkills]);
 
   return (
-    <div style={{ marginTop: 18 }}>
-      <div style={{
-        ...card, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 11,
-        background: 'color-mix(in srgb, var(--primary) 5%, var(--surface))',
-      }}>
-        <Layers size={17} style={{ color: 'var(--primary)', flex: 'none' }} />
-        <span style={{ fontSize: 12.5 }}>
-          These are the official lists students and recruiters pick from — no free typing. Keep the
-          spellings clean; every dashboard grouping and eligibility check keys off them. Renaming a
-          department automatically updates every student already in it.
-        </span>
-      </div>
+    <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Reveal>
+        <div style={{
+          ...card, padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10,
+          background: 'color-mix(in srgb, var(--primary) 5%, var(--surface))',
+        }}>
+          <Layers size={15} style={{ color: 'var(--primary)', flex: 'none' }} />
+          <span style={{ fontSize: 12.5 }}>
+            Official lists everyone picks from — renames update existing records.
+          </span>
+        </div>
+      </Reveal>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 16, alignItems: 'start' }}>
+      <Reveal>
         <ManagedList
           title="Departments"
-          subtitle="University departments."
           icon={Layers}
           loading={loading.dept}
           items={departments.map((d) => ({ _id: d._id, label: d.name, sub: d.code, inactive: !d.active }))}
@@ -261,10 +290,11 @@ const ReferencePanel: React.FC = () => {
             loadDepts();
           }}
         />
+      </Reveal>
 
+      <Reveal delay={0.05}>
         <ManagedList
           title="Courses"
-          subtitle="Degree programmes."
           icon={GraduationCap}
           loading={loading.course}
           items={courses.map((c) => ({ _id: c._id, label: c.name, sub: c.category?.toUpperCase() }))}
@@ -274,10 +304,11 @@ const ReferencePanel: React.FC = () => {
           onRename={async (id, name) => { await coursesApi.updateCourse(id, { name }); toast.success('Course renamed.'); loadCourses(); }}
           onDelete={async (id) => { await coursesApi.deleteCourse(id); toast.success('Course removed.'); loadCourses(); }}
         />
+      </Reveal>
 
+      <Reveal delay={0.1}>
         <ManagedList
           title="Skills"
-          subtitle="The skill catalogue students choose from."
           icon={Tags}
           loading={loading.skill}
           items={skills.map((s) => ({ _id: s._id, label: s.displayName || s.name }))}
@@ -287,7 +318,7 @@ const ReferencePanel: React.FC = () => {
           onRename={async (id, name) => { await skillsApi.updateSkill(id, name); toast.success('Skill renamed.'); loadSkills(); }}
           onDelete={async (id) => { await skillsApi.deleteSkill(id); toast.success('Skill removed.'); loadSkills(); }}
         />
-      </div>
+      </Reveal>
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import axios from 'axios';
-import { Plus, Pencil, Trash2, Search, Shield, RefreshCw, Users, Building2, UserCheck, LayoutDashboard, Award, Settings, GraduationCap, Layers } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, RefreshCw, Users, Building2, UserCheck, LayoutDashboard, Award, Settings, GraduationCap, Layers } from 'lucide-react';
 import { useAppSelector } from '@/context/hooks';
 import adminApi, {
   type AdminUser,
@@ -18,6 +18,9 @@ import TpoPanel from './TpoPanel';
 import ReferencePanel from './ReferencePanel';
 import analyticsApi from '@/api/analytics';
 import { avatarColor, initials } from '@/utils/avatar';
+import { motion, AnimatePresence } from 'motion/react';
+import { Reveal } from '@/components/motion';
+import { SelectField } from '@/components/ui/select-field';
 
 /* ------------------------------ helpers ------------------------------ */
 
@@ -48,13 +51,19 @@ const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff',
   fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  transition: 'background .18s ease',
 };
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
   fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  transition: 'background .18s ease',
 };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 
 const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) => (
   <span aria-hidden style={{
@@ -97,6 +106,12 @@ function UserFormModal({
   );
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const toggleRole = (role: Role) =>
     setForm((f) => {
@@ -153,8 +168,8 @@ function UserFormModal({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{isEdit ? 'Edit user' : 'Create user'}</h2>
+      <div role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit user' : 'Create user'} style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit user' : 'Create user'}</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
           {isEdit ? `Updating ${editing?.firstName} (AUID ${editing?.auid}).` : 'Create a student or admin account.'}
         </p>
@@ -184,18 +199,18 @@ function UserFormModal({
           </div>
           <div>
             <label style={labelStyle}>University</label>
-            <select value={form.university} onChange={(e) => set('university', e.target.value as University)} style={{ ...inputStyle, cursor: 'pointer' }}>
-              {UNIVERSITIES.map((u) => <option key={u} value={u}>{u}</option>)}
-            </select>
+            <SelectField aria-label="University" value={form.university} onChange={(v) => set('university', v as University)}
+              options={UNIVERSITIES.map((u) => ({ value: u, label: u }))} />
           </div>
           <div>
             <label style={labelStyle}>Gender <span style={{ fontWeight: 400 }}>(for NIRF reporting)</span></label>
-            <select value={form.gender} onChange={(e) => set('gender', e.target.value as FormState['gender'])} style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="">Not recorded</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+            <SelectField aria-label="Gender" value={form.gender} onChange={(v) => set('gender', v as FormState['gender'])}
+              options={[
+                { value: '', label: 'Not recorded' },
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' },
+              ]} />
           </div>
           <div>
             <label style={labelStyle}>{isEdit ? 'New password' : 'Password'}</label>
@@ -223,7 +238,7 @@ function UserFormModal({
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} style={btnGhost}>Cancel</button>
-          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
+          <button onClick={submit} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Create user'}
           </button>
         </div>
@@ -247,6 +262,12 @@ function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () 
   });
   const [saving, setSaving] = useState(false);
   const set = (k: keyof typeof form, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   const submit = async () => {
     const payload: Record<string, unknown> = {};
@@ -278,10 +299,10 @@ function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Academic record</h2>
+      <div role="dialog" aria-modal="true" aria-label="Academic record" style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Academic record</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
-          {user.firstName} (AUID {user.auid}). Leave a field blank to keep its current value.
+          {user.firstName} (AUID {user.auid}). Blank fields keep current values.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -307,7 +328,7 @@ function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () 
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} style={btnGhost}>Cancel</button>
-          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
+          <button onClick={submit} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : 'Save record'}
           </button>
         </div>
@@ -392,167 +413,224 @@ const AdminPage: React.FC = () => {
   const rows = useMemo(() => users, [users]);
 
   if (!initialized) {
-    return <section style={{ maxWidth: 1100, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Loading…</section>;
+    return <section style={{ padding: '60px clamp(20px,10vw,48px)', color: 'var(--text-muted)' }}>Loading…</section>;
   }
   if (!isAdmin) {
-    return <section style={{ maxWidth: 1100, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Redirecting…</section>;
+    return <section style={{ padding: '60px clamp(20px,10vw,48px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
   }
 
   return (
     // The dashboard has far more to show than the CRUD tables — give it room.
-    <section style={{ maxWidth: tab === 'dashboard' || tab === 'policy' || tab === 'reference' ? 1320 : 1100, margin: '0 auto', padding: '40px 24px 80px', transition: 'max-width .2s ease' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 12, background: 'var(--primary-soft)', color: 'var(--primary)' }}>
-          <Shield size={22} />
-        </span>
+    <section style={{ padding: '40px clamp(20px,10vw,48px) 80px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-.02em' }}>Admin</h1>
+          <div className="brass-rule" style={{ marginBottom: 12 }} />
+          <span className="ledger-label" style={{ color: 'var(--brass)' }}>Placement office</span>
+          <h1 className="font-display" style={{ margin: '8px 0 0', fontSize: 'clamp(24px,3vw,30px)', fontWeight: 500, letterSpacing: '-.02em' }}>Admin</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
             Placement analytics, user management, and recruiter approvals.
           </p>
         </div>
-        {tab === 'users' && <button onClick={openCreate} style={btnPrimary}><Plus size={16} /> New user</button>}
+        {tab === 'users' && <button onClick={openCreate} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}><Plus size={16} /> New user</button>}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — equal-width bar spanning the full width, with a sliding brass active indicator (shared layoutId) */}
       <div style={{ display: 'flex', gap: 4, margin: '20px 0 4px', borderBottom: '1px solid var(--border)' }}>
-        {([['dashboard', LayoutDashboard], ['placements', Award], ['policy', Settings], ['reference', Layers], ['users', Users], ['recruiters', Building2], ['approvals', UserCheck]] as const).map(([t, Icon]) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer',
-              fontWeight: 600, fontSize: 14, textTransform: 'capitalize',
-              color: tab === t ? 'var(--primary)' : 'var(--text-muted)',
-              borderBottom: `2px solid ${tab === t ? 'var(--primary)' : 'transparent'}`,
-              marginBottom: -1,
-            }}
-          >
-            <Icon size={16} /> {t}
-            {t === 'approvals' && !!pendingCount && (
-              <span style={{
-                minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                background: 'color-mix(in srgb, orange 18%, transparent)', color: 'orange',
-              }}>{pendingCount}</span>
-            )}
-          </button>
-        ))}
+        {([['dashboard', LayoutDashboard], ['placements', Award], ['policy', Settings], ['reference', Layers], ['users', Users], ['recruiters', Building2], ['approvals', UserCheck]] as const).map(([t, Icon]) => {
+          const active = tab === t;
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'var(--surface-2)'; } }}
+              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; } }}
+              style={{
+                position: 'relative', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                padding: '11px 8px', border: 'none', cursor: 'pointer',
+                background: active ? 'var(--surface-2)' : 'transparent', borderRadius: '9px 9px 0 0',
+                fontWeight: active ? 600 : 550, fontSize: 13.5, textTransform: 'capitalize',
+                whiteSpace: 'nowrap', color: active ? 'var(--text)' : 'var(--text-muted)',
+                transition: 'color .18s ease, background .18s ease',
+              }}
+            >
+              <Icon size={16} /> {t}
+              {t === 'approvals' && !!pendingCount && (
+                <span className="data" style={{
+                  minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'color-mix(in srgb, orange 18%, transparent)', color: 'orange',
+                }}>{pendingCount}</span>
+              )}
+              {active && (
+                <motion.span
+                  layoutId="admin-tab"
+                  style={{ position: 'absolute', left: 10, right: 10, bottom: -1, height: 2, background: 'var(--brass)', borderRadius: 2 }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {tab === 'dashboard' ? (
-        <DashboardPanel />
-      ) : tab === 'placements' ? (
-        <PlacementsPanel />
-      ) : tab === 'policy' ? (
-        <TpoPanel />
-      ) : tab === 'reference' ? (
-        <ReferencePanel />
-      ) : tab === 'recruiters' ? (
-        <div style={{ marginTop: 18 }}><RecruitersPanel mode="active" onChanged={loadPending} /></div>
-      ) : tab === 'approvals' ? (
-        <div style={{ marginTop: 18 }}><RecruitersPanel mode="approvals" onChanged={loadPending} /></div>
-      ) : (
-      <>
-      <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 16px' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by AUID, name, or email"
-            style={{ ...inputStyle, paddingLeft: 36 }} />
-        </div>
-        <button type="submit" style={btnGhost}>Search</button>
-        <button type="button" onClick={load} style={btnGhost} aria-label="Refresh"><RefreshCw size={15} /></button>
-      </form>
+      {/* Tab panels — calm crossfade between top tabs */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+        >
+          {tab === 'dashboard' ? (
+            <DashboardPanel />
+          ) : tab === 'placements' ? (
+            <PlacementsPanel />
+          ) : tab === 'policy' ? (
+            <TpoPanel />
+          ) : tab === 'reference' ? (
+            <ReferencePanel />
+          ) : tab === 'recruiters' ? (
+            <div style={{ marginTop: 18 }}><RecruitersPanel mode="active" onChanged={loadPending} /></div>
+          ) : tab === 'approvals' ? (
+            <div style={{ marginTop: 18 }}><RecruitersPanel mode="approvals" onChanged={loadPending} /></div>
+          ) : (
+            <>
+              <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 16px' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
+                  <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by AUID, name, or email"
+                    style={{ ...inputStyle, paddingLeft: 36 }} />
+                </div>
+                <button type="submit" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>Search</button>
+                <button type="button" onClick={load} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost} aria-label="Refresh"><RefreshCw size={15} /></button>
+              </form>
 
-      <div style={{ ...card, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: 720 }}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: 'var(--text-subtle)', background: 'var(--surface-2)' }}>
-                {['AUID', 'Name', 'Email', 'University', 'Roles', ''].map((h, i) => (
-                  <th key={i} style={{ padding: '12px 14px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '.04em', whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} style={{ padding: 28, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</td></tr>
-              ) : rows.length === 0 ? (
-                <tr><td colSpan={6}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '40px 20px', color: 'var(--text-muted)' }}>
+              <Reveal>
+                {loading ? (
+                  <div style={{ ...card, padding: 30, textAlign: 'center', color: 'var(--text-muted)' }}>Loading…</div>
+                ) : rows.length === 0 ? (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '40px 20px',
+                    color: 'var(--text-muted)', border: '1px dashed var(--border)', borderRadius: 'var(--r-card)',
+                  }}>
                     <Users size={26} style={{ opacity: 0.5 }} />
                     <span>{q ? 'No users match your search.' : 'No users yet.'}</span>
                   </div>
-                </td></tr>
-              ) : (
-                rows.map((u) => (
-                  <tr key={u._id} style={{ borderTop: '1px solid var(--border)', transition: 'background .15s' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={{ padding: '12px 14px', fontWeight: 600, whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{u.auid}</td>
-                    <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                        <Avatar first={u.firstName} last={u.lastName} />
-                        <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{`${u.firstName} ${u.lastName ?? ''}`.trim()}</span>
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 14px', color: 'var(--text-muted)' }}>{u.email || '—'}</td>
-                    <td style={{ padding: '12px 14px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{u.university}</td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        {u.roles.map((r) => (
-                          <span key={r} style={{
-                            padding: '2px 8px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, textTransform: 'capitalize',
-                            background: r === 'admin' ? 'var(--primary-soft)' : 'var(--surface-2)',
-                            color: r === 'admin' ? 'var(--primary)' : 'var(--text-muted)',
-                            border: '1px solid var(--border)',
-                          }}>{r}</span>
-                        ))}
-                      </span>
-                    </td>
-                    <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', textAlign: 'right' }}>
-                      {u.roles.includes('student') && (
-                        <button onClick={() => setRecordFor(u)} aria-label="Edit academic record"
-                          title="Academic record (CGPA, backlogs, readiness)"
-                          style={{ ...btnGhost, padding: 8, marginRight: 6 }}>
-                          <GraduationCap size={15} />
-                        </button>
-                      )}
-                      <button onClick={() => openEdit(u)} aria-label="Edit user" style={{ ...btnGhost, padding: 8, marginRight: 6 }}><Pencil size={15} /></button>
-                      <button onClick={() => remove(u)} aria-label="Delete user"
-                        style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }}
-                        disabled={u._id === user?._id}
-                        title={u._id === user?._id ? 'You cannot delete yourself' : 'Delete user'}>
-                        <Trash2 size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(305px,1fr))', gap: 14 }}>
+                    {rows.map((u) => {
+                      const isAdminUser = u.roles.includes('admin');
+                      const tone = isAdminUser ? 'var(--primary)' : 'var(--text-subtle)';
+                      const isSelf = u._id === user?._id;
+                      const quietBtn: React.CSSProperties = {
+                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        width: 28, height: 28, borderRadius: 8, border: 'none', background: 'none',
+                        color: 'var(--text-subtle)', cursor: 'pointer', padding: 0, flex: 'none',
+                        transition: 'color .14s ease, background .14s ease',
+                      };
+                      const quietHover = (color: string, bg: string) => ({
+                        onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = color; e.currentTarget.style.background = bg; },
+                        onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.color = 'var(--text-subtle)'; e.currentTarget.style.background = 'none'; },
+                      });
+                      return (
+                        <div
+                          key={u._id}
+                          style={{
+                            minWidth: 0, overflow: 'hidden',
+                            background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)',
+                            transition: 'border-color .18s ease, transform .18s ease, box-shadow .18s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border-strong)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = 'var(--shadow)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.transform = 'none';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        >
+                          {/* identity band — tinted by role */}
+                          <div style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 11, padding: '14px 16px',
+                            background: `color-mix(in srgb, ${tone} 17%, transparent)`,
+                            borderBottom: '1px solid var(--border)',
+                          }}>
+                            <Avatar first={u.firstName} last={u.lastName} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <span style={{ display: 'block', fontSize: 14.5, fontWeight: 650, textTransform: 'capitalize', lineHeight: 1.35 }}>
+                                {`${u.firstName} ${u.lastName ?? ''}`.trim()}
+                              </span>
+                              <span className="data" style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>
+                                AUID {u.auid} · {u.university}
+                              </span>
+                            </div>
+                            <span style={{ flex: 'none', display: 'inline-flex', gap: 6 }}>
+                              {u.roles.map((r) => (
+                                <span key={r} style={{
+                                  padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600, textTransform: 'capitalize',
+                                  background: 'var(--bg-2)', border: '1px solid var(--border)',
+                                  color: r === 'admin' ? 'var(--primary)' : 'var(--text-muted)',
+                                }}>{r}</span>
+                              ))}
+                            </span>
+                          </div>
 
-      {pagination && pagination.totalPages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            Page {pagination.page} of {pagination.totalPages} · {pagination.total} users
-          </span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
-              style={{ ...btnGhost, opacity: page <= 1 ? 0.5 : 1 }}>Previous</button>
-            <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={page >= pagination.totalPages}
-              style={{ ...btnGhost, opacity: page >= pagination.totalPages ? 0.5 : 1 }}>Next</button>
-          </div>
-        </div>
-      )}
+                          {/* email + actions */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px 12px' }}>
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, overflowWrap: 'anywhere', minWidth: 0 }}>
+                              {u.email || 'No email recorded'}
+                            </span>
+                            <span style={{ marginLeft: 'auto', flex: 'none', display: 'inline-flex', gap: 2 }}>
+                              {u.roles.includes('student') && (
+                                <button onClick={() => setRecordFor(u)} aria-label="Edit academic record"
+                                  title="Academic record (CGPA, backlogs, readiness)"
+                                  style={quietBtn} {...quietHover('var(--text)', 'var(--surface-2)')}>
+                                  <GraduationCap size={15} />
+                                </button>
+                              )}
+                              <button onClick={() => openEdit(u)} aria-label="Edit user" title="Edit user"
+                                style={quietBtn} {...quietHover('var(--text)', 'var(--surface-2)')}>
+                                <Pencil size={14} />
+                              </button>
+                              <button onClick={() => remove(u)} aria-label="Delete user"
+                                disabled={isSelf}
+                                title={isSelf ? 'You cannot delete yourself' : 'Delete user'}
+                                style={{ ...quietBtn, opacity: isSelf ? 0.35 : 1, cursor: isSelf ? 'not-allowed' : 'pointer' }}
+                                {...(isSelf ? {} : quietHover('var(--danger)', 'var(--danger-soft)'))}>
+                                <Trash2 size={14} />
+                              </button>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Reveal>
+
+              {pagination && pagination.totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+                  <span className="data" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                    Page {pagination.page} of {pagination.totalPages} · {pagination.total} users
+                  </span>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}
+                      style={{ ...btnGhost, opacity: page <= 1 ? 0.5 : 1 }}>Previous</button>
+                    <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={page >= pagination.totalPages}
+                      style={{ ...btnGhost, opacity: page >= pagination.totalPages ? 0.5 : 1 }}>Next</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {modalOpen && <UserFormModal editing={editing} onClose={() => setModalOpen(false)} onSaved={load} />}
       {recordFor && <RecordModal user={recordFor} onClose={() => setRecordFor(null)} onSaved={load} />}
-      </>
-      )}
     </section>
   );
 };

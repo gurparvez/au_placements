@@ -9,6 +9,8 @@ import analyticsApi, {
   type PlacementType,
 } from '@/api/analytics';
 import studentApi, { type UserSearchResult } from '@/api/students';
+import { Reveal } from '@/components/motion';
+import { SelectField, DateField } from '@/components/ui/select-field';
 
 /* ------------------------------ styles ------------------------------ */
 
@@ -24,7 +26,12 @@ const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff',
   fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  transition: 'background .18s ease',
 };
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
@@ -200,6 +207,12 @@ function PlacementModal({
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm((f) => ({ ...f, [k]: v }));
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const isInternship = form.type === 'internship';
 
   const submit = async () => {
@@ -242,10 +255,11 @@ function PlacementModal({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div style={{ ...card, position: 'relative', width: 'min(580px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{isEdit ? 'Edit placement' : 'Record placement'}</h2>
+      <div role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit placement' : 'Record placement'} style={{ ...card, position: 'relative', width: 'min(580px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <div className="brass-rule" style={{ marginBottom: 12 }} />
+        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit placement' : 'Record placement'}</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
-          Only <strong>accepted</strong>, <strong>joined</strong>, and <strong>completed</strong> records count towards placement statistics.
+          Only <strong>accepted</strong>, <strong>joined</strong>, and <strong>completed</strong> count towards statistics.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -269,15 +283,13 @@ function PlacementModal({
 
           <div>
             <label style={labelStyle}>Type</label>
-            <select value={form.type} onChange={(e) => set('type', e.target.value as PlacementType)} style={{ ...inputStyle, cursor: 'pointer', textTransform: 'capitalize' }}>
-              {TYPES.map((t) => <option key={t} value={t}>{t === 'ppo' ? 'PPO' : t}</option>)}
-            </select>
+            <SelectField aria-label="Type" value={form.type} onChange={(v) => set('type', v as PlacementType)}
+              options={TYPES.map((t) => ({ value: t, label: t === 'ppo' ? 'PPO' : t.charAt(0).toUpperCase() + t.slice(1) }))} />
           </div>
           <div>
             <label style={labelStyle}>Status</label>
-            <select value={form.status} onChange={(e) => set('status', e.target.value as PlacementStatus)} style={{ ...inputStyle, cursor: 'pointer', textTransform: 'capitalize' }}>
-              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <SelectField aria-label="Status" value={form.status} onChange={(v) => set('status', v as PlacementStatus)}
+              options={STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} />
           </div>
 
           <div>
@@ -295,11 +307,11 @@ function PlacementModal({
 
           <div>
             <label style={labelStyle}>Offer date</label>
-            <input type="date" value={form.offer_date} onChange={(e) => set('offer_date', e.target.value)} style={inputStyle} />
+            <DateField value={form.offer_date} onChange={(v) => set('offer_date', v)} aria-label="Offer date" />
           </div>
           <div>
             <label style={labelStyle}>Start / joining date</label>
-            <input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} style={inputStyle} />
+            <DateField value={form.start_date} onChange={(v) => set('start_date', v)} aria-label="Start / joining date" />
           </div>
 
           <div style={{ gridColumn: '1 / -1' }}>
@@ -323,7 +335,7 @@ function PlacementModal({
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 22 }}>
           <button onClick={onClose} style={btnGhost}>Cancel</button>
-          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
+          <button onClick={submit} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Record placement'}
           </button>
         </div>
@@ -414,11 +426,22 @@ const PlacementsPanel: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const selectStyle: React.CSSProperties = { ...inputStyle, width: 'auto', cursor: 'pointer', textTransform: 'capitalize' };
   const body = useMemo(() => rows, [rows]);
 
   return (
     <div style={{ marginTop: 18 }}>
+      {/* Section header — serif title + record count; primary action sits top-right */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+        <div style={{ minWidth: 0 }}>
+          <h2 className="font-display" style={{ margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: '-.01em' }}>Placement records</h2>
+          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
+            <span className="data">{total.toLocaleString()}</span> record{total === 1 ? '' : 's'} on file
+          </p>
+        </div>
+        <button onClick={() => { setEditing(null); setModalOpen(true); }} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}><Plus size={16} /> Record placement</button>
+      </div>
+
+      {/* Toolbar — search, filters, and export */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
@@ -429,19 +452,17 @@ const PlacementsPanel: React.FC = () => {
             style={{ ...inputStyle, paddingLeft: 36 }}
           />
         </div>
-        <select value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} style={selectStyle}>
-          <option value="">All types</option>
-          {TYPES.map((t) => <option key={t} value={t}>{t === 'ppo' ? 'PPO' : t}</option>)}
-        </select>
-        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} style={selectStyle}>
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <SelectField aria-label="Filter by type" value={type} onChange={(v) => { setType(v); setPage(1); }}
+          options={[{ value: '', label: 'All types' }, ...TYPES.map((t) => ({ value: t, label: t === 'ppo' ? 'PPO' : t.charAt(0).toUpperCase() + t.slice(1) }))]}
+          style={{ width: 150 }} />
+        <SelectField aria-label="Filter by status" value={status} onChange={(v) => { setStatus(v); setPage(1); }}
+          options={[{ value: '', label: 'All statuses' }, ...STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))]}
+          style={{ width: 160 }} />
         <button onClick={load} style={btnGhost} aria-label="Refresh"><RefreshCw size={15} /></button>
         <button onClick={exportCsv} style={btnGhost}><Download size={15} /> CSV</button>
-        <button onClick={() => { setEditing(null); setModalOpen(true); }} style={btnPrimary}><Plus size={16} /> Record placement</button>
       </div>
 
+      <Reveal>
       <div style={{ ...card, overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
@@ -461,59 +482,77 @@ const PlacementsPanel: React.FC = () => {
                   </div>
                 </td></tr>
               ) : (
-                body.map((r) => (
-                  <tr key={r._id} style={{ borderTop: '1px solid var(--border)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                    <td style={{ ...td, fontWeight: 600, textTransform: 'capitalize' }}>
-                      {fullName(r.student)}
-                      {r.student?.auid && (
-                        <span style={{ display: 'block', fontSize: 11.5, fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none' }}>
-                          AUID {r.student.auid}
+                body.map((r) => {
+                  const pkg = r.ctc_lpa ? `${r.ctc_lpa} LPA` : r.stipend ? `₹${r.stipend.toLocaleString('en-IN')}/mo` : '—';
+                  const quietBtn: React.CSSProperties = {
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 28, height: 28, borderRadius: 8, border: 'none', background: 'none',
+                    color: 'var(--text-subtle)', cursor: 'pointer', padding: 0,
+                    transition: 'color .14s ease, background .14s ease',
+                  };
+                  return (
+                    <tr
+                      key={r._id}
+                      title={`${fullName(r.student)} — ${r.company}, ${r.role} · ${pkg} · ${r.status}`}
+                      style={{ borderTop: '1px solid var(--border)', transition: 'background .15s ease', cursor: 'default' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <td style={{ ...td, fontWeight: 600, textTransform: 'capitalize' }}>
+                        {fullName(r.student)}
+                        {r.student?.auid && (
+                          <span className="data" style={{ display: 'block', fontSize: 11.5, fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none' }}>
+                            AUID {r.student.auid}
+                          </span>
+                        )}
+                      </td>
+                      <td style={td}>{r.company}</td>
+                      <td style={{ ...td, color: 'var(--text-muted)' }}>{r.role}</td>
+                      <td style={td}>
+                        <span className="data" style={{ fontSize: 10.5, fontWeight: 650, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>
+                          {r.type}
                         </span>
-                      )}
-                    </td>
-                    <td style={td}>{r.company}</td>
-                    <td style={{ ...td, color: 'var(--text-muted)' }}>{r.role}</td>
-                    <td style={td}>
-                      <span style={{
-                        padding: '2px 8px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, textTransform: 'uppercase',
-                        background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)',
-                      }}>{r.type}</span>
-                    </td>
-                    <td style={td}>
-                      {r.ctc_lpa ? `${r.ctc_lpa} LPA`
-                        : r.stipend ? `₹${r.stipend.toLocaleString('en-IN')}/mo`
-                        : '—'}
-                    </td>
-                    <td style={td}>
-                      <span style={{
-                        padding: '2px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, textTransform: 'capitalize',
-                        background: `color-mix(in srgb, ${STATUS_TONE[r.status]} 14%, transparent)`,
-                        color: STATUS_TONE[r.status],
-                        border: `1px solid color-mix(in srgb, ${STATUS_TONE[r.status]} 32%, transparent)`,
-                      }}>{r.status}</span>
-                    </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <button onClick={() => { setEditing(r); setModalOpen(true); }} aria-label="Edit placement" style={{ ...btnGhost, padding: 8, marginRight: 6 }}>
-                        <Pencil size={15} />
-                      </button>
-                      <button onClick={() => remove(r)} aria-label="Delete placement"
-                        style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }}>
-                        <Trash2 size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="data" style={td}>{pkg}</td>
+                      <td style={td}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, textTransform: 'capitalize', color: STATUS_TONE[r.status] }}>
+                          <span aria-hidden style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_TONE[r.status] }} />
+                          {r.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button
+                          onClick={() => { setEditing(r); setModalOpen(true); }}
+                          aria-label="Edit placement" title="Edit"
+                          style={{ ...quietBtn, marginRight: 2 }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'var(--surface-3)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-subtle)'; e.currentTarget.style.background = 'none'; }}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => remove(r)}
+                          aria-label="Delete placement" title="Delete"
+                          style={quietBtn}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.background = 'var(--danger-soft)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-subtle)'; e.currentTarget.style.background = 'none'; }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
+      </Reveal>
 
       {pages > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Page {page} of {pages} · {total} records</span>
+          <span className="data" style={{ fontSize: 13, color: 'var(--text-muted)' }}>Page {page} of {pages} · {total.toLocaleString()} records</span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ ...btnGhost, opacity: page <= 1 ? 0.5 : 1 }}>Previous</button>
             <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages} style={{ ...btnGhost, opacity: page >= pages ? 0.5 : 1 }}>Next</button>
