@@ -138,7 +138,7 @@ const SkillsSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit skills</DialogTitle>
+            <DialogTitle className="font-display">Edit skills</DialogTitle>
             <DialogDescription>
               Search and add the skills you want recruiters to see.
             </DialogDescription>

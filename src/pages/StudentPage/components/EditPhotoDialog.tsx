@@ -88,7 +88,7 @@ const EditPhotoDialog: React.FC<EditPhotoDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Profile photo</DialogTitle>
+          <DialogTitle className="font-display">Profile photo</DialogTitle>
           <DialogDescription>
             A clear headshot helps recruiters recognise you. JPG, PNG or WebP, up to 5MB.
           </DialogDescription>

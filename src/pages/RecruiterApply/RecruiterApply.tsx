@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Briefcase, UserRound, Building2, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { UserRound, Building2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import authApi, { type RecruiterRequestPayload } from '@/api/auth';
 import { isValidEmail } from '@/utils/validation';
+import { SelectField } from '@/components/ui/select-field';
 
 const SectionCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
   <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 22, marginTop: 16 }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16 }}>
-      <span style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
-      <h2 style={{ margin: 0, fontSize: 15.5, fontWeight: 650 }}>{title}</h2>
+      <span style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--brass-soft)', color: 'var(--brass)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
+      <h2 className="font-display" style={{ margin: 0, fontSize: 15.5, fontWeight: 500 }}>{title}</h2>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>{children}</div>
   </div>
@@ -22,6 +23,10 @@ const field = (e?: string): React.CSSProperties => ({
   width: '100%', padding: '11px 13px', borderRadius: 'var(--r-ctl)',
   border: `1px solid ${e ? 'var(--danger)' : 'var(--border-strong)'}`,
   background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+});
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
 });
 
 const SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'] as const;
@@ -89,14 +94,13 @@ const RecruiterApply: React.FC = () => {
 
   if (done) {
     return (
-      <section style={{ maxWidth: 560, margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
+      <section style={{ padding: '60px clamp(20px,10vw,112px)', textAlign: 'center' }}>
         <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Request submitted</h1>
+        <h1 className="font-display" style={{ fontSize: 24, fontWeight: 500, letterSpacing: '-.02em', margin: 0 }}>Request submitted</h1>
         <p style={{ color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.6 }}>
-          Thanks! Your recruiter account is <strong>pending admin approval</strong>. Once approved you
-          can sign in with your email and password to contact students and post openings.
+          Your recruiter account is <strong>pending admin approval</strong>. Sign in once approved.
         </p>
-        <Link to="/login" style={{ display: 'inline-block', marginTop: 22, padding: '11px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, textDecoration: 'none' }}>
+        <Link to="/login" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-block', marginTop: 22, padding: '11px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, textDecoration: 'none', transition: 'background .18s ease' }}>
           Back to sign in
         </Link>
       </section>
@@ -104,19 +108,14 @@ const RecruiterApply: React.FC = () => {
   }
 
   return (
-    <section style={{ maxWidth: 720, margin: '0 auto', padding: '36px 24px 80px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <span aria-hidden style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
-          <Briefcase size={24} />
-        </span>
-        <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-.02em', margin: 0 }}>Apply as a recruiter</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '5px 0 0', fontSize: 14 }}>Tell us about you and your company to start hiring.</p>
-        </div>
-      </div>
+    <section style={{ padding: '36px clamp(20px,10vw,112px) 80px' }}>
+      <div className="brass-rule" style={{ marginBottom: 14 }} />
+      <span className="ledger-label" style={{ color: 'var(--brass)' }}>Recruiter access</span>
+      <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Apply as a recruiter</h1>
+      <p style={{ textAlign: 'left', color: 'var(--text-muted)', margin: '10px 0 0', fontSize: 14 }}>Tell us about you and your company.</p>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 20, padding: '11px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', border: '1px solid var(--primary-soft-border)', color: 'var(--primary)', fontSize: 13.5, fontWeight: 500 }}>
-        <ShieldCheck size={16} /> An admin reviews every request before your account is activated.
+        <ShieldCheck size={16} /> An admin reviews every request.
       </div>
 
       <SectionCard title="Your details" icon={<UserRound size={18} />}>
@@ -166,10 +165,8 @@ const RecruiterApply: React.FC = () => {
         </div>
         <div>
           <label style={label}>Company size</label>
-          <select value={form.company_size ?? ''} onChange={(e) => set('company_size', (e.target.value || undefined) as any)} style={{ ...field(), cursor: 'pointer' }}>
-            <option value="">Select</option>
-            {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <SelectField aria-label="Company size" value={form.company_size ?? ''} onChange={(v) => set('company_size', (v || undefined) as any)}
+            options={[{ value: '', label: 'Select' }, ...SIZES.map((s) => ({ value: s, label: s }))]} />
         </div>
         <div>
           <label style={label}>Location</label>
@@ -187,7 +184,7 @@ const RecruiterApply: React.FC = () => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
         <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13.5, textDecoration: 'none' }}><ArrowLeft size={15} /> Back to sign in</Link>
-        <button onClick={submit} disabled={submitting} style={{ padding: '12px 24px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1 }}>
+        <button onClick={submit} disabled={submitting} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '12px 24px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}>
           {submitting ? 'Submitting…' : 'Submit request'}
         </button>
       </div>

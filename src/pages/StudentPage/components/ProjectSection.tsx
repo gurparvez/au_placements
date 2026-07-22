@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DateField } from '@/components/ui/select-field';
 import SkillPicker from '@/components/SkillPicker';
 import SectionCard from './SectionCard';
 
@@ -159,7 +160,7 @@ const ProjectsSection: React.FC = () => {
 
         {items.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Showcase the projects you've built to stand out to recruiters.
+            Showcase the projects you've built.
           </p>
         ) : (
           <ol className="divide-y divide-border">
@@ -231,7 +232,7 @@ const ProjectsSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit projects</DialogTitle>
+            <DialogTitle className="font-display">Edit projects</DialogTitle>
             <DialogDescription>Showcase the projects you've built.</DialogDescription>
           </DialogHeader>
 
@@ -269,23 +270,21 @@ const ProjectsSection: React.FC = () => {
                       >
                         Start date
                       </label>
-                      <Input
-                        id={`proj-start-${i}`}
-                        type="date"
+                      <DateField
                         value={toInputDate(pr.start_date)}
-                        onChange={(e) => change(i, 'start_date', e.target.value)}
+                        onChange={(v) => change(i, 'start_date', v)}
+                        aria-label="Start date"
                       />
                     </div>
                     <div>
                       <label htmlFor={`proj-end-${i}`} className="mb-1.5 block text-sm font-medium">
                         End date <span className="text-muted-foreground">(blank = present)</span>
                       </label>
-                      <Input
-                        id={`proj-end-${i}`}
-                        type="date"
+                      <DateField
                         disabled={pr.on_going}
                         value={toInputDate(pr.end_date)}
-                        onChange={(e) => change(i, 'end_date', e.target.value)}
+                        onChange={(v) => change(i, 'end_date', v)}
+                        aria-label="End date"
                       />
                       <label
                         htmlFor={`proj-ongoing-${i}`}

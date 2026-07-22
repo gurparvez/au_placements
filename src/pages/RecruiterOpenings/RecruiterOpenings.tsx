@@ -17,10 +17,16 @@ import openingsApi, {
 } from '@/api/openings';
 import type { Skill } from '@/api/skills';
 import SkillPicker from '@/components/SkillPicker';
+import { SelectField, DateField } from '@/components/ui/select-field';
 import departmentsApi, { type Department } from '@/api/departments';
 import { avatarColor, initials } from '@/utils/avatar';
 
 const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
+
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
 
 /* --------------------------- applicants modal --------------------------- */
 
@@ -86,18 +92,24 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
     return () => { cancelled = true; };
   }, [opening._id]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const fmt = (d: string) => new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div style={{ position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
+      <div role="dialog" aria-modal="true" aria-label={`Applicants for ${opening.title}`} style={{ position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Applicants</h2>
+            <h2 className="font-display" style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Applicants</h2>
             <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{opening.title}</p>
           </div>
-          <button onClick={onClose} aria-label="Close" style={{ width: 32, height: 32, borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={15} /></button>
+          <button onClick={onClose} aria-label="Close" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ width: 32, height: 32, borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .18s ease' }}><X size={15} /></button>
         </div>
 
         <div style={{ marginTop: 14 }}>
@@ -185,8 +197,8 @@ const input: React.CSSProperties = {
   border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
 };
 const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
-const btnPrimary: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none' };
-const btnGhost: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)' };
+const btnPrimary: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' };
+const btnGhost: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)', transition: 'background .18s ease' };
 const UNIS: University[] = ['Akal University', 'Eternal University'];
 
 function extractError(err: unknown, fallback: string): string {
@@ -262,6 +274,12 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
     departmentsApi.list().then(setDepartments).catch(() => { /* selector stays empty */ });
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const selectedDepts = form.eligible_departments.split(/[,\n]/).map((x) => x.trim()).filter(Boolean);
   const toggleDept = (name: string) =>
     setForm((f) => {
@@ -321,9 +339,9 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div style={{ ...card, position: 'relative', width: 'min(620px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{isEdit ? 'Edit opening' : 'Post an opening'}</h2>
-        <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{isEdit ? 'Update the details students see.' : 'Share an internship or job with eligible students.'}</p>
+      <div role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit opening' : 'Post an opening'} style={{ ...card, position: 'relative', width: 'min(620px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500 }}>{isEdit ? 'Edit opening' : 'Post an opening'}</h2>
+        <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{isEdit ? 'Update the details students see.' : 'Share an internship or job.'}</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
           {requireCompany && (
@@ -333,32 +351,26 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
           <div style={{ gridColumn: '1 / -1' }}><label style={label}>Description</label><textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={5} style={{ ...input, resize: 'vertical' }} /></div>
           <div>
             <label style={label}>Type</label>
-            <select value={form.type} onChange={(e) => set('type', e.target.value as any)} style={{ ...input, cursor: 'pointer' }}>
-              <option value="internship">Internship</option>
-              <option value="job">Job</option>
-            </select>
+            <SelectField aria-label="Type" value={form.type} onChange={(v) => set('type', v as any)}
+              options={[{ value: 'internship', label: 'Internship' }, { value: 'job', label: 'Job' }]} />
           </div>
           <div>
             <label style={label}>Work mode</label>
-            <select value={form.work_mode} onChange={(e) => set('work_mode', e.target.value as any)} style={{ ...input, cursor: 'pointer' }}>
-              <option value="">—</option>
-              <option value="onsite">Onsite</option>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-            </select>
+            <SelectField aria-label="Work mode" value={form.work_mode} onChange={(v) => set('work_mode', v as any)}
+              options={[{ value: '', label: '—' }, { value: 'onsite', label: 'Onsite' }, { value: 'remote', label: 'Remote' }, { value: 'hybrid', label: 'Hybrid' }]} />
           </div>
           <div><label style={label}>Location</label><input value={form.location} onChange={(e) => set('location', e.target.value)} style={input} /></div>
           <div><label style={label}>Stipend / Salary</label><input value={form.stipend_or_salary} onChange={(e) => set('stipend_or_salary', e.target.value)} placeholder="e.g. ₹20,000/mo" style={input} /></div>
           <div><label style={label}>Min experience (months)</label><input type="number" min={0} value={form.min_experience} onChange={(e) => set('min_experience', e.target.value)} style={input} /></div>
-          <div><label style={label}>Apply by</label><input type="date" value={form.apply_by} onChange={(e) => set('apply_by', e.target.value)} style={input} /></div>
+          <div><label style={label}>Apply by</label><DateField value={form.apply_by} onChange={(v) => set('apply_by', v)} aria-label="Apply by" /></div>
           <div style={{ gridColumn: '1 / -1' }}><label style={label}>Apply URL</label><input value={form.apply_url} onChange={(e) => set('apply_url', e.target.value)} placeholder="https://…" style={input} /></div>
           <div style={{ gridColumn: '1 / -1' }}>
             <SkillPicker label="Required skills" selected={form.skills} setSelected={(s) => set('skills', s)} initialData={initialSkills} />
           </div>
           <div style={{ gridColumn: '1 / -1', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-            <h3 style={{ margin: '0 0 3px', fontSize: 13.5, fontWeight: 700 }}>Eligibility criteria</h3>
+            <h3 className="font-display" style={{ margin: '0 0 3px', fontSize: 13.5, fontWeight: 500 }}>Eligibility criteria</h3>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>
-              Enforced server-side. Ineligible students are told exactly which criterion they failed.
+              Enforced server-side. Students see which criterion failed.
             </p>
           </div>
           <div><label style={label}>Minimum CGPA</label><input type="number" min={0} max={10} step="0.1" value={form.min_cgpa} onChange={(e) => set('min_cgpa', e.target.value)} placeholder="e.g. 7.0" style={input} /></div>
@@ -393,11 +405,8 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
           <div><label style={label}>Eligible batches</label><input value={form.eligible_batches} onChange={(e) => set('eligible_batches', e.target.value)} placeholder="e.g. 2027, 2028" style={input} /></div>
           <div>
             <label style={label}>Package tier</label>
-            <select value={form.tier} onChange={(e) => set('tier', e.target.value as FormState['tier'])} style={{ ...input, cursor: 'pointer', textTransform: 'capitalize' }}>
-              <option value="regular">Regular</option>
-              <option value="core">Core</option>
-              <option value="dream">Dream</option>
-            </select>
+            <SelectField aria-label="Package tier" value={form.tier} onChange={(v) => set('tier', v as FormState['tier'])}
+              options={[{ value: 'regular', label: 'Regular' }, { value: 'core', label: 'Core' }, { value: 'dream', label: 'Dream' }]} />
           </div>
           <div><label style={label}>Package (LPA)</label><input type="number" min={0} step="0.5" value={form.ctc_lpa} onChange={(e) => set('ctc_lpa', e.target.value)} placeholder="e.g. 12" style={input} /></div>
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -410,7 +419,7 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
           <div style={{ gridColumn: '1 / -1', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
             <label style={label}>Selection rounds</label>
             <p style={{ margin: '0 0 9px', fontSize: 12, color: 'var(--text-muted)' }}>
-              Recorded per applicant, so the placement cell can see which round candidates fail at.
+              Recorded per applicant.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {form.rounds.map((r, i) => (
@@ -423,13 +432,13 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
                     style={input}
                   />
                   <button type="button" onClick={() => set('rounds', form.rounds.filter((_, j) => j !== i))}
-                    aria-label="Remove round" style={{ ...btnGhost, padding: 8, flex: 'none' }}>
+                    aria-label="Remove round" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, padding: 8, flex: 'none' }}>
                     <X size={14} />
                   </button>
                 </div>
               ))}
               {form.rounds.length < 10 && (
-                <button type="button" onClick={() => set('rounds', [...form.rounds, ''])} style={{ ...btnGhost, alignSelf: 'flex-start' }}>
+                <button type="button" onClick={() => set('rounds', [...form.rounds, ''])} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, alignSelf: 'flex-start' }}>
                   <Plus size={14} /> Add round
                 </button>
               )}
@@ -453,8 +462,8 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-          <button onClick={onClose} style={btnGhost}>Cancel</button>
-          <button onClick={submit} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Post opening'}</button>
+          <button onClick={onClose} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>Cancel</button>
+          <button onClick={submit} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }}>{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Post opening'}</button>
         </div>
       </div>
     </div>
@@ -516,8 +525,8 @@ const RecruiterOpenings: React.FC = () => {
     } catch (err) { toast.error(extractError(err, 'Failed to delete.')); }
   };
 
-  if (!initialized) return <section style={{ maxWidth: 1000, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Loading…</section>;
-  if (!canManage) return <section style={{ maxWidth: 1000, margin: '0 auto', padding: '60px 24px', color: 'var(--text-muted)' }}>Redirecting…</section>;
+  if (!initialized) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
+  if (!canManage) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
 
   const openCount = openings.filter((o) => o.status === 'open').length;
   const summary = openings.length === 0
@@ -525,14 +534,15 @@ const RecruiterOpenings: React.FC = () => {
     : `${openings.length} opening${openings.length === 1 ? '' : 's'} · ${openCount} open`;
 
   return (
-    <section style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 24px 80px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 12, background: 'var(--primary-soft)', color: 'var(--primary)' }}><Briefcase size={22} /></span>
+    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-.02em' }}>My openings</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>{summary}</p>
+          <div className="brass-rule" style={{ marginBottom: 14 }} />
+          <span className="ledger-label" style={{ color: 'var(--brass)' }}>Recruiter tools</span>
+          <h1 className="font-display" style={{ margin: '10px 0 0', fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em' }}>My openings</h1>
+          <p style={{ textAlign: 'left', margin: '10px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>{summary}</p>
         </div>
-        <button onClick={() => { setEditing(null); setModalOpen(true); }} style={btnPrimary}><Plus size={16} /> Post opening</button>
+        <button onClick={() => { setEditing(null); setModalOpen(true); }} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}><Plus size={16} /> Post opening</button>
       </div>
 
       <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -542,8 +552,8 @@ const RecruiterOpenings: React.FC = () => {
           <div style={{ ...card, padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Briefcase size={24} /></span>
             <div style={{ fontWeight: 650, fontSize: 15.5 }}>No openings yet</div>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13.5, maxWidth: 340 }}>Post your first internship or job to start reaching Akal &amp; Eternal students.</p>
-            <button onClick={() => { setEditing(null); setModalOpen(true); }} style={{ ...btnPrimary, marginTop: 6 }}><Plus size={16} /> Post opening</button>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13.5, maxWidth: 340 }}>Post your first internship or job.</p>
+            <button onClick={() => { setEditing(null); setModalOpen(true); }} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, marginTop: 6 }}><Plus size={16} /> Post opening</button>
           </div>
         ) : (
           openings.map((o) => (
@@ -564,12 +574,12 @@ const RecruiterOpenings: React.FC = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <button onClick={() => setApplicantsFor(o)} style={{ ...btnGhost, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <button onClick={() => setApplicantsFor(o)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <Users size={15} /> Applicants{typeof o.application_count === 'number' ? ` (${o.application_count})` : ''}
                 </button>
-                <button onClick={() => toggleStatus(o)} style={btnGhost}>{o.status === 'open' ? 'Close' : 'Reopen'}</button>
-                <button onClick={() => { setEditing(o); setModalOpen(true); }} style={{ ...btnGhost, padding: 8 }} aria-label="Edit"><Pencil size={15} /></button>
-                <button onClick={() => remove(o)} style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }} aria-label="Delete"><Trash2 size={15} /></button>
+                <button onClick={() => toggleStatus(o)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>{o.status === 'open' ? 'Close' : 'Reopen'}</button>
+                <button onClick={() => { setEditing(o); setModalOpen(true); }} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, padding: 8 }} aria-label="Edit"><Pencil size={15} /></button>
+                <button onClick={() => remove(o)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }} aria-label="Delete"><Trash2 size={15} /></button>
               </div>
             </div>
           ))

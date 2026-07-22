@@ -31,16 +31,20 @@ const ProfileHeader: React.FC = () => {
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
-      {/* Cover band — prototype gradient */}
+      {/* Cover band — editorial register masthead */}
       <div
         className="relative h-24 w-full sm:h-28"
-        style={{ background: 'linear-gradient(120deg, var(--primary-soft), var(--surface-2))' }}
+        style={{
+          background: 'linear-gradient(120deg, var(--surface-2), var(--surface-3))',
+          borderBottom: '2px solid var(--brass)',
+        }}
         aria-hidden
       >
         <div
           className="absolute inset-0"
-          style={{ background: 'radial-gradient(80% 140% at 12% 0%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 60%)' }}
+          style={{ background: 'radial-gradient(70% 140% at 10% 0%, color-mix(in srgb, var(--brass) 14%, transparent), transparent 62%)' }}
         />
+        <span className="ledger-label absolute top-3.5 left-5">The Akal &amp; Eternal Register</span>
       </div>
 
       <div className="px-5 pb-6 sm:px-7">
@@ -70,7 +74,7 @@ const ProfileHeader: React.FC = () => {
         {/* Identity + actions */}
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold capitalize sm:text-3xl">
+            <h1 className="font-display text-2xl font-medium capitalize tracking-[-0.02em] sm:text-3xl">
               {fullName || 'Your name'}
             </h1>
             {profile.headline && (
@@ -130,7 +134,7 @@ const ProfileHeader: React.FC = () => {
         <div className="bg-bg-2 mt-6 rounded-lg border border-border p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Profile strength</span>
-            <span className="data text-sm font-semibold">{percent}%</span>
+            <span className="data text-brass text-sm font-semibold">{percent}%</span>
           </div>
           <div className="bg-surface-2 mt-2 h-1.5 w-full overflow-hidden rounded-full">
             <div

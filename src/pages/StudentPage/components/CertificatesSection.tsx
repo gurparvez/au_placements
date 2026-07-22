@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DateField } from '@/components/ui/select-field';
 import SectionCard from './SectionCard';
 import { formatDate } from '@/utils/formatDate';
 
@@ -111,7 +112,7 @@ const CertificatesSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit certifications</DialogTitle>
+            <DialogTitle className="font-display">Edit certifications</DialogTitle>
             <DialogDescription>Add the credentials you've earned.</DialogDescription>
           </DialogHeader>
 
@@ -155,22 +156,20 @@ const CertificatesSection: React.FC = () => {
                     <label htmlFor={`cert-issue-${i}`} className="mb-1.5 block text-sm font-medium">
                       Issue date
                     </label>
-                    <Input
-                      id={`cert-issue-${i}`}
-                      type="date"
+                    <DateField
                       value={toInputDate(c.issue_date)}
-                      onChange={(e) => change(i, 'issue_date', e.target.value)}
+                      onChange={(v) => change(i, 'issue_date', v)}
+                      aria-label="Issue date"
                     />
                   </div>
                   <div>
                     <label htmlFor={`cert-valid-${i}`} className="mb-1.5 block text-sm font-medium">
                       Expiry date <span className="text-muted-foreground">(optional)</span>
                     </label>
-                    <Input
-                      id={`cert-valid-${i}`}
-                      type="date"
+                    <DateField
                       value={toInputDate(c.valid_until)}
-                      onChange={(e) => change(i, 'valid_until', e.target.value)}
+                      onChange={(v) => change(i, 'valid_until', v)}
+                      aria-label="Expiry date"
                     />
                   </div>
                   <div className="sm:col-span-2">

@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DateField } from '@/components/ui/select-field';
 import SectionCard from './SectionCard';
 
 interface ExperienceItem {
@@ -74,7 +75,7 @@ const ExperienceSection: React.FC = () => {
       <SectionCard title="Experience" onEdit={() => setOpen(true)} isEmpty={items.length === 0}>
         {items.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Add internships and jobs to show recruiters what you've done.
+            Add internships and jobs.
           </p>
         ) : (
           <ol className="divide-y divide-border">
@@ -108,7 +109,7 @@ const ExperienceSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit experience</DialogTitle>
+            <DialogTitle className="font-display">Edit experience</DialogTitle>
             <DialogDescription>Add the internships and roles you've held.</DialogDescription>
           </DialogHeader>
 
@@ -152,22 +153,20 @@ const ExperienceSection: React.FC = () => {
                     <label htmlFor={`exp-start-${i}`} className="mb-1.5 block text-sm font-medium">
                       Start date
                     </label>
-                    <Input
-                      id={`exp-start-${i}`}
-                      type="date"
+                    <DateField
                       value={toInputDate(exp.start_date)}
-                      onChange={(e) => change(i, 'start_date', e.target.value)}
+                      onChange={(v) => change(i, 'start_date', v)}
+                      aria-label="Start date"
                     />
                   </div>
                   <div>
                     <label htmlFor={`exp-end-${i}`} className="mb-1.5 block text-sm font-medium">
                       End date <span className="text-muted-foreground">(blank = present)</span>
                     </label>
-                    <Input
-                      id={`exp-end-${i}`}
-                      type="date"
+                    <DateField
                       value={toInputDate(exp.end_date)}
-                      onChange={(e) => change(i, 'end_date', e.target.value)}
+                      onChange={(v) => change(i, 'end_date', v)}
+                      aria-label="End date"
                     />
                   </div>
                   <div className="sm:col-span-2">

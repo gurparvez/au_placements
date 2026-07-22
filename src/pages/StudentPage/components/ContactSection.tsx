@@ -196,7 +196,7 @@ const ContactSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit contact &amp; links</DialogTitle>
+            <DialogTitle className="font-display">Edit contact &amp; links</DialogTitle>
             <DialogDescription>How recruiters can reach you and find your work.</DialogDescription>
           </DialogHeader>
 

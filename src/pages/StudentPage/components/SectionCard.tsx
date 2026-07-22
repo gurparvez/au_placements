@@ -19,7 +19,7 @@ interface SectionCardProps {
 const SectionCard: React.FC<SectionCardProps> = ({ title, onEdit, isEmpty, children }) => (
   <Card>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="font-display text-lg font-medium">{title}</h2>
       {onEdit && (
         <Button
           variant="ghost"

@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DateField } from '@/components/ui/select-field';
 
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { updateStudentProfile } from '@/context/student/studentSlice';
@@ -117,7 +118,7 @@ const EditIntroDialog: React.FC<EditIntroDialogProps> = ({ open, onOpenChange })
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Edit intro</DialogTitle>
+          <DialogTitle className="font-display">Edit intro</DialogTitle>
           <DialogDescription>This is the first thing recruiters see.</DialogDescription>
         </DialogHeader>
 
@@ -165,7 +166,7 @@ const EditIntroDialog: React.FC<EditIntroDialogProps> = ({ open, onOpenChange })
               rows={4}
               value={about}
               onChange={(e) => setAbout(e.target.value)}
-              placeholder="A short summary of who you are and what you're looking for."
+              placeholder="A short summary about you."
             />
           </Field>
 
@@ -196,10 +197,10 @@ const EditIntroDialog: React.FC<EditIntroDialogProps> = ({ open, onOpenChange })
             </div>
             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="intro-from" label="Available from">
-                <Input id="intro-from" type="date" value={lfFrom} onChange={(e) => setLfFrom(e.target.value)} />
+                <DateField value={lfFrom} onChange={(v) => setLfFrom(v)} aria-label="Available from" />
               </Field>
               <Field id="intro-to" label="Available until (optional)">
-                <Input id="intro-to" type="date" value={lfTo} onChange={(e) => setLfTo(e.target.value)} />
+                <DateField value={lfTo} onChange={(v) => setLfTo(v)} aria-label="Available until" />
               </Field>
             </div>
           </div>

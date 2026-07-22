@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SelectField, DateField } from '@/components/ui/select-field';
 import CoursePicker from '@/components/CoursePicker';
 import { coursesApi, type Course } from '@/api/courses';
 import SectionCard from './SectionCard';
@@ -173,7 +174,7 @@ const EducationSection: React.FC = () => {
       <SectionCard title="Education" onEdit={() => setOpen(true)} isEmpty={items.length === 0}>
         {items.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Add your degrees and institutions to complete your academic profile.
+            Add your degrees and institutions.
           </p>
         ) : (
           <ol className="divide-y divide-border">
@@ -228,8 +229,8 @@ const EducationSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit education</DialogTitle>
-            <DialogDescription>Add the degrees and institutions you've studied at.</DialogDescription>
+            <DialogTitle className="font-display">Edit education</DialogTitle>
+            <DialogDescription>Add degrees and institutions.</DialogDescription>
           </DialogHeader>
 
           {hydrating ? (
@@ -275,19 +276,17 @@ const EducationSection: React.FC = () => {
                           <label htmlFor={`edu-institute-${i}`} className="mb-1.5 block text-sm font-medium">
                             Institute
                           </label>
-                          <select
+                          <SelectField
                             id={`edu-institute-${i}`}
+                            aria-label="Institute"
+                            placeholder="Select an institute"
                             value={edu.institute}
-                            onChange={(e) => change(i, 'institute', e.target.value)}
-                            className="border-border-strong bg-card text-foreground ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-[9px] border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                          >
-                            <option value="">Select an institute</option>
-                            {INSTITUTE_OPTIONS.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(v) => change(i, 'institute', v)}
+                            options={[
+                              { value: '', label: 'Select an institute' },
+                              ...INSTITUTE_OPTIONS.map((opt) => ({ value: opt, label: opt })),
+                            ]}
+                          />
                         </div>
 
                         <div className="sm:col-span-2">
@@ -314,16 +313,18 @@ const EducationSection: React.FC = () => {
                           <label htmlFor={`edu-grade-${i}`} className="mb-1.5 block text-sm font-medium">
                             Class
                           </label>
-                          <select
+                          <SelectField
                             id={`edu-grade-${i}`}
-                            value={edu.grade}
-                            onChange={(e) => change(i, 'grade', e.target.value)}
-                            className="border-border-strong bg-card text-foreground ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-[9px] border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                          >
-                            <option value="">Select</option>
-                            <option value="10th">10th</option>
-                            <option value="12th">12th</option>
-                          </select>
+                            aria-label="Class"
+                            placeholder="Select"
+                            value={edu.grade ?? ''}
+                            onChange={(v) => change(i, 'grade', v)}
+                            options={[
+                              { value: '', label: 'Select' },
+                              { value: '10th', label: '10th' },
+                              { value: '12th', label: '12th' },
+                            ]}
+                          />
                         </div>
                         <div>
                           <label htmlFor={`edu-board-${i}`} className="mb-1.5 block text-sm font-medium">
@@ -360,22 +361,20 @@ const EducationSection: React.FC = () => {
                           <label htmlFor={`edu-from-${i}`} className="mb-1.5 block text-sm font-medium">
                             From date
                           </label>
-                          <Input
-                            id={`edu-from-${i}`}
-                            type="date"
+                          <DateField
                             value={edu.from_date}
-                            onChange={(e) => change(i, 'from_date', e.target.value)}
+                            onChange={(v) => change(i, 'from_date', v)}
+                            aria-label="From date"
                           />
                         </div>
                         <div>
                           <label htmlFor={`edu-to-${i}`} className="mb-1.5 block text-sm font-medium">
                             To date
                           </label>
-                          <Input
-                            id={`edu-to-${i}`}
-                            type="date"
+                          <DateField
                             value={edu.to_date}
-                            onChange={(e) => change(i, 'to_date', e.target.value)}
+                            onChange={(v) => change(i, 'to_date', v)}
+                            aria-label="To date"
                           />
                         </div>
                       </>

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SelectField } from '@/components/ui/select-field';
 import CoursePicker from '@/components/CoursePicker';
 import { type Course } from '@/api/courses';
 import departmentsApi, { type Department } from '@/api/departments';
@@ -130,15 +131,24 @@ const AcademicSection: React.FC = () => {
       <SectionCard title="Academic record" onEdit={() => setOpen(true)} isEmpty={isEmpty}>
         {isEmpty ? (
           <p className="text-muted-foreground text-sm">
-            Add your department, programme, and graduating batch — the placement cell uses these to
-            match you with eligible drives.
+            Add department, programme, and graduating batch.
           </p>
         ) : (
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
             <Row label="Department" value={p?.department} />
             <Row label="Course" value={courseName} />
-            <Row label="Batch" value={p?.batch_year} />
-            <Row label="CGPA" value={p?.cgpa != null ? `${p.cgpa} (verified)` : undefined} />
+            <Row label="Batch" value={p?.batch_year != null ? <span className="data">{p.batch_year}</span> : undefined} />
+            <Row
+              label="CGPA"
+              value={
+                p?.cgpa != null ? (
+                  <>
+                    <span className="data">{p.cgpa}</span>{' '}
+                    <span className="text-brass">(verified)</span>
+                  </>
+                ) : undefined
+              }
+            />
             <Row
               label="Active backlogs"
               value={
@@ -162,9 +172,9 @@ const AcademicSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Academic record</DialogTitle>
+            <DialogTitle className="font-display">Academic record</DialogTitle>
             <DialogDescription>
-              Used by the placement cell for eligibility and reporting. Keep it accurate.
+              Used for eligibility and reporting.
             </DialogDescription>
           </DialogHeader>
 
@@ -173,21 +183,21 @@ const AcademicSection: React.FC = () => {
               <label htmlFor="ac-dept" className="mb-1.5 block text-sm font-medium">
                 Department
               </label>
-              <select
+              <SelectField
                 id="ac-dept"
+                aria-label="Department"
+                placeholder="Select your department…"
                 value={form.department}
-                onChange={(e) => set('department', e.target.value)}
-                className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
-              >
-                <option value="">Select your department…</option>
-                {/* Keep the stored value selectable even if it was later deactivated. */}
-                {form.department && !departments.some((d) => d.name === form.department) && (
-                  <option value={form.department}>{form.department}</option>
-                )}
-                {departments.map((d) => (
-                  <option key={d._id} value={d.name}>{d.name}</option>
-                ))}
-              </select>
+                onChange={(v) => set('department', v)}
+                options={[
+                  { value: '', label: 'Select your department…' },
+                  // Keep the stored value selectable even if it was later deactivated.
+                  ...(form.department && !departments.some((d) => d.name === form.department)
+                    ? [{ value: form.department, label: form.department }]
+                    : []),
+                  ...departments.map((d) => ({ value: d.name, label: d.name })),
+                ]}
+              />
             </div>
 
             <div>
@@ -204,36 +214,32 @@ const AcademicSection: React.FC = () => {
               <label htmlFor="ac-batch" className="mb-1.5 block text-sm font-medium">
                 Batch
               </label>
-              <select
+              <SelectField
                 id="ac-batch"
+                aria-label="Batch"
+                placeholder="—"
                 value={form.batch_year}
-                onChange={(e) => set('batch_year', e.target.value)}
-                className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
-              >
-                <option value="">—</option>
-                {batchYearOptions().map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+                onChange={(v) => set('batch_year', v)}
+                options={[
+                  { value: '', label: '—' },
+                  ...batchYearOptions().map((y) => ({ value: String(y), label: String(y) })),
+                ]}
+              />
             </div>
 
             <div className="border-t pt-4">
               <label htmlFor="ac-intent" className="mb-1.5 block text-sm font-medium">
                 Placement status
               </label>
-              <select
+              <SelectField
                 id="ac-intent"
+                aria-label="Placement status"
                 value={form.placement_intent}
-                onChange={(e) => set('placement_intent', e.target.value as Intent)}
-                className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
-              >
-                {INTENTS.map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
+                onChange={(v) => set('placement_intent', v as Intent)}
+                options={INTENTS.map(([k, v]) => ({ value: k, label: v }))}
+              />
               <p className="text-muted-foreground mt-1.5 text-xs">
-                Opting out removes you from placement drives and from the university's placement
-                percentage. You can opt back in at any time.
+                Opting out removes you from placement drives.
               </p>
             </div>
 
@@ -252,8 +258,7 @@ const AcademicSection: React.FC = () => {
             )}
 
             <p className="text-muted-foreground border-t pt-4 text-xs">
-              CGPA, backlogs and readiness scores are maintained by the placement cell and cannot be
-              edited here.
+              CGPA and backlogs are not editable here.
             </p>
           </div>
 

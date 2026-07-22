@@ -60,7 +60,7 @@ const AboutSection: React.FC = () => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit About</DialogTitle>
+            <DialogTitle className="font-display">Edit About</DialogTitle>
             <DialogDescription>
               A short, first-person summary works best — strengths, focus, and goals.
             </DialogDescription>

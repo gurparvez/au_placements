@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { SelectField, DateField } from '@/components/ui/select-field';
 
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { createStudentProfile } from '@/context/student/studentSlice';
@@ -37,12 +38,12 @@ const SectionHeader: React.FC<{
     <div className="flex items-center gap-3">
       <span
         aria-hidden
-        className="bg-primary-soft text-primary flex h-10 w-10 flex-none items-center justify-center rounded-[11px]"
+        className="bg-[var(--brass-soft)] text-brass flex h-10 w-10 flex-none items-center justify-center rounded-[11px]"
       >
         {icon}
       </span>
       <div>
-        <h2 className="text-lg font-semibold leading-tight tracking-tight">{title}</h2>
+        <h2 className="font-display text-lg font-medium leading-tight tracking-tight">{title}</h2>
         {hint && <p className="text-muted-foreground mt-0.5 text-xs">{hint}</p>}
       </div>
     </div>
@@ -215,23 +216,16 @@ const CreateProfile: React.FC = () => {
 
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <div className="mx-auto flex max-w-[760px] flex-col px-6 pt-24 pb-10">
-        <div className="mb-8 flex items-start gap-4">
-          <span
-            aria-hidden
-            className="bg-primary-soft text-primary flex h-12 w-12 flex-none items-center justify-center rounded-[13px]"
-          >
-            <Rocket size={24} />
-          </span>
-          <div>
-            <span className="eyebrow">Set up your profile</span>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight">Create your profile</h1>
-            <p className="text-muted-foreground mt-2 max-w-[65ch] text-sm">
-              A complete profile helps recruiters across Akal &amp; Eternal discover you. Fields
-              marked <span className="text-danger">*</span> are required — everything else you can
-              fill in as you go.
-            </p>
-          </div>
+      <div className="flex w-full flex-col px-[clamp(20px,10vw,112px)] pt-24 pb-10">
+        <div className="mb-8">
+          <div className="brass-rule mb-3.5" />
+          <span className="ledger-label text-brass">Build your profile</span>
+          <h1 className="font-display mt-2.5 text-[clamp(28px,4vw,40px)] font-medium tracking-[-.02em]">
+            Create your profile
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-[65ch] text-sm">
+            Fields marked <span className="text-danger">*</span> are required.
+          </p>
         </div>
 
         <form onSubmit={() => {}} className="space-y-6">
@@ -470,14 +464,12 @@ const CreateProfile: React.FC = () => {
                       >
                         Available From <span className="text-danger">*</span>
                       </label>
-                      <Input
-                        id="available-from"
-                        type="date"
+                      <DateField
+                        aria-label="Available From"
                         value={lookingFor.from_date}
-                        onChange={(e) =>
-                          setLookingFor((prev) => ({ ...prev, from_date: e.target.value }))
+                        onChange={(v) =>
+                          setLookingFor((prev) => ({ ...prev, from_date: v }))
                         }
-                        aria-invalid={!!errors.looking_for}
                       />
                     </div>
                     <div>
@@ -487,12 +479,11 @@ const CreateProfile: React.FC = () => {
                       >
                         Available Until (Optional)
                       </label>
-                      <Input
-                        id="available-until"
-                        type="date"
+                      <DateField
+                        aria-label="Available Until"
                         value={lookingFor.to_date}
-                        onChange={(e) =>
-                          setLookingFor((prev) => ({ ...prev, to_date: e.target.value }))
+                        onChange={(v) =>
+                          setLookingFor((prev) => ({ ...prev, to_date: v }))
                         }
                       />
                     </div>
@@ -586,18 +577,17 @@ const CreateProfile: React.FC = () => {
                         <label htmlFor={`edu-institute-${index}`} className="mb-1.5 block text-sm font-medium">
                           Institute <span className="text-danger">*</span>
                         </label>
-                        <select
+                        <SelectField
                           id={`edu-institute-${index}`}
+                          aria-label="Institute"
                           value={edu.institute}
-                          onChange={(e) => setEdu(index, { institute: e.target.value })}
-                          className="bg-bg-2 border border-border-strong rounded-[9px] px-3 py-2 text-[14px] w-full outline-none transition-[color,box-shadow,border-color] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-[var(--ring-soft)] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="" disabled>
-                            Select Institute
-                          </option>
-                          <option value="Akal University">Akal University</option>
-                          <option value="Eternal University">Eternal University</option>
-                        </select>
+                          onChange={(v) => setEdu(index, { institute: v })}
+                          options={[
+                            { value: '', label: 'Select Institute', disabled: true },
+                            { value: 'Akal University', label: 'Akal University' },
+                            { value: 'Eternal University', label: 'Eternal University' },
+                          ]}
+                        />
                       </div>
 
                       <div className="flex gap-2">
@@ -649,18 +639,17 @@ const CreateProfile: React.FC = () => {
                           <label htmlFor={`edu-grade-${index}`} className="mb-1.5 block text-sm font-medium">
                             Class <span className="text-danger">*</span>
                           </label>
-                          <select
+                          <SelectField
                             id={`edu-grade-${index}`}
+                            aria-label="Class"
                             value={edu.grade}
-                            onChange={(e) => setEdu(index, { grade: e.target.value })}
-                            className="bg-bg-2 border border-border-strong rounded-[9px] px-3 py-2 text-[14px] w-full outline-none transition-[color,box-shadow,border-color] focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-[var(--ring-soft)]"
-                          >
-                            <option value="" disabled>
-                              Select
-                            </option>
-                            <option value="10th">10th</option>
-                            <option value="12th">12th</option>
-                          </select>
+                            onChange={(v) => setEdu(index, { grade: v })}
+                            options={[
+                              { value: '', label: 'Select', disabled: true },
+                              { value: '10th', label: '10th' },
+                              { value: '12th', label: '12th' },
+                            ]}
+                          />
                         </div>
                         <div className="flex-1">
                           <label htmlFor={`edu-board-${index}`} className="mb-1.5 block text-sm font-medium">
@@ -698,11 +687,10 @@ const CreateProfile: React.FC = () => {
                         <label htmlFor={`edu-from-${index}`} className="mb-1.5 block text-sm font-medium">
                           From Date <span className="text-danger">*</span>
                         </label>
-                        <Input
-                          id={`edu-from-${index}`}
-                          type="date"
+                        <DateField
+                          aria-label="From Date"
                           value={edu.from_date}
-                          onChange={(e) => setEdu(index, { from_date: e.target.value })}
+                          onChange={(v) => setEdu(index, { from_date: v })}
                         />
                       </div>
 
@@ -710,11 +698,10 @@ const CreateProfile: React.FC = () => {
                         <label htmlFor={`edu-to-${index}`} className="mb-1.5 block text-sm font-medium">
                           To Date <span className="text-danger">*</span>
                         </label>
-                        <Input
-                          id={`edu-to-${index}`}
-                          type="date"
+                        <DateField
+                          aria-label="To Date"
                           value={edu.to_date}
-                          onChange={(e) => setEdu(index, { to_date: e.target.value })}
+                          onChange={(v) => setEdu(index, { to_date: v })}
                         />
                       </div>
                     </div>
@@ -826,14 +813,13 @@ const CreateProfile: React.FC = () => {
                       >
                         Start Date <span className="text-danger">*</span>
                       </label>
-                      <Input
-                        id={`exp-start-${index}`}
-                        type="date"
+                      <DateField
+                        aria-label="Start Date"
                         value={exp.start_date}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           setExperiences((prev) =>
                             prev.map((r, i) =>
-                              i === index ? { ...r, start_date: e.target.value } : r
+                              i === index ? { ...r, start_date: v } : r
                             )
                           )
                         }
@@ -847,14 +833,13 @@ const CreateProfile: React.FC = () => {
                       >
                         End Date
                       </label>
-                      <Input
-                        id={`exp-end-${index}`}
-                        type="date"
-                        value={exp.end_date}
-                        onChange={(e) =>
+                      <DateField
+                        aria-label="End Date"
+                        value={exp.end_date ?? ''}
+                        onChange={(v) =>
                           setExperiences((prev) =>
                             prev.map((r, i) =>
-                              i === index ? { ...r, end_date: e.target.value } : r
+                              i === index ? { ...r, end_date: v } : r
                             )
                           )
                         }
@@ -893,7 +878,7 @@ const CreateProfile: React.FC = () => {
               <SectionHeader
                 icon={<FolderKanban size={19} />}
                 title="Projects"
-                hint="Things you've built — with links if you have them."
+                hint="Things you've built, with links."
                 action={
                   <Button
                     type="button"
@@ -963,14 +948,13 @@ const CreateProfile: React.FC = () => {
                       >
                         Start Date <span className="text-danger">*</span>
                       </label>
-                      <Input
-                        id={`project-start-${index}`}
-                        type="date"
+                      <DateField
+                        aria-label="Start Date"
                         value={pr.start_date}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           setProjects((prev) =>
                             prev.map((r, i) =>
-                              i === index ? { ...r, start_date: e.target.value } : r
+                              i === index ? { ...r, start_date: v } : r
                             )
                           )
                         }
@@ -984,14 +968,13 @@ const CreateProfile: React.FC = () => {
                       >
                         End Date
                       </label>
-                      <Input
-                        id={`project-end-${index}`}
-                        type="date"
-                        value={pr.end_date}
-                        onChange={(e) =>
+                      <DateField
+                        aria-label="End Date"
+                        value={pr.end_date ?? ''}
+                        onChange={(v) =>
                           setProjects((prev) =>
                             prev.map((r, i) =>
-                              i === index ? { ...r, end_date: e.target.value } : r
+                              i === index ? { ...r, end_date: v } : r
                             )
                           )
                         }
@@ -1190,14 +1173,13 @@ const CreateProfile: React.FC = () => {
                       >
                         Issue Date <span className="text-danger">*</span>
                       </label>
-                      <Input
-                        id={`cert-issue-date-${index}`}
-                        type="date"
+                      <DateField
+                        aria-label="Issue Date"
                         value={cert.issue_date}
-                        onChange={(e) =>
+                        onChange={(v) =>
                           setCertificates((prev) =>
                             prev.map((r, i) =>
-                              i === index ? { ...r, issue_date: e.target.value } : r
+                              i === index ? { ...r, issue_date: v } : r
                             )
                           )
                         }
@@ -1211,14 +1193,13 @@ const CreateProfile: React.FC = () => {
                       >
                         Valid Until
                       </label>
-                      <Input
-                        id={`cert-valid-until-${index}`}
-                        type="date"
-                        value={cert.valid_until}
-                        onChange={(e) =>
+                      <DateField
+                        aria-label="Valid Until"
+                        value={cert.valid_until ?? ''}
+                        onChange={(v) =>
                           setCertificates((prev) =>
                             prev.map((r, i) =>
-                              i === index ? { ...r, valid_until: e.target.value } : r
+                              i === index ? { ...r, valid_until: v } : r
                             )
                           )
                         }
