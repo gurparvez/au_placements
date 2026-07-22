@@ -74,7 +74,7 @@ function EditCompanyModal({ initial, onClose, onSaved }: { initial: CompanyProfi
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
           <button onClick={onClose} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' }}>Cancel</button>
-          <button onClick={save} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1, transition: 'background .18s ease' }}>{saving ? 'Saving…' : 'Save changes'}</button>
+          <button onClick={save} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1, transition: 'background .18s ease' }}>{saving ? 'Saving…' : 'Save changes'}</button>
         </div>
       </div>
     </div>
@@ -135,7 +135,7 @@ const CompanyProfilePage: React.FC = () => {
     <section style={{ padding: '60px clamp(20px,10vw,112px)', textAlign: 'center', color: 'var(--text-muted)' }}>
       <Building2 size={30} style={{ opacity: 0.5 }} />
       <p style={{ marginTop: 10 }}>This company profile isn’t available.</p>
-      <button onClick={() => navigate('/companies')} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'background .18s ease' }}>Browse companies</button>
+      <button onClick={() => navigate('/companies')} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'background .18s ease' }}>Browse companies</button>
     </section>
   );
 

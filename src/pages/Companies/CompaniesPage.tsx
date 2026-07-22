@@ -24,10 +24,10 @@ const CompaniesPage: React.FC = () => {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (over?: { q?: string; page?: number }) => {
     setLoading(true);
     try {
-      const res = await companiesApi.list({ page, limit: 12, q: q.trim() || undefined });
+      const res = await companiesApi.list({ page: over?.page ?? page, limit: 12, q: (over?.q ?? q).trim() || undefined });
       setCompanies(res.data); setPagination(res.pagination);
     } catch { toast.error('Could not load companies.'); }
     finally { setLoading(false); }
@@ -65,10 +65,26 @@ const CompaniesPage: React.FC = () => {
       {loading ? (
         <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Loading…</p>
       ) : companies.length === 0 ? (
-        <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>No companies yet.</div>
+        <div style={{ textAlign: 'center', padding: '56px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 650, margin: 0 }}>{q ? 'No companies match your search' : 'No companies yet'}</h3>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>
+            {q ? 'Check the spelling, or clear the search to browse every partner.' : 'Recruiting partners appear here once they join the register.'}
+          </p>
+          {q && (
+            <button
+              onClick={() => { setQ(''); setPage(1); if (page === 1) load({ q: '' }); }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')}
+              style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}
+            >
+              Clear search
+            </button>
+          )}
+        </div>
       ) : (
         <Reveal delay={0.05}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+        {/* Locked to 4 per row on desktop; stacks via the responsive helper on small screens */}
+        <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14 }}>
           {companies.map((c) => (
             <div
               key={c.companyUserId}

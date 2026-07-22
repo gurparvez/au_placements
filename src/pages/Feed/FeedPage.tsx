@@ -181,7 +181,7 @@ const FeedPage: React.FC = () => {
             <h1 className="font-display" style={{ fontSize: 'clamp(26px,4vw,36px)', fontWeight: 500, letterSpacing: '-.02em', margin: '6px 0 0' }}>Feed</h1>
           </div>
           {user && (
-            <button onClick={() => setComposerOpen(true)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>
+            <button onClick={() => setComposerOpen(true)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>
               <Plus size={16} /> Add post
             </button>
           )}
@@ -228,7 +228,7 @@ const FeedPage: React.FC = () => {
               <button onClick={() => fileRef.current?.click()} disabled={images.length >= 4} title={images.length >= 4 ? 'Up to 4 images' : 'Add photos'} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 12px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)', fontWeight: 600, fontSize: 13, cursor: images.length >= 4 ? 'not-allowed' : 'pointer', opacity: images.length >= 4 ? 0.6 : 1 }}>
                 <ImagePlus size={16} /> Photo
               </button>
-              <button onClick={submit} disabled={posting || (!content.trim() && images.length === 0)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '9px 22px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease', opacity: posting || (!content.trim() && images.length === 0) ? 0.6 : 1 }}>
+              <button onClick={submit} disabled={posting || (!content.trim() && images.length === 0)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '9px 22px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease', opacity: posting || (!content.trim() && images.length === 0) ? 0.6 : 1 }}>
                 {posting ? 'Posting…' : 'Post'}
               </button>
             </div>

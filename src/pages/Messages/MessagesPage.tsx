@@ -153,7 +153,7 @@ const MessagesPage: React.FC = () => {
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 2 }}>
                         <span style={{ fontSize: 12.5, color: c.unread > 0 ? 'var(--text)' : 'var(--text-muted)', fontWeight: c.unread > 0 ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.last_message?.text || 'No messages yet'}</span>
-                        {c.unread > 0 && <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--primary)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{c.unread}</span>}
+                        {c.unread > 0 && <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--primary)', color: 'var(--on-primary)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{c.unread}</span>}
                       </div>
                     </div>
                   </button>
@@ -210,7 +210,7 @@ const MessagesPage: React.FC = () => {
                     <div key={m._id} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexDirection: mine ? 'row-reverse' : 'row', marginTop: grouped ? -4 : 0 }}>
                       {!mine && (grouped ? <span style={{ width: 28, flex: 'none' }} /> : <Avatar u={m.sender} size={28} />)}
                       <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
-                        <div style={{ padding: '9px 13px', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: mine ? 'var(--primary)' : 'var(--surface)', color: mine ? '#fff' : 'var(--text)', border: mine ? 'none' : '1px solid var(--border)' }}>{m.content}</div>
+                        <div style={{ padding: '9px 13px', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: mine ? 'var(--primary)' : 'var(--surface)', color: mine ? 'var(--on-primary)' : 'var(--text)', border: mine ? 'none' : '1px solid var(--border)' }}>{m.content}</div>
                         <span style={{ fontSize: 10.5, color: 'var(--text-subtle)', margin: '3px 4px 0' }}>{msgTime(m.createdAt)}</span>
                       </div>
                     </div>
@@ -227,7 +227,7 @@ const MessagesPage: React.FC = () => {
                   placeholder="Write a message…"
                   style={{ flex: 1, padding: '12px 16px', borderRadius: 999, border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none' }}
                 />
-                <button onClick={send} disabled={sending || !text.trim()} aria-label="Send" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', transition: 'background .18s ease', opacity: sending || !text.trim() ? 0.5 : 1 }}>
+                <button onClick={send} disabled={sending || !text.trim()} aria-label="Send" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary)', color: 'var(--on-primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', transition: 'background .18s ease', opacity: sending || !text.trim() ? 0.5 : 1 }}>
                   <Send size={18} />
                 </button>
               </div>

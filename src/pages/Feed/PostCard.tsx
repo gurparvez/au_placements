@@ -253,7 +253,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
               {replyTo && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Replying… <button onClick={() => setReplyTo(null)} style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>cancel</button></div>}
               <MentionTextarea value={commentText} onChange={setCommentText} mentions={commentMentions} onMentionsChange={setCommentMentions} placeholder="Add a comment… use @ to mention" rows={2} />
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                <button onClick={submitComment} disabled={busy || !commentText.trim()} style={{ padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none', opacity: busy || !commentText.trim() ? 0.6 : 1 }}>Comment</button>
+                <button onClick={submitComment} disabled={busy || !commentText.trim()} style={{ padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none', opacity: busy || !commentText.trim() ? 0.6 : 1 }}>Comment</button>
               </div>
             </div>
           )}
@@ -287,7 +287,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
             <textarea value={shareQuote} onChange={(e) => setShareQuote(e.target.value)} rows={3} placeholder="Add a thought (optional)…" style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'vertical' }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
               <button onClick={() => setShareOpen(false)} style={{ padding: '9px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={doShare} disabled={busy} style={{ padding: '9px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, cursor: 'pointer', border: 'none', opacity: busy ? 0.7 : 1 }}>Repost</button>
+              <button onClick={doShare} disabled={busy} style={{ padding: '9px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, cursor: 'pointer', border: 'none', opacity: busy ? 0.7 : 1 }}>Repost</button>
             </div>
           </div>
         </div>

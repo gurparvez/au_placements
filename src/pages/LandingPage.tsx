@@ -253,7 +253,7 @@ const LandingPage: React.FC = () => {
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, ease: EASE, delay: 1.1 }}
-                    style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--surface-3)', border: '2px solid var(--bg)', marginLeft: -9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 10, fontWeight: 600 }}
+                    style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--text)', border: '2px solid var(--bg)', marginLeft: -9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bg)', fontSize: 10, fontWeight: 700 }}
                   >
                     +120
                   </motion.span>
@@ -389,11 +389,11 @@ const LandingPage: React.FC = () => {
             {FEATURES.map((f) => (
               <StaggerItem
                 key={f.title}
-                style={{ background: `color-mix(in srgb, ${f.tone} 12%, var(--surface))`, padding: '26px 24px', transition: 'background .18s ease', cursor: 'default' }}
+                style={{ background: `color-mix(in srgb, ${f.tone} 17%, var(--surface))`, padding: '26px 24px', transition: 'background .18s ease', cursor: 'default' }}
               >
                 <div
-                  onMouseEnter={(e) => { (e.currentTarget.parentElement as HTMLElement).style.background = `color-mix(in srgb, ${f.tone} 20%, var(--surface))`; }}
-                  onMouseLeave={(e) => { (e.currentTarget.parentElement as HTMLElement).style.background = `color-mix(in srgb, ${f.tone} 12%, var(--surface))`; }}
+                  onMouseEnter={(e) => { (e.currentTarget.parentElement as HTMLElement).style.background = `color-mix(in srgb, ${f.tone} 26%, var(--surface))`; }}
+                  onMouseLeave={(e) => { (e.currentTarget.parentElement as HTMLElement).style.background = `color-mix(in srgb, ${f.tone} 17%, var(--surface))`; }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <f.icon size={17} aria-hidden style={{ color: f.tone, flex: 'none' }} />

@@ -115,7 +115,7 @@ const PublicStudentProfile: React.FC = () => {
           <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto', color: 'var(--text-subtle)' }}>?</div>
           <h2 style={{ fontSize: 21, fontWeight: 700, margin: '18px 0 0' }}>Profile not found</h2>
           <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0' }}>Profile removed or link incorrect.</p>
-          <Link to="/students" style={{ display: 'inline-flex', marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Back to register</Link>
+          <Link to="/students" style={{ display: 'inline-flex', marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>Back to register</Link>
         </div>
       </Shell>
     );
@@ -159,9 +159,9 @@ const PublicStudentProfile: React.FC = () => {
   const connectButton = () => {
     if (!authUser || authUser._id === studentId) return null;
     const base: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)' };
-    if (conn.status === 'none') return <button onClick={doConnect} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}><UserPlus size={16} /> Connect</button>;
+    if (conn.status === 'none') return <button onClick={doConnect} style={{ ...base, background: 'var(--primary)', color: 'var(--on-primary)', border: 'none' }}><UserPlus size={16} /> Connect</button>;
     if (conn.status === 'outgoing') return <button onClick={doRemoveConn} style={base} title="Withdraw request">Requested</button>;
-    if (conn.status === 'incoming') return <button onClick={doAccept} style={{ ...base, background: 'var(--primary)', color: '#fff', border: 'none' }}><Check size={16} /> Accept request</button>;
+    if (conn.status === 'incoming') return <button onClick={doAccept} style={{ ...base, background: 'var(--primary)', color: 'var(--on-primary)', border: 'none' }}><Check size={16} /> Accept request</button>;
     if (conn.status === 'connected') return <button onClick={doRemoveConn} style={base} title="Remove connection"><Check size={16} /> Connected</button>;
     return null;
   };
@@ -247,9 +247,9 @@ const PublicStudentProfile: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 170, marginTop: 16 }}>
               {isRecruiter ? (
-                <button onClick={openCompose} {...primaryHover} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}><Mail size={16} /> Contact</button>
+                <button onClick={openCompose} {...primaryHover} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}><Mail size={16} /> Contact</button>
               ) : (
-                <a href={contactHref(cs)} {...primaryHover} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background .18s ease' }}><Mail size={16} /> Contact</a>
+                <a href={contactHref(cs)} {...primaryHover} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background .18s ease' }}><Mail size={16} /> Contact</a>
               )}
               {connectButton()}
               {canMessage && (
@@ -421,9 +421,9 @@ const PublicStudentProfile: React.FC = () => {
               ))}
             </div>
             {isRecruiter ? (
-              <button onClick={openCompose} {...primaryHover} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>Email {name}</button>
+              <button onClick={openCompose} {...primaryHover} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>Email {name}</button>
             ) : (
-              <a href={contactHref(cs)} {...primaryHover} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background .18s ease' }}>Email {name}</a>
+              <a href={contactHref(cs)} {...primaryHover} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 16, padding: 11, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, textDecoration: 'none', transition: 'background .18s ease' }}>Email {name}</a>
             )}
           </div>
         </aside>
@@ -452,7 +452,7 @@ const PublicStudentProfile: React.FC = () => {
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 18 }}>
               <button onClick={() => setCompose((c) => ({ ...c, open: false }))} disabled={sending} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border)' }}>Cancel</button>
-              <button onClick={sendCompose} disabled={sending} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', opacity: sending ? 0.7 : 1 }}>{sending ? 'Sending…' : 'Send email'}</button>
+              <button onClick={sendCompose} disabled={sending} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', opacity: sending ? 0.7 : 1 }}>{sending ? 'Sending…' : 'Send email'}</button>
             </div>
           </div>
         </div>

@@ -79,7 +79,8 @@ const LoginPage: React.FC = () => {
           {/* Top: identity */}
           <div style={{ position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/logo2.png" alt="Kalgidhar Trust" width={30} height={30} style={{ display: 'block', objectFit: 'contain', borderRadius: 7 }} />
+              <img data-kp-logo="light" src="/logo_light.png" alt="Kalgidhar Trust" width={30} height={30} style={{ objectFit: 'contain', borderRadius: 7 }} />
+              <img data-kp-logo="dark" src="/logo2.png" alt="Kalgidhar Trust" width={30} height={30} style={{ objectFit: 'contain', borderRadius: 7 }} />
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Kalgidhar Placements</span>
             </div>
             <div style={{ height: 2, width: 40, background: PANEL_BRASS, borderRadius: 2, margin: '30px 0 14px' }} />
@@ -171,7 +172,7 @@ const LoginPage: React.FC = () => {
             <button
               onClick={submitSignin}
               disabled={submitting}
-              style={{ marginTop: 6, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: submitting ? 'not-allowed' : 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}
+              style={{ marginTop: 6, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: submitting ? 'not-allowed' : 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}
               onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = 'var(--primary-hover)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
             >

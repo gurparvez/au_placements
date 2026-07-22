@@ -62,10 +62,15 @@ const OpeningsPage: React.FC = () => {
     }
   };
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (over?: { q?: string; type?: string; university?: string; page?: number }) => {
     setLoading(true);
     try {
-      const res = await openingsApi.list({ page, limit: 12, q: q.trim() || undefined, type: type || undefined, university: university || undefined });
+      const res = await openingsApi.list({
+        page: over?.page ?? page, limit: 12,
+        q: (over?.q ?? q).trim() || undefined,
+        type: (over?.type ?? type) || undefined,
+        university: (over?.university ?? university) || undefined,
+      });
       setOpenings(res.data);
       setPagination(res.pagination);
     } catch {
@@ -105,8 +110,28 @@ const OpeningsPage: React.FC = () => {
       {loading ? (
         <p style={{ color: 'var(--text-muted)', padding: '40px 0', textAlign: 'center' }}>Loading…</p>
       ) : openings.length === 0 ? (
-        <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-          {q || type || university ? 'No openings match your filters.' : 'No openings posted yet.'}
+        <div style={{ textAlign: 'center', padding: '56px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 650, margin: 0 }}>
+            {q || type || university ? 'No openings match your filters' : 'No openings posted yet'}
+          </h3>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>
+            {q || type || university ? 'Try a broader search, or clear the filters to see everything.' : 'Check back soon — new roles from recruiting partners appear here.'}
+          </p>
+          {(q || type || university) && (
+            <button
+              onClick={() => {
+                setQ(''); setPage(1);
+                // type/university are load() deps — clearing them refetches via the
+                // effect; when they're already empty, fetch explicitly with overrides.
+                if (!type && !university && page === 1) load({ q: '' });
+                else { setType(''); setUniversity(''); }
+              }}
+              {...hoverBg('var(--primary-hover)', 'var(--primary)')}
+              style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         /* Two cards per row — equal heights, staggered entrance, springy lift on hover */
@@ -173,7 +198,7 @@ const OpeningsPage: React.FC = () => {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 600, fontSize: 13.5 }}><Check size={15} /> Applied</span>
                   ) : (
                     (!user || isStudent) && (
-                      <button onClick={() => apply(o)} disabled={applying === o._id} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 13.5, border: 'none', cursor: 'pointer', opacity: applying === o._id ? 0.7 : 1, transition: 'background .18s ease' }}>
+                      <button onClick={() => apply(o)} disabled={applying === o._id} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 13.5, border: 'none', cursor: 'pointer', opacity: applying === o._id ? 0.7 : 1, transition: 'background .18s ease' }}>
                         {applying === o._id ? 'Applying…' : 'Apply'}
                       </button>
                     )

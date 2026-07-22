@@ -100,7 +100,7 @@ const RecruiterApply: React.FC = () => {
         <p style={{ color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.6 }}>
           Your recruiter account is <strong>pending admin approval</strong>. Sign in once approved.
         </p>
-        <Link to="/login" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-block', marginTop: 22, padding: '11px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, textDecoration: 'none', transition: 'background .18s ease' }}>
+        <Link to="/login" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-block', marginTop: 22, padding: '11px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, textDecoration: 'none', transition: 'background .18s ease' }}>
           Back to sign in
         </Link>
       </section>
@@ -184,7 +184,7 @@ const RecruiterApply: React.FC = () => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
         <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13.5, textDecoration: 'none' }}><ArrowLeft size={15} /> Back to sign in</Link>
-        <button onClick={submit} disabled={submitting} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '12px 24px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}>
+        <button onClick={submit} disabled={submitting} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '12px 24px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}>
           {submitting ? 'Submitting…' : 'Submit request'}
         </button>
       </div>

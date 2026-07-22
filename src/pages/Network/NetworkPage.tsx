@@ -14,7 +14,7 @@ const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w)
 
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' };
 const btnGhost: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' };
-const btnPrimary: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' };
+const btnPrimary: React.CSSProperties = { padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: 'var(--on-primary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' };
 const hoverBg = (over: string, base: string) => ({
   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
   onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
@@ -137,7 +137,7 @@ const NetworkPage: React.FC = () => {
             {t.icon} {t.label}
             <span className="data" style={{ fontSize: 12.5, color: 'var(--text-subtle)', fontWeight: 600 }}>{t.count}</span>
             {t.badge ? (
-              <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)', color: '#fff' }}>{t.badge}</span>
+              <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)', color: 'var(--on-primary)' }}>{t.badge}</span>
             ) : null}
           </button>
         ))}

@@ -11,7 +11,7 @@ const onHover = (lift: boolean, hue: string) => (e: React.MouseEvent<HTMLAnchorE
   e.currentTarget.style.transform = lift ? 'translateY(-4px)' : 'none';
   e.currentTarget.style.borderColor = lift ? `color-mix(in srgb, ${hue} 45%, var(--border))` : 'var(--border)';
   e.currentTarget.style.boxShadow = lift ? '0 20px 38px -22px rgba(0,0,0,.45)' : 'var(--shadow)';
-  e.currentTarget.style.background = tintOf(hue, lift ? 17 : 10);
+  e.currentTarget.style.background = tintOf(hue, lift ? 24 : 15);
 };
 
 export default function StudentCard({ vm }: { vm: CardVM }) {
@@ -29,7 +29,7 @@ export default function StudentCard({ vm }: { vm: CardVM }) {
         padding: 18,
         height: '100%',
         boxSizing: 'border-box',
-        background: tintOf(vm.avatarBg, 10),
+        background: tintOf(vm.avatarBg, 15),
         border: '1px solid var(--border)',
         borderRadius: 'var(--r-card)',
         textDecoration: 'none',
