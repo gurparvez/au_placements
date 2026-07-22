@@ -83,7 +83,7 @@ const ChangePasswordDialog: React.FC<{
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Change password</DialogTitle>
+          <DialogTitle className="font-display">Change password</DialogTitle>
           <DialogDescription>Enter your current password and a new one.</DialogDescription>
         </DialogHeader>
 
@@ -183,7 +183,7 @@ const StudentProfilePage: React.FC = () => {
     return (
       <StatusScreen>
         <span className="eyebrow">Restricted</span>
-        <h1 className="mt-3 text-2xl font-semibold">Please sign in first</h1>
+        <h1 className="font-display mt-3 text-2xl font-medium">Please sign in first</h1>
         <p className="text-muted-foreground mt-2 text-sm">
           You need an account to view and edit your profile.
         </p>
@@ -222,7 +222,7 @@ const StudentProfilePage: React.FC = () => {
     return (
       <StatusScreen>
         <span className="eyebrow">No profile yet</span>
-        <h1 className="mt-3 text-2xl font-semibold">Create your profile</h1>
+        <h1 className="font-display mt-3 text-2xl font-medium">Create your profile</h1>
         <p className="text-muted-foreground mt-2 text-sm">
           You don't have a profile yet — let's build one.
         </p>
@@ -238,7 +238,7 @@ const StudentProfilePage: React.FC = () => {
 
   return (
     <div className="bg-secondary/30 text-foreground min-h-screen">
-      <div className="mx-auto w-full max-w-[1080px] space-y-4 px-6 pt-24 pb-16">
+      <div className="w-full space-y-4 px-[clamp(20px,10vw,112px)] pt-24 pb-16">
         <ProfileHeader />
         <AboutSection />
         <AcademicSection />
