@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
-import { Home, Newspaper, GraduationCap, Briefcase, Building2, Users, Shield, Info, X, Search, Sun, Moon, MessageCircle, LogOut, User as UserIcon } from 'lucide-react';
+import { Home, Newspaper, GraduationCap, Briefcase, Building2, Users, Shield, Info, Search, Sun, Moon, MessageCircle, LogOut, User as UserIcon } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { initials } from '@/utils/avatar';
 import NotificationsBell from '@/components/NotificationsBell';
@@ -17,7 +17,7 @@ interface Item {
 }
 
 const rowStyle = (active = false, accent = false): React.CSSProperties => ({
-  display: 'flex', alignItems: 'center', gap: 11, padding: '11px 12px', borderRadius: 'var(--r-ctl)',
+  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 'var(--r-ctl)',
   textDecoration: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', width: '100%',
   textAlign: 'left', background: active ? 'var(--primary-soft)' : 'transparent',
   color: active || accent ? 'var(--primary)' : 'var(--text)',
@@ -45,8 +45,11 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
       const t = e.target as HTMLElement;
       if (ref.current && !ref.current.contains(t) && !t.closest('[data-sidebar-toggle]')) onClose();
     };
+    // No visible close button — Esc is the keyboard exit.
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); window.removeEventListener('keydown', onKey); };
   }, [open, onClose]);
 
   const handleLogout = async () => {
@@ -113,22 +116,27 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
       onMouseEnter={cancelLeave}
       style={{
         /* Compact panel from the RIGHT — sized to its content, not the viewport */
-        position: 'fixed', right: 10, top: 82, zIndex: 300,
-        width: 'fit-content', minWidth: 224, maxWidth: 'min(80vw, 300px)',
-        height: 'fit-content', maxHeight: 'calc(100vh - 96px)',
-        background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 12,
+        /* Anchored exactly like the bell dropdown: flush under the avatar
+           (header is 76px tall, icons end at 57px, +8px gap = 65) */
+        position: 'fixed', right: 12, top: 65, zIndex: 300,
+        width: 'fit-content', minWidth: 188, maxWidth: 'min(80vw, 280px)',
+        height: 'fit-content', maxHeight: 'calc(100vh - 77px)',
+        background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 10,
         display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', overflowX: 'visible',
-        /* transform must clear entirely when open — a lingering translateX(0) makes
-           this panel the containing block for the bell's position:fixed dropdown */
-        transform: open ? 'none' : 'translateX(calc(100% + 14px))',
-        transition: 'transform .25s cubic-bezier(.4,0,.2,1), visibility .25s',
+        /* Drops down from under the avatar, matching the bell popup. Transform must
+           clear entirely when open — a lingering transform makes this panel the
+           containing block for the bell's position:fixed dropdown. */
+        transform: open ? 'none' : 'translateY(-8px) scale(.98)',
+        transformOrigin: 'top right',
+        opacity: open ? 1 : 0,
+        transition: 'transform .18s cubic-bezier(.16,1,.3,1), opacity .16s ease, visibility .18s',
         boxShadow: open ? '0 12px 40px -12px rgba(0,0,0,.45)' : 'none',
         pointerEvents: open ? 'auto' : 'none',
         visibility: open ? 'visible' : 'hidden', // closed drawer leaves the tab order entirely
       }}
     >
       {/* header — identity when signed in, plus close (bell appears here only on mobile) */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, padding: '0 4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6, padding: '2px 4px 0' }}>
         {user ? (
           <span style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
             <span aria-hidden style={{
@@ -142,12 +150,7 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
         ) : (
           <span style={{ fontWeight: 700, fontSize: 15 }}>Menu</span>
         )}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
-          {user && <span data-kp-show="mobile"><NotificationsBell fixedPanel /></span>}
-          <button onClick={onClose} aria-label="Close menu" style={{ width: 40, height: 40, borderRadius: 'var(--r-ctl)', cursor: 'pointer', color: 'var(--text)', border: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} />
-          </button>
-        </span>
+        {user && <span data-kp-show="mobile" style={{ flex: 'none' }}><NotificationsBell fixedPanel /></span>}
       </div>
 
       {/* mobile-only: the primary nav (hidden from the top bar at this width) */}

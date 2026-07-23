@@ -50,7 +50,14 @@ const MessagesBubble: React.FC = () => {
         onClick={() => setOpen((o) => !o)}
         aria-label="Messages"
         aria-expanded={open}
-        style={{ position: 'relative', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', background: 'var(--surface-2)', border: '1px solid var(--border)' }}
+        style={{
+          position: 'relative', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          // open = filled with the accent so the active state is unmistakable
+          color: open ? 'var(--on-primary)' : 'var(--text-muted)',
+          background: open ? 'var(--primary)' : 'var(--surface-2)',
+          border: open ? '1px solid var(--primary)' : '1px solid var(--border)',
+          transition: 'background .18s ease, color .18s ease, border-color .18s ease',
+        }}
       >
         <MessageCircle size={17} />
         {unread > 0 && (

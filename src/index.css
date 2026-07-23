@@ -192,7 +192,7 @@ img[data-kp-logo='dark'] { display: none; }
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 15px;
-    font-weight: 500; /* heavier base — thin text never blends into either background */
+    font-weight: 550; /* heavier base — thin text never blends into either background */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
@@ -221,6 +221,29 @@ img[data-kp-logo='dark'] { display: none; }
   }
   button:disabled {
     cursor: not-allowed;
+  }
+
+  /* Universal minimal hover feedback — every button responds even when it has
+     no bespoke handler: a whisper of shade on hover, a 1px press on click. */
+  button:not(:disabled) {
+    transition: filter 0.15s ease, transform 0.1s ease;
+  }
+  button:not(:disabled):hover {
+    filter: brightness(0.96);
+  }
+  .dark button:not(:disabled):hover,
+  [data-theme='dark'] button:not(:disabled):hover {
+    filter: brightness(1.12);
+  }
+  button:not(:disabled):active {
+    transform: translateY(1px);
+  }
+
+  /* Inputs acknowledge the pointer with a faint halo (additive — never fights
+     inline borders or error states). */
+  input:not(:disabled):hover:not(:focus),
+  textarea:not(:disabled):hover:not(:focus) {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pri) 8%, transparent);
   }
 
   ::selection {
@@ -276,9 +299,19 @@ img[data-kp-logo='dark'] { display: none; }
     letter-spacing: -0.02em !important;
   }
   /* Tiny tracked label — spec: 10.5–11px, 700, .1em, subtle ink */
+  /* Chart & graph titles — a clear step above ledger labels: bigger, heavier,
+     and in full ink so they read as headings, not metadata. */
+  .chart-label {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
   .ledger-label {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 11.5px;
+    font-weight: 750;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--subtle);

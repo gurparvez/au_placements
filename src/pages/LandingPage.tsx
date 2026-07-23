@@ -104,13 +104,13 @@ const HeroSteps: React.FC = () => {
                 aria-hidden
                 animate={{ color: on ? 'var(--brass)' : 'var(--text-subtle)', scale: on ? 1.12 : 1 }}
                 transition={{ duration: 0.35, ease: EASE }}
-                style={{ fontSize: 21, fontWeight: 500, lineHeight: 1.2, flex: 'none', transformOrigin: 'left center' }}
+                style={{ fontSize: 24, fontWeight: 550, lineHeight: 1.2, flex: 'none', transformOrigin: 'left center' }}
               >
                 {n}
               </motion.span>
               <div style={{ minWidth: 0 }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <motion.span animate={{ color: on ? 'var(--text)' : 'var(--text-muted)' }} style={{ fontWeight: 650, fontSize: 14.5 }}>{title}</motion.span>
+                  <motion.span animate={{ color: on ? 'var(--text)' : 'var(--text-muted)' }} style={{ fontWeight: 700, fontSize: 16.5 }}>{title}</motion.span>
                   {/* the sign-off stamps itself on the verification step */}
                   {i === 1 && on && (
                     <motion.span
@@ -123,7 +123,7 @@ const HeroSteps: React.FC = () => {
                     </motion.span>
                   )}
                 </span>
-                <motion.div animate={{ opacity: on ? 1 : 0.72 }} style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.5 }}>{sub}</motion.div>
+                <motion.div animate={{ opacity: on ? 1 : 0.78 }} style={{ fontSize: 14.5, fontWeight: 550, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.5 }}>{sub}</motion.div>
               </div>
             </motion.button>
           );

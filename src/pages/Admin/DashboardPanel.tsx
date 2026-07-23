@@ -70,7 +70,7 @@ const Panel: React.FC<{
     <div style={{ ...card, padding: PANEL_PAD, minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 className="font-display" style={{ margin: 0, fontSize: 15, fontWeight: 500, letterSpacing: '-.01em' }}>{title}</h3>
+          <h3 className="font-display" style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: '-.01em' }}>{title}</h3>
           {subtitle && <p style={{ ...muted, margin: '4px 0 0', lineHeight: 1.5 }}>{subtitle}</p>}
         </div>
         {action}
@@ -95,20 +95,21 @@ const StatCard: React.FC<{
   hint?: string;
   tone?: string;
 }> = ({ icon: Icon, label, value, hint, tone = 'var(--primary)' }) => (
-  <MotionCard style={{ ...card, padding: 16, height: '100%', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+  /* Icon beside the figures — the row fills the card's width, the figure owns the card */
+  <MotionCard style={{ ...card, padding: '18px 18px', height: '100%', display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
     <span style={{
-      width: 34, height: 34, flex: 'none', borderRadius: 10, display: 'inline-flex',
+      width: 48, height: 48, flex: 'none', borderRadius: 13, display: 'inline-flex',
       alignItems: 'center', justifyContent: 'center',
-      background: `color-mix(in srgb, ${tone} 12%, transparent)`, color: tone,
+      background: `color-mix(in srgb, ${tone} 14%, transparent)`, color: tone,
     }}>
-      <Icon size={18} />
+      <Icon size={23} />
     </span>
-    <div style={{ minWidth: 0, marginTop: 'auto' }}>
-      <div className="data" style={{ fontSize: 25, fontWeight: 600, letterSpacing: '-.02em', lineHeight: 1.15 }}>
+    <div style={{ minWidth: 0, flex: 1 }}>
+      <div className="data" style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1.1 }}>
         {typeof value === 'number' ? <AnimatedNumber value={value} decimals={decimalsOf(value)} /> : value}
       </div>
-      <div style={{ ...muted, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-      {hint && <div style={{ fontSize: 11.5, color: 'var(--text-subtle)', marginTop: 4, lineHeight: 1.45 }}>{hint}</div>}
+      <div style={{ fontSize: 14, fontWeight: 650, color: 'var(--text-muted)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+      {hint && <div style={{ fontSize: 12.5, fontWeight: 550, color: 'var(--text-subtle)', marginTop: 3, lineHeight: 1.45 }}>{hint}</div>}
     </div>
   </MotionCard>
 );
@@ -420,7 +421,7 @@ const DashboardPanel: React.FC = () => {
               ) : (
                 <div className="kp-ledger" style={{ gridTemplateColumns: '1fr 1.15fr 1.35fr', alignItems: 'stretch' }}>
                   <div style={{ paddingRight: 22, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 14 }}>
-                    <span className="ledger-label" style={{ display: 'block' }}>Placement rate</span>
+                    <span className="chart-label" style={{ display: 'block' }}>Placement rate</span>
                     <div title={`${fy.placed} of ${fy.total} seeking placed (${fy.rate}%) — batch of ${fy.batch}`} style={{ display: 'flex', justifyContent: 'center' }}>
                       <Gauge value={fy.rate} label="placed" size={172} />
                     </div>
@@ -474,7 +475,7 @@ const DashboardPanel: React.FC = () => {
                     </div>
                   </div>
                   <div style={{ paddingLeft: 22, paddingRight: 22, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 14 }}>
-                    <span className="ledger-label" style={{ display: 'block' }}>Outcome mix</span>
+                    <span className="chart-label" style={{ display: 'block' }}>Outcome mix</span>
                     <DonutChart data={data.distribution.outcome_composition} emptyLabel="No intent recorded." size={196} stacked centerLabel="students" />
                     <div>
                       <span style={{ ...muted, fontSize: 11.5, fontWeight: 600, display: 'block', marginBottom: 7 }}>
@@ -494,7 +495,7 @@ const DashboardPanel: React.FC = () => {
                     </div>
                   </div>
                   <div style={{ paddingLeft: 22, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                    <span className="ledger-label" style={{ display: 'block', marginBottom: 16 }}>Placed vs remaining · department</span>
+                    <span className="chart-label" style={{ display: 'block', marginBottom: 16 }}>Placed vs remaining · department</span>
                     <StackedBar
                       fill
                       data={fy.by_department.map((d) => ({
