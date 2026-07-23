@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
 import type { Skill } from './skills';
+import { createHttp } from './http';
 
 export type OpeningType = 'internship' | 'job';
 export type WorkMode = 'onsite' | 'remote' | 'hybrid';
@@ -105,7 +106,7 @@ class OpeningsApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
+    this.instance = createHttp();
   }
 
   async list(params?: { page?: number; limit?: number; q?: string; type?: string; university?: string; skill?: string; status?: string; recruiter?: string }): Promise<ListOpeningsResponse> {

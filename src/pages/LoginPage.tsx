@@ -75,7 +75,7 @@ const LoginPage: React.FC = () => {
           data-kp-show="desktop"
           style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 44 }}
         >
-          <img src="/login_panel.jpg" alt="" aria-hidden loading="lazy" width={1339} height={847} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src="/login_panel.webp" alt="" aria-hidden loading="lazy" width={1339} height={847} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           {/* base wash + extra weight behind the headline (top) and proof ledger (bottom) */}
           <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(9,11,16,.50) 0%, rgba(9,11,16,.16) 34%, rgba(9,11,16,.16) 56%, rgba(9,11,16,.68) 100%), linear-gradient(165deg, rgba(9,11,16,.16) 0%, rgba(9,11,16,.22) 100%)' }} />
 

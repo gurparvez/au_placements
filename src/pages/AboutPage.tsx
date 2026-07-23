@@ -19,19 +19,19 @@ const FOUNDERS = [
     name: 'Sant Attar Singh Ji',
     years: '1866 – 1927',
     note: 'The revered saint of Mastuana Sahib who taught that spiritual and scientific education must go hand in hand. A century ago he envisioned a centre of learning in the Himalayan foothills where character would be built alongside knowledge, the seed from which Baru Sahib grew. He sent his disciple Sant Teja Singh abroad to master modern education and bring it home.',
-    img: '/Sant_Attar_Singh_Ji.jpg',
+    img: '/Sant_Attar_Singh_Ji.webp',
   },
   {
     name: 'Sant Teja Singh Ji',
     years: 'Harvard A.M., 1911',
     note: 'A scholar who studied at Cambridge and Harvard and carried the mission across three continents. In 1956, at the age of 79, he laid the foundation of Baru Sahib, the "Valley of Divine Peace", fulfilling his master\'s vision, and entrusted its future to a young Iqbal Singh before passing in 1965.',
-    img: '/sant_baba_taja_singh_ji.jpg',
+    img: '/sant_baba_taja_singh_ji.webp',
   },
   {
     name: 'Baba Iqbal Singh Ji',
     years: '1926 – 2022 · Padma Shri',
     note: 'A Director of Agriculture in Himachal Pradesh who gave his retirement, and everything after, to Baru Sahib. He opened the first Akal Academy in 1986 with just five students and lived to see 130 academies, two universities and thousands of rural children educated. India honoured him with the Padma Shri in 2022.',
-    img: '/Baba_Iqbal_Singh.jpg',
+    img: '/Baba_Iqbal_Singh.webp',
   },
 ];
 const VALUES = [
@@ -127,7 +127,7 @@ const AboutPage: React.FC = () => {
         <Reveal>
           <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', border: '1px solid var(--border)', minHeight: 'clamp(340px,40vw,460px)', display: 'flex', alignItems: 'center' }}>
             <img
-              src="/baru_sahib.jpg"
+              src="/baru_sahib.webp"
               alt="Baru Sahib campus in the Himalayan foothills"
               loading="lazy"
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}

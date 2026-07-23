@@ -141,7 +141,7 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
         )}
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
           {user && <span data-kp-show="mobile"><NotificationsBell fixedPanel /></span>}
-          <button onClick={onClose} aria-label="Close menu" style={{ width: 34, height: 34, borderRadius: 'var(--r-ctl)', cursor: 'pointer', color: 'var(--text)', border: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={onClose} aria-label="Close menu" style={{ width: 40, height: 40, borderRadius: 'var(--r-ctl)', cursor: 'pointer', color: 'var(--text)', border: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} />
           </button>
         </span>

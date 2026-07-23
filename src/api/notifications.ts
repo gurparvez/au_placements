@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
 import type { ChatUser } from './messages';
+import { createHttp } from './http';
 
 export type NotificationType =
   | 'reaction' | 'comment' | 'reply' | 'mention' | 'message' | 'recruiter_approved' | 'recruiter_rejected'
@@ -19,7 +20,7 @@ export interface AppNotification {
 class NotificationsApi {
   private instance: AxiosInstance;
   constructor() {
-    this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
+    this.instance = createHttp();
   }
 
   async list(): Promise<{ items: AppNotification[]; unread: number }> {

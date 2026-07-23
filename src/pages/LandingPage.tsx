@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   ArrowRight, ArrowUpRight, BadgeCheck, Users, Briefcase, Building2, Newspaper,
   MessageCircle, UserPlus, GraduationCap, Search, Send, MapPin,
@@ -48,10 +48,12 @@ const STEP_MS = 2800;
 
 const HeroSteps: React.FC = () => {
   const [active, setActive] = useState(0);
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
+    if (reduceMotion) return; // stay on the first step — no auto-advance for reduced motion
     const t = setInterval(() => setActive((v) => (v + 1) % HERO_STEPS.length), STEP_MS);
     return () => clearInterval(t);
-  }, []);
+  }, [reduceMotion]);
 
   return (
     <>
@@ -528,7 +530,7 @@ const LandingPage: React.FC = () => {
         <Reveal delay={0.05} style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', border: '1px solid var(--border)' }}>
           {/* slow Ken Burns drift on the campus photograph */}
           <motion.img
-            src="/cta_banner.jpg" alt="" aria-hidden loading="lazy" width={1516} height={910}
+            src="/cta_banner.webp" alt="" aria-hidden loading="lazy" width={1516} height={910}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
             animate={{ scale: [1, 1.07] }}
             transition={{ duration: 22, repeat: Infinity, repeatType: 'mirror', ease: 'linear' }}

@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export interface SendOutreachPayload {
   studentId: string;
@@ -11,11 +12,7 @@ class OutreachApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({
-      baseURL: URL,
-      withCredentials: true, // send auth cookie (recruiter-only, gated)
-      timeout: 20000,
-    });
+    this.instance = createHttp(20000);
   }
 
   async emailStudent(payload: SendOutreachPayload): Promise<{ success: boolean; message: string }> {

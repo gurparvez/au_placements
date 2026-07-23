@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export interface Company {
   companyUserId: string;
@@ -25,7 +26,7 @@ export interface CompaniesResponse { success: boolean; data: Company[]; paginati
 
 class CompaniesApi {
   private instance: AxiosInstance;
-  constructor() { this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 }); }
+  constructor() { this.instance = createHttp(); }
 
   async list(params?: { page?: number; limit?: number; q?: string }): Promise<CompaniesResponse> {
     const res = await this.instance.get<CompaniesResponse>('/api/companies', { params });

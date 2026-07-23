@@ -1,9 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageCircle, X } from 'lucide-react';
 import messagesApi from '@/api/messages';
 import { getSocket } from '@/lib/socket';
-import { MessagesPanel } from '@/pages/Messages/MessagesPage';
+
+// Loaded only when the popup first opens — keeps the messages code out of the main bundle.
+const MessagesPanel = lazy(() => import('@/pages/Messages/MessagesPage').then((m) => ({ default: m.MessagesPanel })));
 
 /* Messages popup — the icon toggles a large modal with the full two-pane
    inbox + thread UI. Portaled to <body>: the header's backdrop-filter would
@@ -11,6 +13,12 @@ import { MessagesPanel } from '@/pages/Messages/MessagesPage';
 const MessagesBubble: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
+  const closeRef = React.useRef<HTMLButtonElement>(null);
+
+  // Move focus into the dialog when it opens (keyboard/screen-reader entry point).
+  useEffect(() => {
+    if (open) closeRef.current?.focus();
+  }, [open]);
 
   const refresh = useCallback(async () => {
     try {
@@ -61,8 +69,11 @@ const MessagesBubble: React.FC = () => {
             aria-label="Messages"
             style={{ position: 'relative', width: 'min(1080px, 96vw)', height: 'min(82vh, 720px)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', background: 'var(--surface)' }}
           >
-            <MessagesPanel modal onNavigateAway={() => setOpen(false)} />
+            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 14 }}>Loading…</div>}>
+              <MessagesPanel modal onNavigateAway={() => setOpen(false)} />
+            </Suspense>
             <button
+              ref={closeRef}
               onClick={() => setOpen(false)}
               aria-label="Close messages"
               style={{ position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 5 }}

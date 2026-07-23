@@ -1,3 +1,4 @@
+import { confirmDialog } from '@/components/confirm';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -108,7 +109,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
   };
 
   const removeComment = async (c: Comment) => {
-    if (!window.confirm('Delete this comment?')) return;
+    if (!(await confirmDialog({ title: 'Delete this comment?', confirmLabel: 'Delete', danger: true }))) return;
     try {
       await postsApi.deleteComment(c._id);
       await loadComments();
@@ -126,7 +127,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
   };
 
   const del = async () => {
-    if (!window.confirm('Delete this post?')) return;
+    if (!(await confirmDialog({ title: 'Delete this post?', message: 'The post and its comments will be removed for everyone.', confirmLabel: 'Delete', danger: true }))) return;
     try { await postsApi.remove(p._id); toast.success('Post deleted.'); onDeleted(p._id); }
     catch { toast.error('Could not delete post.'); }
   };

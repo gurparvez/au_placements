@@ -1,6 +1,7 @@
 // src/api/courses.ts
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants'; // Ensure this points to your backend URL
+import { createHttp } from './http';
 
 export interface Course {
   _id: string;
@@ -18,11 +19,7 @@ export class CoursesApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({
-      baseURL: URL,
-      withCredentials: true, // send the auth cookie for protected routes (POST /courses)
-      timeout: 15000,
-    });
+    this.instance = createHttp();
   }
 
   // GET /api/courses/search?q={query}

@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
 import type { ChatUser } from './messages';
+import { createHttp } from './http';
 
 export type ConnStatus = 'none' | 'pending' | 'outgoing' | 'incoming' | 'connected' | 'self';
 
@@ -9,7 +10,7 @@ export interface PendingLists { incoming: ConnectionEntry[]; outgoing: Connectio
 
 class ConnectionsApi {
   private instance: AxiosInstance;
-  constructor() { this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 }); }
+  constructor() { this.instance = createHttp(); }
 
   async status(userId: string): Promise<{ status: ConnStatus; connectionId?: string }> {
     const res = await this.instance.get(`/api/connections/status/${userId}`);

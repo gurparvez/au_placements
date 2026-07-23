@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export const REACTION_TYPES = ['like', 'celebrate', 'support', 'insightful', 'funny', 'love'] as const;
 export type ReactionType = (typeof REACTION_TYPES)[number];
@@ -69,7 +70,7 @@ export interface MentionUser { _id: string; firstName?: string; lastName?: strin
 class PostsApi {
   private instance: AxiosInstance;
   constructor() {
-    this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
+    this.instance = createHttp();
   }
 
   async feed(params?: { cursor?: string; limit?: number }): Promise<CursorFeedResponse> {

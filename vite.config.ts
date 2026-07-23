@@ -11,4 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Stable vendor chunks — cached across deploys, loaded in parallel.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router', 'react-router-dom'],
+          motion: ['motion'],
+          state: ['@reduxjs/toolkit', 'react-redux', 'axios'],
+        },
+      },
+    },
+  },
 })

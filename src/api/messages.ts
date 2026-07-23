@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export interface ChatUser { _id: string; firstName?: string; lastName?: string; roles?: string[]; }
 
@@ -23,7 +24,7 @@ export interface Message {
 class MessagesApi {
   private instance: AxiosInstance;
   constructor() {
-    this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
+    this.instance = createHttp();
   }
 
   async listConversations(): Promise<Conversation[]> {

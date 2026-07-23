@@ -1,3 +1,4 @@
+import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -120,7 +121,7 @@ function ManagedList({
   };
 
   const remove = async (item: RefItem) => {
-    if (!window.confirm(`Delete "${item.label}"? This cannot be undone.`)) return;
+    if (!(await confirmDialog({ title: `Delete "${item.label}"?`, message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }))) return;
     try {
       await onDelete(item._id);
     } catch (err) {

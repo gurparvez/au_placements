@@ -1,6 +1,7 @@
 // src/api/student.ts
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 import {
   type CreateStudentProfilePayload,
   type UpdateStudentProfilePayload,
@@ -37,11 +38,7 @@ class StudentApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({
-      baseURL: URL,
-      withCredentials: true, // cookie-based auth
-      timeout: 15000,
-    });
+    this.instance = createHttp();
   }
 
   /* ------------------------------ Create Profile ----------------------------- */

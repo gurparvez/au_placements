@@ -1,3 +1,4 @@
+import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -517,7 +518,7 @@ const RecruiterOpenings: React.FC = () => {
   };
 
   const remove = async (o: Opening) => {
-    if (!window.confirm(`Delete "${o.title}"? This cannot be undone.`)) return;
+    if (!(await confirmDialog({ title: `Delete "${o.title}"?`, message: 'The opening and its applications list cannot be recovered.', confirmLabel: 'Delete', danger: true }))) return;
     try {
       await openingsApi.remove(o._id);
       toast.success('Opening deleted.');

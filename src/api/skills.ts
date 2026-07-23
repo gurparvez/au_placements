@@ -1,6 +1,7 @@
 // src/api/skills.ts
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export interface Skill {
   _id: string;
@@ -27,11 +28,7 @@ export class SkillsApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({
-      baseURL: URL,
-      withCredentials: true, // send the auth cookie for protected routes (POST /skills)
-      timeout: 15000,
-    });
+    this.instance = createHttp();
   }
 
   async getSkillById(skillId: string): Promise<SkillResponse> {

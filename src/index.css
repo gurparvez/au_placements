@@ -295,6 +295,11 @@ img[data-kp-logo='dark'] { display: none; }
 
 /* --------- Prototype responsive + placeholder helpers --------- */
 [data-kp-show="mobile"] { display: none !important; }
+/* Intermediate step: 3/4-wide card grids ease to 2 columns before stacking,
+   so cards never get pinched at tablet widths. */
+@media (max-width: 1180px) and (min-width: 881px) {
+  [data-kp-browse] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
 @media (max-width: 880px) {
   [data-kp-show="desktop"] { display: none !important; }
   [data-kp-show="mobile"] { display: flex !important; }

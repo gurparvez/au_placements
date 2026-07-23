@@ -1,3 +1,4 @@
+import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -250,7 +251,7 @@ const InvitationsSection: React.FC = () => {
   };
 
   const remove = async (row: InvitationRow) => {
-    if (!window.confirm(`Remove ${row.company} from session ${row.session}?`)) return;
+    if (!(await confirmDialog({ title: `Remove ${row.company}?`, message: `It will be dropped from session ${row.session}.`, confirmLabel: 'Remove', danger: true }))) return;
     try {
       await analyticsApi.deleteInvitation(row._id);
       toast.success('Removed.');

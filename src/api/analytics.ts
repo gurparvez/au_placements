@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 /* ----------------------------- TYPES ----------------------------- */
 
@@ -293,7 +294,7 @@ class AnalyticsApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 20000 });
+    this.instance = createHttp(20000);
   }
 
   async dashboard(filters: DashboardFilters = {}): Promise<DashboardData> {

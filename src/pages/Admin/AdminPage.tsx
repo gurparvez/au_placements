@@ -1,3 +1,4 @@
+import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -396,7 +397,7 @@ const AdminPage: React.FC = () => {
   const openEdit = (u: AdminUser) => { setEditing(u); setModalOpen(true); };
 
   const remove = async (u: AdminUser) => {
-    if (!window.confirm(`Delete ${u.firstName} (AUID ${u.auid})? This also removes their student profile.`)) return;
+    if (!(await confirmDialog({ title: `Delete ${u.firstName}?`, message: `AUID ${u.auid} — this also removes their student profile.`, confirmLabel: 'Delete', danger: true }))) return;
     try {
       await adminApi.deleteUser(u._id);
       toast.success('User deleted.');

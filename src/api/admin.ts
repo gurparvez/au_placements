@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 /* ----------------------------- TYPES ----------------------------- */
 
@@ -97,11 +98,7 @@ class AdminApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({
-      baseURL: URL,
-      withCredentials: true,
-      timeout: 15000,
-    });
+    this.instance = createHttp();
   }
 
   async listUsers(params?: { page?: number; limit?: number; q?: string }): Promise<ListUsersResponse> {

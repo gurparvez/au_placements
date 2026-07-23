@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export interface RecruiterProfile {
   _id: string;
@@ -32,7 +33,7 @@ export interface UpdateRecruiterPayload {
 
 class RecruiterApi {
   private instance: AxiosInstance;
-  constructor() { this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 20000 }); }
+  constructor() { this.instance = createHttp(20000); }
 
   async getMe(): Promise<{ user: any; profile: RecruiterProfile }> {
     const res = await this.instance.get('/api/recruiter/me');

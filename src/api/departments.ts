@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { URL } from '../constants';
+import { createHttp } from './http';
 
 export interface Department {
   _id: string;
@@ -12,7 +13,7 @@ class DepartmentsApi {
   private instance: AxiosInstance;
 
   constructor() {
-    this.instance = axios.create({ baseURL: URL, withCredentials: true, timeout: 15000 });
+    this.instance = createHttp();
   }
 
   /** Active departments — the dropdown source. Pass all=true (admin) for inactive too. */

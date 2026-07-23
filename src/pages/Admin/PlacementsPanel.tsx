@@ -1,3 +1,4 @@
+import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -386,7 +387,7 @@ const PlacementsPanel: React.FC = () => {
   useEffect(() => { load(); }, [load]);
 
   const remove = async (r: PlacementRow) => {
-    if (!window.confirm(`Delete the ${r.type} record at ${r.company} for ${fullName(r.student)}?`)) return;
+    if (!(await confirmDialog({ title: 'Delete this record?', message: `The ${r.type} record at ${r.company} for ${fullName(r.student)} will be removed.`, confirmLabel: 'Delete', danger: true }))) return;
     try {
       await analyticsApi.deletePlacement(r._id);
       toast.success('Placement deleted.');
