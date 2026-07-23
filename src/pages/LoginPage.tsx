@@ -16,8 +16,8 @@ const fieldStyle = (err?: string): React.CSSProperties => ({
 });
 
 // The left panel always sits over a dark photo, so its accents are fixed
-// light-on-dark regardless of the app theme — the blue accent's dark-mode ink.
-const PANEL_ACCENT = '#7cabff';
+// light-on-dark regardless of the app theme — the old brass/gold, kept only on this page.
+const PANEL_ACCENT = '#d8b25a';
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const PROOF: [string, string][] = [
@@ -76,7 +76,8 @@ const LoginPage: React.FC = () => {
           style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 44 }}
         >
           <img src="/login_panel.jpg" alt="" aria-hidden loading="lazy" width={1339} height={847} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(165deg, rgba(9,11,16,.18) 0%, rgba(9,11,16,.30) 55%, rgba(9,11,16,.46) 100%)' }} />
+          {/* base wash + extra weight behind the headline (top) and proof ledger (bottom) */}
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(9,11,16,.50) 0%, rgba(9,11,16,.16) 34%, rgba(9,11,16,.16) 56%, rgba(9,11,16,.68) 100%), linear-gradient(165deg, rgba(9,11,16,.16) 0%, rgba(9,11,16,.22) 100%)' }} />
 
           {/* Top: identity */}
           <motion.div

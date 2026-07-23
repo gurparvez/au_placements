@@ -528,12 +528,12 @@ const LandingPage: React.FC = () => {
         <Reveal delay={0.05} style={{ position: 'relative', borderRadius: 22, overflow: 'hidden', border: '1px solid var(--border)' }}>
           {/* slow Ken Burns drift on the campus photograph */}
           <motion.img
-            src="/baru_sahib.jpg" alt="" aria-hidden loading="lazy" width={1600} height={1000}
+            src="/cta_banner.jpg" alt="" aria-hidden loading="lazy" width={1516} height={910}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
             animate={{ scale: [1, 1.07] }}
             transition={{ duration: 22, repeat: Infinity, repeatType: 'mirror', ease: 'linear' }}
           />
-          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(9,11,16,.74) 0%, rgba(9,11,16,.52) 46%, rgba(9,11,16,.18) 100%)' }} />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(9,11,16,.58) 0%, rgba(9,11,16,.36) 46%, rgba(9,11,16,.08) 100%)' }} />
           <div style={{ position: 'relative', padding: 'clamp(34px,5vw,60px)', maxWidth: 640 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
               <motion.span
