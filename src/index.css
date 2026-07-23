@@ -88,8 +88,8 @@
   --surface2: #f7f8fa;
   --surface3: #edeef1;
   --text: #181b21;
-  --muted: #232830; /* almost ink — secondary text */
-  --subtle: #3d4650; /* meta/labels — dark charcoal */
+  --muted: #3a424e; /* secondary text — dark, but a clear step below ink */
+  --subtle: #5c6674; /* meta/labels — recedes while staying AA-readable */
   --border: #cdd3da; /* light but visible — cards separate from the canvas without heavy lines */
   --border2: #b3bbc5;
   --pri: #3b82f6;
@@ -153,8 +153,8 @@ img[data-kp-logo='dark'] { display: none; }
   --surface2: #1c2330;
   --surface3: #232c3b;
   --text: #f7f9fc;
-  --muted: #dde4ee; /* near-white secondary text */
-  --subtle: #b7c2d0; /* meta/labels — light silver */
+  --muted: #c5cfdd; /* secondary text — bright, but a clear step below white */
+  --subtle: #97a3b4; /* meta/labels — silver that recedes, still ~8:1 on the bg */
   --border: #232b38;
   --border2: #333d4d;
   --pri: #4c8dff;

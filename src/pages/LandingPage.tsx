@@ -21,13 +21,15 @@ const STATS = [
   { value: 50, suffix: '+', label: 'Recruitment drives' },
 ];
 
+/* Three tones only — blue (identity), teal, amber — cycling across the six
+   cards so the lattice stays lively without leaving the palette's story. */
 const FEATURES = [
   { icon: Users, tone: '#2563eb', title: 'Rich student profiles', body: 'Skills, projects, and experience in one profile.' },
   { icon: Newspaper, tone: '#d97706', title: 'Community feed', body: 'Post updates, mention peers, react, comment.' },
   { icon: Briefcase, tone: '#0d9488', title: 'Internships & jobs', body: 'Browse and apply to recruiter openings.' },
-  { icon: Building2, tone: '#a855f7', title: 'Company directory', body: 'Follow companies hiring from your campus.' },
-  { icon: UserPlus, tone: '#16a34a', title: 'Connections', body: 'Build a lasting professional network.' },
-  { icon: MessageCircle, tone: '#ec4899', title: 'Direct messaging', body: 'Message peers and recruiters directly.' },
+  { icon: Building2, tone: '#0d9488', title: 'Company directory', body: 'Follow companies hiring from your campus.' },
+  { icon: UserPlus, tone: '#2563eb', title: 'Connections', body: 'Build a lasting professional network.' },
+  { icon: MessageCircle, tone: '#d97706', title: 'Direct messaging', body: 'Message peers and recruiters directly.' },
 ];
 
 const STEPS = [
