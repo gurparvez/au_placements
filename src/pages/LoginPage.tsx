@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { User, Lock, Eye, EyeOff, BadgeCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/context/hooks';
 import { loginUser } from '@/context/auth/authSlice';
@@ -15,8 +16,9 @@ const fieldStyle = (err?: string): React.CSSProperties => ({
 });
 
 // The left panel always sits over a dark photo, so its accents are fixed
-// light-on-dark regardless of the app theme.
-const PANEL_BRASS = '#d8b25a';
+// light-on-dark regardless of the app theme — the blue accent's dark-mode ink.
+const PANEL_ACCENT = '#7cabff';
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 const PROOF: [string, string][] = [
   ['Verified by your university', 'Recruiters trust the register.'],
@@ -73,39 +75,60 @@ const LoginPage: React.FC = () => {
           data-kp-show="desktop"
           style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 44 }}
         >
-          <img src="/baru_sahib.jpg" alt="" aria-hidden loading="lazy" width={1200} height={1600} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(165deg, rgba(9,11,16,.82) 0%, rgba(9,11,16,.9) 55%, rgba(9,11,16,.96) 100%)' }} />
+          <img src="/login_panel.jpg" alt="" aria-hidden loading="lazy" width={1339} height={847} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(165deg, rgba(9,11,16,.18) 0%, rgba(9,11,16,.30) 55%, rgba(9,11,16,.46) 100%)' }} />
 
           {/* Top: identity */}
-          <div style={{ position: 'relative' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            style={{ position: 'relative' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img data-kp-logo="light" src="/logo_light.png" alt="Kalgidhar Trust" width={30} height={30} style={{ objectFit: 'contain', borderRadius: 7 }} />
-              <img data-kp-logo="dark" src="/logo2.png" alt="Kalgidhar Trust" width={30} height={30} style={{ objectFit: 'contain', borderRadius: 7 }} />
+              {/* fixed dark panel — always the dark-mode mark, whatever the app theme */}
+              <img src="/logo2.png" alt="Kalgidhar Trust" width={30} height={30} style={{ display: 'block', objectFit: 'contain', borderRadius: 7 }} />
               <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Kalgidhar Placements</span>
             </div>
-            <div style={{ height: 2, width: 40, background: PANEL_BRASS, borderRadius: 2, margin: '30px 0 14px' }} />
-            <span className="ledger-label" style={{ color: PANEL_BRASS }}>The Akal &amp; Eternal Register</span>
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.25 }}
+              style={{ height: 2, width: 40, background: PANEL_ACCENT, borderRadius: 2, margin: '30px 0 14px', transformOrigin: 'left center' }}
+            />
+            <span className="ledger-label" style={{ color: PANEL_ACCENT }}>The Akal &amp; Eternal Register</span>
             <div className="font-display" style={{ color: '#fff', fontSize: 32, letterSpacing: '-.02em', fontWeight: 500, margin: '12px 0 0', lineHeight: 1.12, maxWidth: '16ch', textWrap: 'balance' }}>
               One profile. Seen by every recruiter.
             </div>
-          </div>
+          </motion.div>
 
           {/* Bottom: proof ledger */}
           <ul style={{ position: 'relative', listStyle: 'none', padding: 0, margin: 0 }}>
             {PROOF.map(([t, s], i) => (
-              <li key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 0', borderTop: i ? '1px solid rgba(255,255,255,.14)' : 'none' }}>
-                <BadgeCheck size={18} aria-hidden style={{ color: PANEL_BRASS, flex: 'none', marginTop: 1 }} />
+              <motion.li
+                key={t}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: EASE, delay: 0.35 + i * 0.12 }}
+                style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 0', borderTop: i ? '1px solid rgba(255,255,255,.14)' : 'none' }}
+              >
+                <BadgeCheck size={18} aria-hidden style={{ color: PANEL_ACCENT, flex: 'none', marginTop: 1 }} />
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14.5, color: '#fff' }}>{t}</div>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,.74)' }}>{s}</div>
                 </div>
-              </li>
+              </motion.li>
             ))}
           </ul>
         </div>
 
         {/* ---------------- Right: sign-in form ---------------- */}
-        <div style={{ padding: 'clamp(28px,4vw,44px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.15 }}
+          style={{ padding: 'clamp(28px,4vw,44px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+        >
           <div>
             <div className="brass-rule" style={{ marginBottom: 14 }} />
             <span className="ledger-label">Sign in to the register</span>
@@ -183,7 +206,7 @@ const LoginPage: React.FC = () => {
               <Link to="/recruiter/apply" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Apply for access</Link>
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

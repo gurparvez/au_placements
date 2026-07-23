@@ -43,14 +43,16 @@ const useIsNarrow = (max = 760) => {
   return narrow;
 };
 
-const MessagesPage: React.FC = () => {
+/* The two-pane inbox + thread UI. Used by the /messages page and, in `modal`
+   mode, by the navbar popup (no URL params, fills its container). */
+export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => void }> = ({ modal, onNavigateAway }) => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const user = useAppSelector((s) => s.auth.user);
   const initialized = useAppSelector((s) => s.auth.initialized);
 
   const [convos, setConvos] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(params.get('c'));
+  const [activeId, setActiveId] = useState<string | null>(modal ? null : params.get('c'));
   const [thread, setThread] = useState<{ conversation: Conversation; messages: Message[] } | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -66,9 +68,9 @@ const MessagesPage: React.FC = () => {
 
   useEffect(() => {
     if (!initialized) return;
-    if (!user) navigate('/login', { replace: true });
+    if (!user) { if (!modal) navigate('/login', { replace: true }); }
     else loadConvos();
-  }, [initialized, user, navigate, loadConvos]);
+  }, [initialized, user, navigate, loadConvos, modal]);
 
   useEffect(() => {
     if (!activeId) { setThread(null); return; }
@@ -92,8 +94,8 @@ const MessagesPage: React.FC = () => {
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [thread?.messages.length]);
 
-  const openConvo = (id: string) => { setActiveId(id); setParams({ c: id }); };
-  const goBack = () => { setActiveId(null); setParams({}); };
+  const openConvo = (id: string) => { setActiveId(id); if (!modal) setParams({ c: id }); };
+  const goBack = () => { setActiveId(null); if (!modal) setParams({}); };
 
   const send = async () => {
     if (!activeId || !text.trim()) return;
@@ -107,17 +109,18 @@ const MessagesPage: React.FC = () => {
     finally { setSending(false); }
   };
 
-  if (!initialized) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
-  if (!user) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
+  if (!initialized || !user) {
+    if (modal) return null;
+    return <div style={{ padding: 40, color: 'var(--text-muted)' }}>{!initialized ? 'Loading…' : 'Redirecting…'}</div>;
+  }
 
   const other = thread?.conversation.other ?? undefined;
 
   return (
-    <section style={{ padding: '24px clamp(20px,10vw,112px) 40px' }}>
       <div
         style={{
-          background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16,
-          display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '320px 1fr', height: 'min(72vh, 640px)', overflow: 'hidden',
+          background: 'var(--surface)', border: modal ? 'none' : '1px solid var(--border)', borderRadius: modal ? 0 : 16,
+          display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '320px 1fr', height: modal ? '100%' : 'min(72vh, 640px)', overflow: 'hidden',
         }}
       >
         {/* ---------------- conversation list ---------------- */}
@@ -185,13 +188,13 @@ const MessagesPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px', borderBottom: '1px solid var(--border)' }}>
                 <button onClick={goBack} aria-label="Back" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ display: isNarrow ? 'inline-flex' : 'none', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-2)', cursor: 'pointer', transition: 'background .18s ease' }}><ArrowLeft size={16} /></button>
                 {other && isStudent(other) ? (
-                  <Link to={`/profiles/${other._id}`} style={{ textDecoration: 'none' }}><Avatar u={other} size={38} /></Link>
+                  <Link to={`/profiles/${other._id}`} onClick={onNavigateAway} style={{ textDecoration: 'none' }}><Avatar u={other} size={38} /></Link>
                 ) : (
                   <Avatar u={other} size={38} />
                 )}
                 <div style={{ minWidth: 0 }}>
                   {other && isStudent(other) ? (
-                    <Link to={`/profiles/${other._id}`} style={{ fontWeight: 700, textTransform: 'capitalize', color: 'var(--text)', textDecoration: 'none' }}>{fullName(other)}</Link>
+                    <Link to={`/profiles/${other._id}`} onClick={onNavigateAway} style={{ fontWeight: 700, textTransform: 'capitalize', color: 'var(--text)', textDecoration: 'none' }}>{fullName(other)}</Link>
                   ) : (
                     <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{fullName(other)}</span>
                   )}
@@ -236,8 +239,13 @@ const MessagesPage: React.FC = () => {
         </div>
         )}
       </div>
-    </section>
   );
 };
+
+const MessagesPage: React.FC = () => (
+  <section style={{ padding: '24px clamp(20px,10vw,112px) 40px' }}>
+    <MessagesPanel />
+  </section>
+);
 
 export default MessagesPage;

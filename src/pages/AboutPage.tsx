@@ -18,19 +18,19 @@ const FOUNDERS = [
   {
     name: 'Sant Attar Singh Ji',
     years: '1866 – 1927',
-    note: 'The revered saint of Mastuana Sahib who taught that spiritual and scientific education must go hand in hand. A century ago he envisioned a centre of learning in the Himalayan foothills where character would be built alongside knowledge — the seed from which Baru Sahib grew. He sent his disciple Sant Teja Singh abroad to master modern education and bring it home.',
+    note: 'The revered saint of Mastuana Sahib who taught that spiritual and scientific education must go hand in hand. A century ago he envisioned a centre of learning in the Himalayan foothills where character would be built alongside knowledge, the seed from which Baru Sahib grew. He sent his disciple Sant Teja Singh abroad to master modern education and bring it home.',
     img: '/Sant_Attar_Singh_Ji.jpg',
   },
   {
     name: 'Sant Teja Singh Ji',
     years: 'Harvard A.M., 1911',
-    note: 'A scholar who studied at Cambridge and Harvard and carried the mission across three continents. In 1956, at the age of 79, he laid the foundation of Baru Sahib — the "Valley of Divine Peace" — fulfilling his master\'s vision, and entrusted its future to a young Iqbal Singh before passing in 1965.',
+    note: 'A scholar who studied at Cambridge and Harvard and carried the mission across three continents. In 1956, at the age of 79, he laid the foundation of Baru Sahib, the "Valley of Divine Peace", fulfilling his master\'s vision, and entrusted its future to a young Iqbal Singh before passing in 1965.',
     img: '/sant_baba_taja_singh_ji.jpg',
   },
   {
     name: 'Baba Iqbal Singh Ji',
     years: '1926 – 2022 · Padma Shri',
-    note: 'A Director of Agriculture in Himachal Pradesh who gave his retirement — and everything after — to Baru Sahib. He opened the first Akal Academy in 1986 with just five students and lived to see 130 academies, two universities and thousands of rural children educated. India honoured him with the Padma Shri in 2022.',
+    note: 'A Director of Agriculture in Himachal Pradesh who gave his retirement, and everything after, to Baru Sahib. He opened the first Akal Academy in 1986 with just five students and lived to see 130 academies, two universities and thousands of rural children educated. India honoured him with the Padma Shri in 2022.',
     img: '/Baba_Iqbal_Singh.jpg',
   },
 ];
@@ -41,16 +41,16 @@ const VALUES = [
 ];
 const UNIVERSITIES = [
   {
-    loc: 'Talwandi Sabo, Punjab · Est. 2015',
-    name: 'Akal University',
-    img: '/akal_university.webp',
-    body: 'Founded at "Guru Ki Kashi" — the historic seat of learning where the tenth Guru completed the Sri Guru Granth Sahib — Akal University fulfils a vision Sant Attar Singh Ji voiced over a century ago. A UGC-recognised university, it teaches sciences, engineering, management and humanities alongside a free residential B.A. (Hons.) in Sri Guru Granth Sahib Studies, the first programme of its kind. Its 700+ graduates carry the same pairing the Trust has always stood for: rigorous modern education grounded in character, on a completely drug-free campus with partnerships reaching universities across the world.',
-  },
-  {
     loc: 'Baru Sahib, Himachal Pradesh · Est. 2006',
     name: 'Eternal University',
     img: '/eternal_university.webp',
-    body: 'Born of an ardas on 3 July 2006 in the Valley of Divine Peace, Eternal University is among the first universities for girls in North India — built on the belief that educating a daughter educates a generation. Its seven Akal colleges span engineering, nursing, agriculture, biotechnology and education, carrying NAAC accreditation with ICAR, INC and ISO recognition. Students from 16 countries study on its Himalayan campus, where research and professional degrees are matched with meditation, seva and a values-led way of living.',
+    body: 'Born of an ardas on 3 July 2006 in the Valley of Divine Peace, Eternal University is among the first universities for girls in North India, built on the belief that educating a daughter educates a generation. Its seven Akal colleges span engineering, nursing, agriculture, biotechnology and education, carrying NAAC accreditation with ICAR, INC and ISO recognition. Students from 16 countries study on its Himalayan campus, where research and professional degrees are matched with meditation, seva and a values-led way of living.',
+  },
+  {
+    loc: 'Talwandi Sabo, Punjab · Est. 2015',
+    name: 'Akal University',
+    img: '/akal_university.webp',
+    body: 'Founded at "Guru Ki Kashi", the historic seat of learning where the tenth Guru completed the Sri Guru Granth Sahib, Akal University fulfils a vision Sant Attar Singh Ji voiced over a century ago. A UGC-recognised university, it teaches sciences, engineering, management and humanities alongside a free residential B.A. (Hons.) in Sri Guru Granth Sahib Studies, the first programme of its kind. Its 700+ graduates carry the same pairing the Trust has always stood for: rigorous modern education grounded in character, on a completely drug-free campus with partnerships reaching universities across the world.',
   },
 ];
 
@@ -116,7 +116,7 @@ const AboutPage: React.FC = () => {
             One Trust. Two universities. A timeless idea.
           </h1>
           <p style={{ textAlign: 'left', fontSize: 'clamp(16px,1.7vw,19px)', color: 'var(--text-muted)', margin: '20px 0 0', lineHeight: 1.65 }}>
-            Kalgidhar Placements is run by The Kalgidhar Trust, Baru Sahib — the social and educational movement behind Akal University and Eternal University. This is the story of the institutions whose graduates you meet here.
+            Kalgidhar Placements is run by The Kalgidhar Trust, Baru Sahib, the social and educational movement behind Akal University and Eternal University. This is the story of the institutions whose graduates you meet here.
           </p>
         </Reveal>
       </section>
@@ -139,7 +139,7 @@ const AboutPage: React.FC = () => {
               <span className="ledger-label" style={{ color: '#d8b25a' }}>Established 1956</span>
               <h2 className="font-display" style={{ color: '#fff', fontSize: 'clamp(26px,3.4vw,38px)', letterSpacing: '-.02em', fontWeight: 500, margin: '10px 0 0' }}>The Kalgidhar Trust</h2>
               <p style={{ textAlign: 'left', fontSize: 15.5, color: 'rgba(255,255,255,.88)', margin: '16px 0 0', lineHeight: 1.65, maxWidth: '56ch' }}>
-                A movement for value-based, modern education rooted in service. The first Akal Academy opened at Baru Sahib in 1986 with just five students — today the Trust runs a network of academies and two universities across north India.
+                A movement for value-based, modern education rooted in service. The first Akal Academy opened at Baru Sahib in 1986 with just five students. Today the Trust runs a network of academies and two universities across north India.
               </p>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 22, padding: '8px 16px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.13)', border: '1px solid rgba(255,255,255,.3)' }}>
                 <span style={{ fontSize: 13.5, fontWeight: 650, color: '#fff', letterSpacing: '.04em' }}>Educate · Enshrine · Empower</span>

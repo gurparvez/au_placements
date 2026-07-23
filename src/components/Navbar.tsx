@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/context/hooks';
 import { Menu } from 'lucide-react';
 import { initials } from '@/utils/avatar';
+import NotificationsBell from '@/components/NotificationsBell';
+import MessagesBubble from '@/components/MessagesBubble';
 import Sidebar from '@/components/Sidebar';
 
 /* Two marks, one visible at a time — CSS (data-kp-logo) swaps them with the theme */
@@ -20,6 +22,9 @@ const Navbar: React.FC = () => {
   const user = useAppSelector((s) => s.auth.user);
   const loading = useAppSelector((s) => s.auth.loading);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const isAdmin = !!user?.roles?.includes('admin');
+  const isRecruiter = !!user?.roles?.includes('recruiter') && user?.status === 'active';
 
   useEffect(() => {
     const onScroll = () => {
@@ -78,7 +83,7 @@ const Navbar: React.FC = () => {
             </span>
           </Link>
 
-          {/* Primary navigation — right-aligned, sitting just before the account/actions (the sidebar keeps the full list) */}
+          {/* Primary navigation — right-aligned; role destinations surface here, the drawer keeps only account actions */}
           <nav data-kp-show="desktop" aria-label="Primary" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto' }}>
             {[
               { to: '/', label: 'Home', exact: true },
@@ -88,6 +93,9 @@ const Navbar: React.FC = () => {
               { to: '/companies', label: 'Companies' },
               ...(user ? [{ to: '/network', label: 'Network' }] : []),
               { to: '/about', label: 'About' },
+              { to: '/search', label: 'Search' },
+              ...(isRecruiter || isAdmin ? [{ to: '/recruiter/openings', label: 'My openings' }] : []),
+              ...(isAdmin ? [{ to: '/admin', label: 'Admin' }] : []),
             ].map(({ to, label, exact }) => {
               const active = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
               return (
@@ -123,6 +131,12 @@ const Navbar: React.FC = () => {
               <span data-kp-sk="true" style={{ width: 38, height: 38, borderRadius: '50%' }} aria-hidden />
             ) : (
               <>
+                {user && (
+                  <>
+                    <span data-kp-show="desktop"><MessagesBubble /></span>
+                    <span data-kp-show="desktop"><NotificationsBell /></span>
+                  </>
+                )}
                 {!user && (
                   <Link
                     to="/login"
@@ -134,7 +148,7 @@ const Navbar: React.FC = () => {
                     Sign in
                   </Link>
                 )}
-                {/* Single toggle — the account initial opens the drawer with all actions inside */}
+                {/* Single toggle — the account initial opens the drawer with profile, theme, and logout */}
                 <button
                   data-sidebar-toggle
                   onClick={() => setSidebarOpen((o) => !o)}

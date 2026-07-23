@@ -62,13 +62,8 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
     }
   };
 
-  // Desktop shows only destinations NOT already in the top navbar; on mobile the
-  // top-bar links are hidden, so the primary set reappears here (mobile-only group).
-  const items: Item[] = [
-    { to: '/search', label: 'Search', icon: <Search size={18} /> },
-    { to: '/recruiter/openings', label: 'My openings', icon: <Briefcase size={18} />, show: isRecruiter || isAdmin, accent: true },
-    { to: '/admin', label: 'Admin', icon: <Shield size={18} />, show: isAdmin, accent: true },
-  ];
+  // Every destination lives in the top bar on desktop; this mobile-only group
+  // mirrors it for small screens where the top-bar links are hidden.
   const mobileItems: Item[] = [
     { to: '/', label: 'Home', icon: <Home size={18} /> },
     { to: '/feed', label: 'Feed', icon: <Newspaper size={18} /> },
@@ -77,6 +72,10 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
     { to: '/companies', label: 'Companies', icon: <Building2 size={18} /> },
     { to: '/network', label: 'My network', icon: <Users size={18} />, show: !!user },
     { to: '/about', label: 'About', icon: <Info size={18} /> },
+    { to: '/search', label: 'Search', icon: <Search size={18} /> },
+    { to: '/messages', label: 'Messages', icon: <MessageCircle size={18} />, show: !!user },
+    { to: '/recruiter/openings', label: 'My openings', icon: <Briefcase size={18} />, show: isRecruiter || isAdmin, accent: true },
+    { to: '/admin', label: 'Admin', icon: <Shield size={18} />, show: isAdmin, accent: true },
   ];
 
   const renderItem = (i: Item) => {
@@ -101,23 +100,31 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = 'transparent'; },
   };
 
+  // Auto-collapse shortly after the pointer leaves the panel (cancelled on re-enter).
+  const leaveTimer = useRef<number | null>(null);
+  const cancelLeave = () => { if (leaveTimer.current) { window.clearTimeout(leaveTimer.current); leaveTimer.current = null; } };
+  useEffect(() => cancelLeave, []);
+
   return (
     <aside
       ref={ref}
       aria-hidden={!open}
+      onMouseLeave={() => { cancelLeave(); leaveTimer.current = window.setTimeout(onClose, 350); }}
+      onMouseEnter={cancelLeave}
       style={{
-        /* Compact drawer from the RIGHT — only as wide as its content needs */
-        position: 'fixed', right: 0, top: 0, bottom: 0, zIndex: 300,
+        /* Compact panel from the RIGHT — sized to its content, not the viewport */
+        position: 'fixed', right: 10, top: 82, zIndex: 300,
         width: 'fit-content', minWidth: 224, maxWidth: 'min(80vw, 300px)',
-        background: 'var(--bg-2)', borderLeft: '1px solid var(--border)', padding: 16,
+        height: 'fit-content', maxHeight: 'calc(100vh - 96px)',
+        background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 12,
         display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', overflowX: 'visible',
-        transform: open ? 'translateX(0)' : 'translateX(105%)',
+        transform: open ? 'translateX(0)' : 'translateX(calc(100% + 14px))',
         transition: 'transform .25s cubic-bezier(.4,0,.2,1)',
         boxShadow: open ? '0 12px 40px -12px rgba(0,0,0,.45)' : 'none',
         pointerEvents: open ? 'auto' : 'none',
       }}
     >
-      {/* header — identity when signed in, plus notifications + close */}
+      {/* header — identity when signed in, plus close (bell appears here only on mobile) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, padding: '0 4px' }}>
         {user ? (
           <span style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
@@ -133,7 +140,7 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
           <span style={{ fontWeight: 700, fontSize: 15 }}>Menu</span>
         )}
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
-          {user && <NotificationsBell fixedPanel />}
+          {user && <span data-kp-show="mobile"><NotificationsBell fixedPanel /></span>}
           <button onClick={onClose} aria-label="Close menu" style={{ width: 34, height: 34, borderRadius: 'var(--r-ctl)', cursor: 'pointer', color: 'var(--text)', border: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={16} />
           </button>
@@ -146,25 +153,16 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
         <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
       </div>
 
-      {items.filter((i) => i.show !== false).map(renderItem)}
-
-      {/* account actions — everything that used to sit in the top bar */}
+      {/* account actions — profile, theme, and sign-out only */}
       {user && (
-        <>
-          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-          <button
-            onClick={() => { onClose(); navigate(user.roles?.includes('recruiter') ? `/companies/${user._id}` : '/profiles'); }}
-            tabIndex={open ? 0 : -1} style={rowStyle()} {...hoverRow}
-          >
-            <UserIcon size={18} /> {user.roles?.includes('recruiter') ? 'Company profile' : 'View profile'}
-          </button>
-          <Link to="/messages" onClick={onClose} tabIndex={open ? 0 : -1} style={rowStyle(pathname === '/messages')} {...hoverRow}>
-            <MessageCircle size={18} /> Messages
-          </Link>
-        </>
+        <button
+          onClick={() => { onClose(); navigate(user.roles?.includes('recruiter') ? `/companies/${user._id}` : '/profiles'); }}
+          tabIndex={open ? 0 : -1} style={rowStyle()} {...hoverRow}
+        >
+          <UserIcon size={18} /> {user.roles?.includes('recruiter') ? 'Company profile' : 'View profile'}
+        </button>
       )}
 
-      <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
       <button onClick={() => setTheme(isDark ? 'light' : 'dark')} tabIndex={open ? 0 : -1} style={rowStyle()} {...hoverRow}>
         {isDark ? <Sun size={18} /> : <Moon size={18} />} {isDark ? 'Light mode' : 'Dark mode'}
       </button>

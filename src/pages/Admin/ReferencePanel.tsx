@@ -179,7 +179,8 @@ function ManagedList({
       ) : filtered.length === 0 ? (
         <p style={{ ...muted, margin: 0, padding: '14px 0' }}>{q ? 'No matches.' : 'Nothing yet — add the first entry.'}</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(255px,1fr))', gap: 10 }}>
+        /* chip cloud — every pill hugs its own text on a single line */
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           {filtered.map((item) => (
             <div key={item._id} className="kp-chip" style={{ opacity: item.inactive ? 0.55 : 1 }}>
               {editId === item._id ? (

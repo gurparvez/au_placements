@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -35,6 +35,99 @@ const STEPS = [
   { icon: Search, n: '02', title: 'Get discovered', body: 'Recruiters filter the register to find you.' },
   { icon: Send, n: '03', title: 'Connect & get hired', body: 'Get messaged and apply to openings.' },
 ];
+
+/* The hero's "How the register works" card walks itself: a brass dot travels
+   down the rail step to step, the active row lifts and brightens, and a
+   progress hairline under the header paces the cycle. */
+const HERO_STEPS: [string, string, string][] = [
+  ['01', 'Create your profile', 'Courses, projects, and skills in one place.'],
+  ['02', 'Get verified', 'Your placement office signs off every entry.'],
+  ['03', 'Be seen by recruiters', 'One directory across both campuses.'],
+];
+const STEP_MS = 2800;
+
+const HeroSteps: React.FC = () => {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setActive((v) => (v + 1) % HERO_STEPS.length), STEP_MS);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <>
+      <div style={{ position: 'relative', padding: '15px 18px', borderBottom: '2px solid var(--border)' }}>
+        <span className="ledger-label" style={{ color: 'var(--text)' }}>How the register works</span>
+        {/* pacing hairline — refills each step over the brass rule */}
+        <motion.span
+          key={active}
+          aria-hidden
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: STEP_MS / 1000, ease: 'linear' }}
+          style={{ position: 'absolute', left: 0, right: 0, bottom: -2, height: 2, background: 'var(--brass)', transformOrigin: 'left center' }}
+        />
+      </div>
+
+      {/* rows share the card's leftover height evenly, so the frame never shows a gap */}
+      <div style={{ padding: '4px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
+        {HERO_STEPS.map(([n, title, sub], i) => {
+          const on = i === active;
+          return (
+            <motion.button
+              key={n}
+              type="button"
+              onClick={() => setActive(i)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0, x: on ? 6 : 0 }}
+              transition={{ duration: 0.45, ease: EASE, delay: 0.45 + i * 0.12 }}
+              style={{
+                position: 'relative', display: 'flex', gap: 14, alignItems: 'flex-start', width: '100%', textAlign: 'left',
+                padding: '15px 10px 15px 16px', border: 'none', background: 'transparent', cursor: 'pointer',
+                borderTop: i === 0 ? 'none' : '1px solid var(--border)',
+              }}
+            >
+              {/* traveling marker — one dot, springing between rows */}
+              {on && (
+                <motion.span
+                  layoutId="kp-step-dot"
+                  aria-hidden
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  style={{ position: 'absolute', left: 0, top: 22, width: 7, height: 7, borderRadius: '50%', background: 'var(--brass)', boxShadow: '0 0 0 4px var(--primary-soft)' }}
+                />
+              )}
+              <motion.span
+                className="font-display data"
+                aria-hidden
+                animate={{ color: on ? 'var(--brass)' : 'var(--text-subtle)', scale: on ? 1.12 : 1 }}
+                transition={{ duration: 0.35, ease: EASE }}
+                style={{ fontSize: 21, fontWeight: 500, lineHeight: 1.2, flex: 'none', transformOrigin: 'left center' }}
+              >
+                {n}
+              </motion.span>
+              <div style={{ minWidth: 0 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <motion.span animate={{ color: on ? 'var(--text)' : 'var(--text-muted)' }} style={{ fontWeight: 650, fontSize: 14.5 }}>{title}</motion.span>
+                  {/* the sign-off stamps itself on the verification step */}
+                  {i === 1 && on && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 1.9, rotate: -18 }}
+                      animate={{ opacity: 1, scale: 1, rotate: -6 }}
+                      transition={{ type: 'spring', stiffness: 420, damping: 17 }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 7px', borderRadius: 5, border: '1.5px solid var(--success)', color: 'var(--success)', fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase' }}
+                    >
+                      <BadgeCheck size={11} /> Verified
+                    </motion.span>
+                  )}
+                </span>
+                <motion.div animate={{ opacity: on ? 1 : 0.72 }} style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.5 }}>{sub}</motion.div>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    </>
+  );
+};
 
 /* ---- shared styles ---- */
 const GUTTER = 'clamp(20px,10vw,112px)';
@@ -182,7 +275,7 @@ const LandingPage: React.FC = () => {
           transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
         />
         <div style={{ position: 'relative', padding: `56px ${GUTTER} 60px` }}>
-          <div data-kp-hero="true" style={{ display: 'grid', gridTemplateColumns: '1.02fr .98fr', gap: 52, alignItems: 'center' }}>
+          <div data-kp-hero="true" style={{ display: 'grid', gridTemplateColumns: '1.02fr .98fr', gap: 52, alignItems: 'stretch' }}>
             {/* ---- left: masthead (staggered entrance) ---- */}
             <div>
               <motion.div
@@ -269,40 +362,14 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, y: 26 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: EASE, delay: 0.2 }}
+              style={{ height: '100%' }}
             >
               <motion.div
                 whileHover={{ y: -4 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: 'var(--shadow)', overflow: 'hidden' }}
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: 'var(--shadow)', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '15px 18px', borderBottom: '2px solid var(--brass)' }}>
-                  <span className="ledger-label" style={{ color: 'var(--text)' }}>The Register</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 600, color: 'var(--text-muted)' }}>
-                    <motion.span
-                      aria-hidden
-                      style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)' }}
-                      animate={{ opacity: [1, 0.35, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    Live
-                  </span>
-                </div>
-
-                <div style={{ padding: '4px 12px' }}>
-                  {heroRows.length > 0 ? (
-                    heroRows.map((vm, i) => <RegisterRow key={vm.id} vm={vm} i={i} />)
-                  ) : (
-                    [0, 1, 2].map((i) => (
-                      <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '13px 4px', borderTop: i === 0 ? 'none' : '1px solid var(--border)' }}>
-                        <span data-kp-sk="true" style={{ width: 42, height: 42, borderRadius: '50%', flex: 'none' }} />
-                        <div style={{ flex: 1 }}>
-                          <span data-kp-sk="true" style={{ display: 'block', height: 12, width: '55%', marginBottom: 7 }} />
-                          <span data-kp-sk="true" style={{ display: 'block', height: 10, width: '75%' }} />
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                <HeroSteps />
 
                 <MotionLink
                   to="/students"
@@ -310,7 +377,7 @@ const LandingPage: React.FC = () => {
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '13px 18px', borderTop: '1px solid var(--border)', background: 'var(--bg-2)', textDecoration: 'none', color: 'var(--primary)', fontWeight: 600, fontSize: 13.5, transition: 'background .15s ease' }}
                   {...hoverBg('var(--surface-2)', 'var(--bg-2)')}
                 >
-                  <span>{total > 0 ? `See all ${total} in the register` : 'Browse the register'}</span>
+                  <span>Browse the register</span>
                   <motion.span variants={{ h: { x: 4 } }} transition={{ type: 'spring', stiffness: 400, damping: 24 }} style={{ display: 'inline-flex' }}>
                     <ArrowRight size={16} />
                   </motion.span>
@@ -324,24 +391,34 @@ const LandingPage: React.FC = () => {
       {/* ===================== STATS (ledger band) ===================== */}
       <section style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', background: 'var(--bg-2)' }}>
         <div style={{ padding: `26px ${GUTTER}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-            <motion.span
-              className="brass-rule"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: EASE }}
-              style={{ transformOrigin: 'left center' }}
-            />
+          <div style={{ marginBottom: 18 }}>
             <span className="ledger-label">By the numbers</span>
           </div>
           <Stagger className="kp-ledger" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
             {STATS.map((st, i) => (
               <StaggerItem key={st.label} style={{ paddingLeft: i === 0 ? 0 : 22, paddingRight: 22 }}>
-                <div className="font-display data" style={{ fontSize: 'clamp(30px,3.6vw,40px)', fontWeight: 500, letterSpacing: '-.01em', lineHeight: 1 }}>
-                  <AnimatedNumber value={st.value} suffix={st.suffix} />
+                {/* hover: the figure lifts, inks brass, and a rule sweeps under it */}
+                <div
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget;
+                    el.style.transform = 'translateY(-4px)';
+                    el.querySelector<HTMLElement>('[data-kp-stat-num]')!.style.color = 'var(--brass)';
+                    el.querySelector<HTMLElement>('[data-kp-stat-line]')!.style.width = '44px';
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget;
+                    el.style.transform = 'none';
+                    el.querySelector<HTMLElement>('[data-kp-stat-num]')!.style.color = '';
+                    el.querySelector<HTMLElement>('[data-kp-stat-line]')!.style.width = '0px';
+                  }}
+                  style={{ transition: 'transform .25s cubic-bezier(.16,1,.3,1)', cursor: 'default' }}
+                >
+                  <div data-kp-stat-num className="font-display data" style={{ fontSize: 'clamp(30px,3.6vw,40px)', fontWeight: 500, letterSpacing: '-.01em', lineHeight: 1, transition: 'color .22s ease' }}>
+                    <AnimatedNumber value={st.value} suffix={st.suffix} />
+                  </div>
+                  <span data-kp-stat-line aria-hidden style={{ display: 'block', width: 0, height: 2, borderRadius: 2, background: 'var(--brass)', marginTop: 7, transition: 'width .28s cubic-bezier(.16,1,.3,1)' }} />
+                  <div className="ledger-label" style={{ marginTop: 7, letterSpacing: '.08em' }}>{st.label}</div>
                 </div>
-                <div className="ledger-label" style={{ marginTop: 8, letterSpacing: '.08em' }}>{st.label}</div>
               </StaggerItem>
             ))}
           </Stagger>
@@ -413,12 +490,34 @@ const LandingPage: React.FC = () => {
         <Stagger stagger={0.1} className="kp-ledger" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
           {STEPS.map((step, i) => (
             <StaggerItem key={step.n} style={{ paddingLeft: i === 0 ? 0 : 26, paddingRight: 26 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                <span className="font-display data" style={{ fontSize: 34, fontWeight: 500, color: 'var(--brass)', lineHeight: 1 }}>{step.n}</span>
-                <span aria-hidden style={{ color: 'var(--text-subtle)', transform: 'translateY(2px)' }}><step.icon size={18} /></span>
+              {/* hover: the step lifts, its icon pops brass, and a rule sweeps beneath the number */}
+              <div
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  el.style.transform = 'translateY(-5px)';
+                  const ic = el.querySelector<HTMLElement>('[data-kp-step-icon]')!;
+                  ic.style.color = 'var(--brass)';
+                  ic.style.transform = 'translateY(2px) rotate(-10deg) scale(1.25)';
+                  el.querySelector<HTMLElement>('[data-kp-step-line]')!.style.width = '100%';
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget;
+                  el.style.transform = 'none';
+                  const ic = el.querySelector<HTMLElement>('[data-kp-step-icon]')!;
+                  ic.style.color = '';
+                  ic.style.transform = 'translateY(2px)';
+                  el.querySelector<HTMLElement>('[data-kp-step-line]')!.style.width = '0px';
+                }}
+                style={{ transition: 'transform .25s cubic-bezier(.16,1,.3,1)', cursor: 'default' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                  <span className="font-display data" style={{ fontSize: 34, fontWeight: 500, color: 'var(--brass)', lineHeight: 1 }}>{step.n}</span>
+                  <span data-kp-step-icon aria-hidden style={{ display: 'inline-flex', color: 'var(--text-subtle)', transform: 'translateY(2px)', transition: 'color .22s ease, transform .3s cubic-bezier(.16,1,.3,1)' }}><step.icon size={18} /></span>
+                </div>
+                <span data-kp-step-line aria-hidden style={{ display: 'block', width: 0, maxWidth: 120, height: 2, borderRadius: 2, background: 'var(--brass)', marginTop: 12, transition: 'width .3s cubic-bezier(.16,1,.3,1)' }} />
+                <h3 style={{ fontSize: 18, fontWeight: 650, margin: '12px 0 0', letterSpacing: '-.01em' }}>{step.title}</h3>
+                <p style={{ ...para, fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', lineHeight: 1.6 }}>{step.body}</p>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 650, margin: '18px 0 0', letterSpacing: '-.01em' }}>{step.title}</h3>
-              <p style={{ ...para, fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', lineHeight: 1.6 }}>{step.body}</p>
             </StaggerItem>
           ))}
         </Stagger>
