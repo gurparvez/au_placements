@@ -37,13 +37,17 @@ export const ConfirmHost: React.FC = () => {
     setPending(null);
   };
 
-  // Esc cancels; initial focus lands on the safe (cancel) button.
+  // Esc cancels; initial focus lands on the safe (cancel) button. Capture phase +
+  // stopPropagation: this is the topmost layer, so Esc must not also dismiss
+  // whatever modal/overlay sits underneath it.
   useEffect(() => {
     if (!pending) return;
     cancelRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(false); }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending]);
 

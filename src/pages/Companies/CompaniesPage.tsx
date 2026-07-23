@@ -35,7 +35,9 @@ const CompaniesPage: React.FC = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(1); load(); };
+  // Pass q/page explicitly — the memoized load() closure only refreshes when its
+  // deps change, so a bare load() here would search with a stale query.
+  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(1); load({ q, page: 1 }); };
 
   const toggleFollow = async (c: Company) => {
     if (!user) { toast.error('Sign in to follow companies.'); navigate('/login'); return; }
@@ -113,7 +115,7 @@ const CompaniesPage: React.FC = () => {
                 style={{ marginTop: 'auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '9px 14px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', transition: 'background .18s ease',
                   border: c.is_following ? '1px solid var(--border-strong)' : 'none',
                   background: c.is_following ? 'var(--surface)' : 'var(--primary)',
-                  color: c.is_following ? 'var(--text)' : '#fff' }}>
+                  color: c.is_following ? 'var(--text)' : 'var(--on-primary)' }}>
                 {c.is_following ? <><Check size={15} /> Following</> : <><UserPlus size={15} /> Follow</>}
               </button>
             </div>

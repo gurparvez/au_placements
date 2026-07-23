@@ -161,11 +161,21 @@ const studentSlice = createSlice({
         state.profile = action.payload;
       });
 
-    // PUBLIC PROFILE
+    // PUBLIC PROFILE — only the latest request may settle into state, so rapid
+    // profile-to-profile navigation never shows the slower, older response.
     builder
-      .addCase(fetchAnyStudentProfile.pending, pending)
-      .addCase(fetchAnyStudentProfile.rejected, rejected)
+      .addCase(fetchAnyStudentProfile.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+        (state as any).publicProfileRequestId = action.meta.requestId;
+      })
+      .addCase(fetchAnyStudentProfile.rejected, (state, action) => {
+        if ((state as any).publicProfileRequestId !== action.meta.requestId) return;
+        state.loading = false;
+        state.error = (action.payload as string) || action.error?.message || 'Something went wrong';
+      })
       .addCase(fetchAnyStudentProfile.fulfilled, (state, action) => {
+        if ((state as any).publicProfileRequestId !== action.meta.requestId) return;
         state.loading = false;
         state.publicProfile = {
           ...action.payload.profile,

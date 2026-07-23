@@ -118,10 +118,13 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
         height: 'fit-content', maxHeight: 'calc(100vh - 96px)',
         background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 12,
         display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', overflowX: 'visible',
-        transform: open ? 'translateX(0)' : 'translateX(calc(100% + 14px))',
-        transition: 'transform .25s cubic-bezier(.4,0,.2,1)',
+        /* transform must clear entirely when open — a lingering translateX(0) makes
+           this panel the containing block for the bell's position:fixed dropdown */
+        transform: open ? 'none' : 'translateX(calc(100% + 14px))',
+        transition: 'transform .25s cubic-bezier(.4,0,.2,1), visibility .25s',
         boxShadow: open ? '0 12px 40px -12px rgba(0,0,0,.45)' : 'none',
         pointerEvents: open ? 'auto' : 'none',
+        visibility: open ? 'visible' : 'hidden', // closed drawer leaves the tab order entirely
       }}
     >
       {/* header — identity when signed in, plus close (bell appears here only on mobile) */}

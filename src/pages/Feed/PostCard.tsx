@@ -63,12 +63,15 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
   const [shareQuote, setShareQuote] = useState('');
   const [busy, setBusy] = useState(false);
 
-  // Close the repost dialog on Escape (keyboard users).
+  // Close the repost dialog on Escape (keyboard users). Capture + stopPropagation
+  // so Esc doesn't also collapse the expanded-post overlay underneath.
   useEffect(() => {
     if (!shareOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) setShareOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !busy) { e.preventDefault(); e.stopPropagation(); setShareOpen(false); }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [shareOpen, busy]);
 
   const canManage = !!currentUser && (currentUser._id === p.author?._id || currentUser.roles?.includes('admin'));
@@ -163,7 +166,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <ProfileLink u={p.author} style={{ fontWeight: 700, textTransform: 'capitalize', color: 'var(--text)' }}>{fullName(p.author) || 'User'}</ProfileLink>
-            {roleChip(p.author.roles)}
+            {roleChip(p.author?.roles)}
             {p.archived && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Archived</span>}
           </div>
           <div style={{ fontSize: 12.5, color: 'var(--text-subtle)' }}>{timeLabel(p.createdAt)}</div>

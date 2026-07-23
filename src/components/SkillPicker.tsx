@@ -89,9 +89,9 @@ const SkillPicker: React.FC<SkillPickerProps> = ({ selected, setSelected, initia
     return () => clearTimeout(handler);
   }, [query]);
 
-  useEffect(() => {
-    debouncedSearch();
-  }, [query, debouncedSearch]);
+  // debouncedSearch returns its timer's canceller — returning it here makes React
+  // clear the pending timer on every keystroke, so only the final query fires.
+  useEffect(() => debouncedSearch(), [debouncedSearch]);
 
   useEffect(() => {
     if (searchResults.length > 0) {

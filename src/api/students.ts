@@ -51,7 +51,10 @@ class StudentApi {
       if (value === undefined || value === null) return;
       if (key === 'profile_image') return;
 
-      if (Array.isArray(value) || typeof value === 'object') {
+      // Files must be appended raw — JSON.stringify turns a File into "{}".
+      if (value instanceof File) {
+        form.append(key, value);
+      } else if (Array.isArray(value) || typeof value === 'object') {
         form.append(key, JSON.stringify(value));
       } else {
         form.append(key, value as any);

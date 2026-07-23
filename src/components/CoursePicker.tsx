@@ -55,9 +55,9 @@ const CoursePicker: React.FC<CoursePickerProps> = ({ value, onSelect, error, all
     return () => clearTimeout(handler);
   }, [query, isCreating]);
 
-  useEffect(() => {
-    debouncedSearch();
-  }, [debouncedSearch]);
+  // debouncedSearch returns its timer's canceller — returning it here makes React
+  // clear the pending timer on every keystroke, so only the final query fires.
+  useEffect(() => debouncedSearch(), [debouncedSearch]);
 
   /* ------------ Handle Click Outside ------------ */
   useEffect(() => {

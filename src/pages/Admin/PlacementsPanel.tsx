@@ -1,3 +1,4 @@
+import { useDialogFocus } from '@/components/useDialogFocus';
 import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -256,7 +257,7 @@ function PlacementModal({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit placement' : 'Record placement'} style={{ ...card, position: 'relative', width: 'min(580px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit placement' : 'Record placement'} style={{ ...card, position: 'relative', width: 'min(580px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
         <div className="brass-rule" style={{ marginBottom: 12 }} />
         <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit placement' : 'Record placement'}</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>

@@ -97,7 +97,9 @@ const authSlice = createSlice({
       state.user = null;
       state.loading = false;
       state.error = null;
-      state.initialized = false;
+      // Auth is RESOLVED (known signed-out) — resetting initialized would strand
+      // guarded pages on their "Loading…" branch forever after logout/expiry.
+      state.initialized = true;
     },
     // Optional: Action to clear error manually (e.g., when switching forms)
     clearError: (state) => {
@@ -139,6 +141,7 @@ const authSlice = createSlice({
     // --- FETCH CURRENT USER ---
     builder
       .addCase(fetchCurrentUser.pending, (state) => {
+        state.loading = true; // Navbar shows the skeleton, not a "Sign in" flash
         state.error = null;
       })
       .addCase(fetchCurrentUser.rejected, (state) => {

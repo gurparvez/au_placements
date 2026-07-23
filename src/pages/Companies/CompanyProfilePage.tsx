@@ -176,7 +176,7 @@ const CompanyProfilePage: React.FC = () => {
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: busy ? 0.7 : 1, transition: 'background .18s ease',
                   border: c.is_following ? '1px solid var(--border-strong)' : 'none',
                   background: c.is_following ? 'var(--surface)' : 'var(--primary)',
-                  color: c.is_following ? 'var(--text)' : '#fff' }}>
+                  color: c.is_following ? 'var(--text)' : 'var(--on-primary)' }}>
                 {c.is_following ? <><Check size={15} /> Following</> : <><UserPlus size={15} /> Follow</>}
               </button>
             )}

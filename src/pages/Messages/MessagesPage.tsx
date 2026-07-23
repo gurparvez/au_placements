@@ -62,9 +62,22 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
   const loadConvos = useCallback(async () => {
     try { setConvos(await messagesApi.listConversations()); } catch { /* ignore */ }
   }, []);
+  // Stale-response guard: only the most recently requested thread may render —
+  // rapid conversation switching must never show the older reply that lands last.
+  const threadReq = useRef(0);
   const loadThread = useCallback(async (id: string) => {
-    try { setThread(await messagesApi.listMessages(id)); } catch { toast.error('Could not load messages.'); }
+    const req = ++threadReq.current;
+    try {
+      const data = await messagesApi.listMessages(id);
+      if (req === threadReq.current) setThread(data);
+    } catch { if (req === threadReq.current) toast.error('Could not load messages.'); }
   }, []);
+
+  // The URL is the source of truth for the open thread (page mode) — notification
+  // clicks and back/forward change ?c= without remounting this component.
+  useEffect(() => {
+    if (!modal) setActiveId(params.get('c'));
+  }, [params, modal]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -98,7 +111,7 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
   const goBack = () => { setActiveId(null); if (!modal) setParams({}); };
 
   const send = async () => {
-    if (!activeId || !text.trim()) return;
+    if (sending || !activeId || !text.trim()) return; // in-flight guard — Enter can't double-send
     setSending(true);
     try {
       const msg = await messagesApi.send(activeId, text.trim());
@@ -206,9 +219,10 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
               <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--bg)' }}>
                 {thread.messages.length === 0 && <div style={{ margin: 'auto', color: 'var(--text-muted)', fontSize: 13.5 }}>Say hello 👋</div>}
                 {thread.messages.map((m, i) => {
-                  const mine = m.sender._id === user._id;
+                  // deleted accounts arrive with a null sender — render them as "the other side"
+                  const mine = m.sender?._id === user._id;
                   const prev = thread.messages[i - 1];
-                  const grouped = prev && prev.sender._id === m.sender._id;
+                  const grouped = prev && prev.sender?._id === m.sender?._id;
                   return (
                     <div key={m._id} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexDirection: mine ? 'row-reverse' : 'row', marginTop: grouped ? -4 : 0 }}>
                       {!mine && (grouped ? <span style={{ width: 28, flex: 'none' }} /> : <Avatar u={m.sender} size={28} />)}

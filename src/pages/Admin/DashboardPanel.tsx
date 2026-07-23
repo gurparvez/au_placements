@@ -367,14 +367,14 @@ const DashboardPanel: React.FC = () => {
                 hint={`${o.opted_out} opted out of ${o.profiles_completed} profiles`} />
             </StaggerItem>
             <StaggerItem style={{ height: '100%' }}>
-              <StatCard icon={Award} label="Students placed" value={o.students_placed} tone="#22c55e"
+              <StatCard icon={Award} label="Students placed" value={o.students_placed} tone="var(--success)"
                 hint={`${o.placement_rate}% of those seeking`} />
             </StaggerItem>
             <StaggerItem style={{ height: '100%' }}>
               <StatCard icon={IndianRupee} label="Median package"
                 value={o.median_ctc_lpa !== null
                   ? <AnimatedNumber value={o.median_ctc_lpa} decimals={decimalsOf(o.median_ctc_lpa)} suffix=" LPA" />
-                  : '—'} tone="#22c55e"
+                  : '—'} tone="var(--success)"
                 hint={o.avg_ctc_lpa !== null ? `Mean ${o.avg_ctc_lpa} · high ${o.highest_ctc_lpa}` : 'No packages recorded'} />
             </StaggerItem>
             <StaggerItem style={{ height: '100%' }}>
@@ -442,7 +442,7 @@ const DashboardPanel: React.FC = () => {
                                 {y.batch}
                               </span>
                               <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
-                                <div className="kp-grow-x" style={{ width: `${y.rate}%`, height: '100%', borderRadius: 999, background: current ? '#22c55e' : 'color-mix(in srgb, #22c55e 42%, transparent)' }} />
+                                <div className="kp-grow-x" style={{ width: `${y.rate}%`, height: '100%', borderRadius: 999, background: current ? 'var(--success)' : 'color-mix(in srgb, var(--success) 42%, transparent)' }} />
                               </div>
                               <span className="data" style={{ width: 44, flex: 'none', textAlign: 'right', fontSize: 11.5, fontWeight: current ? 650 : 400, color: current ? 'var(--text)' : 'var(--text-muted)' }}>
                                 {y.rate}%
@@ -455,7 +455,7 @@ const DashboardPanel: React.FC = () => {
                     {/* Supporting figures — enrolled/not-seeking already live in the header line */}
                     <div>
                       {[
-                        { k: 'Placed', v: fy.placed, c: '#22c55e' },
+                        { k: 'Placed', v: fy.placed, c: 'var(--success)' },
                         { k: 'Remaining', v: fy.remaining, c: 'var(--text-subtle)' },
                       ].map((r) => (
                         <div
@@ -485,7 +485,7 @@ const DashboardPanel: React.FC = () => {
                         data={[{
                           key: `${o.placement_rate}% placed`,
                           parts: [
-                            { label: 'Placed', value: o.students_placed, color: '#22c55e' },
+                            { label: 'Placed', value: o.students_placed, color: 'var(--success)' },
                             { label: 'Still seeking', value: Math.max(o.seeking_placement - o.students_placed, 0), color: 'var(--text-subtle)' },
                           ],
                         }]}
@@ -500,7 +500,7 @@ const DashboardPanel: React.FC = () => {
                       data={fy.by_department.map((d) => ({
                         key: d.key,
                         parts: [
-                          { label: 'Placed', value: d.placed, color: '#22c55e' },
+                          { label: 'Placed', value: d.placed, color: 'var(--success)' },
                           { label: 'Remaining', value: d.remaining, color: 'var(--text-subtle)' },
                         ],
                       }))}
@@ -536,11 +536,11 @@ const DashboardPanel: React.FC = () => {
                     >
                       <td style={{ ...td, fontWeight: 700 }} className="data">{y.batch}</td>
                       <td style={td} className="data">{y.total}</td>
-                      <td style={{ ...td, color: '#22c55e', fontWeight: 600 }} className="data">{y.placed}</td>
+                      <td style={{ ...td, color: 'var(--success)', fontWeight: 600 }} className="data">{y.placed}</td>
                       <td style={td}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ width: 48, height: 6, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
-                            <span style={{ display: 'block', width: `${y.rate}%`, height: '100%', background: '#22c55e' }} />
+                            <span style={{ display: 'block', width: `${y.rate}%`, height: '100%', background: 'var(--success)' }} />
                           </span>
                           <span className="data">{y.rate}%</span>
                         </span>
@@ -571,7 +571,7 @@ const DashboardPanel: React.FC = () => {
             <GroupedBarChart
               data={data.placements.by_department.map((d) => ({ key: d.key, placed: d.placed, unplaced: d.unplaced }))}
               series={[
-                { key: 'placed', label: 'Placed', color: '#22c55e' },
+                { key: 'placed', label: 'Placed', color: 'var(--success)' },
                 { key: 'unplaced', label: 'Not placed', color: 'var(--text-subtle)' },
               ]}
               emptyLabel="No departments set yet."
@@ -638,7 +638,7 @@ const DashboardPanel: React.FC = () => {
                   data={roundDropoff.map((r) => ({
                     key: r.name,
                     parts: [
-                      { label: 'Cleared', value: r.cleared, color: '#22c55e' },
+                      { label: 'Cleared', value: r.cleared, color: 'var(--success)' },
                       { label: 'Failed / absent', value: r.failed, color: 'var(--danger)' },
                       { label: 'Pending', value: r.pending, color: 'var(--text-subtle)' },
                     ],
@@ -655,7 +655,7 @@ const DashboardPanel: React.FC = () => {
             </Panel>
 
             <Panel title="Offers over time" subtitle="Placements confirmed each month.">
-              <AreaChart data={data.placements.trend} color="#22c55e" emptyLabel="Needs at least two months of placements." />
+              <AreaChart data={data.placements.trend} color="var(--success)" emptyLabel="Needs at least two months of placements." />
             </Panel>
           </div>
 
@@ -706,7 +706,7 @@ const DashboardPanel: React.FC = () => {
                   data={data.companies.churn.map((c) => ({
                     key: `${c.session}-${String((c.session + 1) % 100).padStart(2, '0')}`,
                     parts: [
-                      { label: 'Repeat', value: c.repeat, color: '#22c55e' },
+                      { label: 'Repeat', value: c.repeat, color: 'var(--success)' },
                       { label: 'New', value: c.fresh, color: '#4f7cff' },
                     ],
                   }))}
@@ -856,7 +856,7 @@ const DashboardPanel: React.FC = () => {
                     : '—'} tone="#f59e0b" />
               </StaggerItem>
               <StaggerItem style={{ height: '100%' }}>
-                <StatCard icon={FileText} label="Resumes verified" value={rd.resume_verified} tone="#22c55e"
+                <StatCard icon={FileText} label="Resumes verified" value={rd.resume_verified} tone="var(--success)"
                   hint={`of ${rd.total} profiles`} />
               </StaggerItem>
             </Stagger>
@@ -874,7 +874,7 @@ const DashboardPanel: React.FC = () => {
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }} /> No student lists it — train here
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} /> Students have it
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success)' }} /> Students have it
                   </span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(330px,1fr))', gap: '2px 28px' }}>
@@ -890,12 +890,12 @@ const DashboardPanel: React.FC = () => {
                           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
                           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: missing ? 'var(--danger)' : '#22c55e' }} />
+                          <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: missing ? 'var(--danger)' : 'var(--success)' }} />
                           <span style={{ flex: 1, minWidth: 0, fontWeight: 600, fontSize: 13, overflowWrap: 'anywhere' }}>{s.key}</span>
                           <span className="data" style={{ flex: 'none', fontSize: 12, color: 'var(--text-muted)' }}>
                             {s.demand} role{s.demand === 1 ? '' : 's'}
                           </span>
-                          <span className="data" style={{ flex: 'none', minWidth: 88, textAlign: 'right', fontSize: 12.5, fontWeight: 600, color: missing ? 'var(--danger)' : '#22c55e' }}>
+                          <span className="data" style={{ flex: 'none', minWidth: 88, textAlign: 'right', fontSize: 12.5, fontWeight: 600, color: missing ? 'var(--danger)' : 'var(--success)' }}>
                             {missing ? 'no students' : `${s.supply} student${s.supply === 1 ? '' : 's'}`}
                           </span>
                         </div>

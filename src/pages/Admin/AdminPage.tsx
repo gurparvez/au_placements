@@ -1,3 +1,4 @@
+import { useDialogFocus } from '@/components/useDialogFocus';
 import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -169,7 +170,7 @@ function UserFormModal({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit user' : 'Create user'} style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit user' : 'Create user'} style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
         <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit user' : 'Create user'}</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
           {isEdit ? `Updating ${editing?.firstName} (AUID ${editing?.auid}).` : 'Create a student or admin account.'}
@@ -300,7 +301,7 @@ function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label="Academic record" style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Academic record" style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
         <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Academic record</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
           {user.firstName} (AUID {user.auid}). Blank fields keep current values.

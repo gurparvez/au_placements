@@ -550,6 +550,10 @@ export const AreaChart: React.FC<{
     setHover(idx >= 0 && idx < data.length ? idx : null);
   };
 
+  // The data prop can shrink between renders (filter refetch while the pointer
+  // rests on the chart) — a hover index past the new length must not render.
+  const hv = hover !== null && hover < data.length ? hover : null;
+
   return (
     <div>
       <div style={{ position: 'relative' }}>
@@ -568,24 +572,24 @@ export const AreaChart: React.FC<{
           ))}
           <path className="kp-chart-fade" style={{ animationDelay: '.4s' }} d={area} fill={`url(#g-${gid})`} />
           <path className="kp-draw" d={line} pathLength={1} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          {hover !== null && (
-            <line x1={pts[hover][0]} x2={pts[hover][0]} y1={PAD} y2={H - PAD} stroke="var(--text-subtle)" strokeWidth={1} strokeDasharray="2 3" />
+          {hv !== null && (
+            <line x1={pts[hv][0]} x2={pts[hv][0]} y1={PAD} y2={H - PAD} stroke="var(--text-subtle)" strokeWidth={1} strokeDasharray="2 3" />
           )}
           <g className="kp-chart-fade" style={{ animationDelay: '.5s' }}>
             {pts.map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r={hover === i ? 4.2 : 2.6} fill={color}
-                stroke="var(--surface)" strokeWidth={hover === i ? 2 : 0} />
+              <circle key={i} cx={x} cy={y} r={hv === i ? 4.2 : 2.6} fill={color}
+                stroke="var(--surface)" strokeWidth={hv === i ? 2 : 0} />
             ))}
           </g>
         </svg>
-        {hover !== null && (
+        {hv !== null && (
           <div style={{
-            ...tip, top: 6, left: `${(pts[hover][0] / W) * 100}%`,
-            transform: hover / (data.length - 1) > 0.72 ? 'translateX(calc(-100% - 10px))' : hover / (data.length - 1) < 0.14 ? 'translateX(10px)' : 'translateX(-50%)',
+            ...tip, top: 6, left: `${(pts[hv][0] / W) * 100}%`,
+            transform: hv / (data.length - 1) > 0.72 ? 'translateX(calc(-100% - 10px))' : hv / (data.length - 1) < 0.14 ? 'translateX(10px)' : 'translateX(-50%)',
           }}>
-            <div style={{ fontWeight: 600, marginBottom: 3, textTransform: 'capitalize' }}>{data[hover].key}</div>
+            <div style={{ fontWeight: 600, marginBottom: 3, textTransform: 'capitalize' }}>{data[hv].key}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)' }}>
-              <Swatch color={color} /> <span style={{ color: 'var(--text)', fontWeight: 600, ...num }}>{data[hover].count}</span>
+              <Swatch color={color} /> <span style={{ color: 'var(--text)', fontWeight: 600, ...num }}>{data[hv].count}</span>
             </div>
           </div>
         )}
@@ -925,6 +929,7 @@ export const MultiLineChart: React.FC<{
   height?: number;
 }> = ({ labels, series, emptyLabel, height = 200 }) => {
   const [hover, setHover] = useState<number | null>(null);
+  const geomRef = React.useRef({ scale: 1, offX: 0 });
   const usable = series.filter((s) => s.values.some((v) => v > 0));
   if (!usable.length || labels.length < 2) return <ChartEmpty label={emptyLabel} />;
 
@@ -933,9 +938,15 @@ export const MultiLineChart: React.FC<{
   const stepX = (W - PAD_L - PAD) / (labels.length - 1);
   const yOf = (v: number) => H - 26 - (v / peak) * (H - 26 - PAD);
 
+  // This SVG keeps its aspect ratio (labels inside must not stretch), so on wide
+  // panels the drawing is letterboxed with side gutters — hit-testing and the
+  // HTML tooltip must both compensate for that scale/offset.
   const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * W;
+    const scale = Math.min(r.width / W, r.height / H);
+    const offX = (r.width - W * scale) / 2;
+    geomRef.current = { scale, offX };
+    const x = (e.clientX - r.left - offX) / scale;
     const idx = Math.round((x - PAD_L) / stepX);
     setHover(idx >= 0 && idx < labels.length ? idx : null);
   };
@@ -1001,7 +1012,7 @@ export const MultiLineChart: React.FC<{
           </svg>
           {hover !== null && (
             <div style={{
-              ...tip, top: 4, left: `${((PAD_L + hover * stepX) / W) * 100}%`,
+              ...tip, top: 4, left: geomRef.current.offX + (PAD_L + hover * stepX) * geomRef.current.scale,
               transform: hover / (labels.length - 1) > 0.72 ? 'translateX(calc(-100% - 10px))' : hover / (labels.length - 1) < 0.14 ? 'translateX(10px)' : 'translateX(-50%)',
             }}>
               <div style={{ fontWeight: 600, marginBottom: 4 }}>{labels[hover]}</div>

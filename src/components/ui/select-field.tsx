@@ -143,7 +143,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       case 'Home': e.preventDefault(); setActive(options.findIndex((o) => !o.disabled)); break;
       case 'End': e.preventDefault(); { const last = [...options].reverse().findIndex((o) => !o.disabled); setActive(last < 0 ? -1 : options.length - 1 - last); } break;
       case 'Enter': case ' ': e.preventDefault(); choose(active); break;
-      case 'Escape': e.preventDefault(); close(); break;
+      case 'Escape': e.preventDefault(); e.stopPropagation(); close(); break; // consume — must not also close a parent modal
       case 'Tab': close(false); break;
       default:
         if (e.key.length === 1) {
@@ -211,6 +211,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.98 }}
               transition={{ duration: 0.15, ease: EASE }}
+              data-kp-pop="true"
               style={{
                 // Fit the longest label: at least as wide as the trigger, growing
                 // up to the viewport edge so options are never truncated.
@@ -222,6 +223,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
                 overflowY: 'auto', padding: 5,
                 background: 'var(--surface)', border: '1px solid var(--border)',
                 borderRadius: 11, boxShadow: 'var(--shadow)',
+                pointerEvents: 'auto', // Radix modal dialogs set pointer-events:none on <body>
               }}
             >
               {options.map((opt, i) => {
@@ -325,13 +327,15 @@ export const DateField: React.FC<{
       setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setOpen(false); btnRef.current?.focus(); }
+      // Capture-phase + stopPropagation: Esc closes only the calendar, never a
+      // parent modal whose own listener would otherwise fire in the same pass.
+      if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); btnRef.current?.focus(); }
     };
     window.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     return () => {
       window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
     };
   }, [open]);
 
@@ -421,11 +425,13 @@ export const DateField: React.FC<{
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.98 }}
               transition={{ duration: 0.15, ease: EASE }}
+              data-kp-pop="true"
               style={{
                 position: 'fixed', top: rect.top, left: rect.left, width: POP_W, zIndex: 400,
                 transformOrigin: 'top left', padding: 12,
                 background: 'var(--surface)', border: '1px solid var(--border)',
                 borderRadius: 12, boxShadow: 'var(--shadow)',
+                pointerEvents: 'auto', // Radix modal dialogs set pointer-events:none on <body>
               }}
             >
               {/* month header */}

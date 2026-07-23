@@ -53,7 +53,9 @@ const LoginPage: React.FC = () => {
     setBanner('');
     setSubmitting(true);
     try {
-      const res = await dispatch(loginUser({ identifier: siRoll.trim(), password: siPw.trim() }));
+      // Password goes verbatim — no flow that SETS passwords trims them, so
+      // trimming here would lock out anyone whose password has edge whitespace.
+      const res = await dispatch(loginUser({ identifier: siRoll.trim(), password: siPw }));
       if (loginUser.fulfilled.match(res)) {
         const roles = res.payload.data.user.roles || [];
         const dest = roles.includes('admin') ? '/admin' : roles.includes('recruiter') ? '/students' : '/profiles';

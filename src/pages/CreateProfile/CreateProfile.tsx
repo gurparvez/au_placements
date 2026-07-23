@@ -23,6 +23,7 @@ import type { Course } from '@/api/courses';
 import CoursePicker from '@/components/CoursePicker';
 import SkillPicker from '@/components/SkillPicker';
 import { isValidUrl } from '@/utils/validation';
+import { toast } from 'sonner';
 import {
   X, UserRound, Link2, Sparkles, GraduationCap, Briefcase,
   FolderKanban, Award, Rocket,
@@ -64,11 +65,15 @@ const CreateProfile: React.FC = () => {
 
   const { loading } = useAppSelector((s) => s.student);
   const authUser = useAppSelector((s) => s.auth.user);
+  const authInitialized = useAppSelector((s) => s.auth.initialized);
 
   // Recruiters don't have a student profile — their profile is the company profile.
+  // Guests are sent to sign in BEFORE they invest time filling the form (the
+  // initialized gate avoids a redirect flash during the auth boot check).
   useEffect(() => {
     if (authUser?.roles?.includes('recruiter')) navigate(`/companies/${authUser._id}`, { replace: true });
-  }, [authUser, navigate]);
+    else if (authInitialized && !authUser) navigate('/login', { replace: true });
+  }, [authUser, authInitialized, navigate]);
 
   // ---------------- BASIC INFO ----------------
   const [headline, setHeadline] = useState('');
@@ -154,8 +159,30 @@ const CreateProfile: React.FC = () => {
     if (linkedinUrl && !isValidUrl(linkedinUrl)) e.linkedin_url = 'Invalid LinkedIn URL';
     if (githubUrl && !isValidUrl(githubUrl)) e.github_url = 'Invalid GitHub URL';
 
+    // Partially-filled rows would be silently dropped by the submit-time filters —
+    // surface them instead, so work is either saved or knowingly removed.
+    educationList.forEach((r, i) => {
+      const touched = r.institute || r.courseId || r.from_date || r.to_date || r.grade || r.passing_year || r.board || r.specialization;
+      const complete = r.level === 'university'
+        ? r.institute && r.courseId && r.from_date && r.to_date
+        : r.institute && r.grade && r.passing_year;
+      if (touched && !complete) e[`edu_${i}`] = `Education #${i + 1} is incomplete — fill the required fields or remove the entry`;
+    });
+    experiences.forEach((r, i) => {
+      const touched = r.company || r.role || r.start_date || r.end_date || r.description;
+      if (touched && !(r.company && r.role && r.start_date)) e[`exp_${i}`] = `Experience #${i + 1} is incomplete — fill the required fields or remove the entry`;
+    });
+    projects.forEach((r, i) => {
+      const touched = r.title || r.start_date || r.end_date || r.description || r.code_url || r.live_url;
+      if (touched && !(r.title && r.start_date)) e[`proj_${i}`] = `Project #${i + 1} is incomplete — fill the required fields or remove the entry`;
+    });
+    certificates.forEach((r, i) => {
+      const touched = r.name || r.issued_by || r.issue_date || r.certificate_url || r.valid_until;
+      if (touched && !(r.name && r.issued_by && r.issue_date)) e[`cert_${i}`] = `Certificate #${i + 1} is incomplete — fill the required fields or remove the entry`;
+    });
+
     setErrors(e);
-    return Object.keys(e).length === 0;
+    return e;
   };
 
   // --- Profile Image Handler ---
@@ -228,7 +255,7 @@ const CreateProfile: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={() => {}} className="space-y-6">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           {/* BASIC INFO */}
           <Card>
             <CardHeader>
@@ -248,7 +275,7 @@ const CreateProfile: React.FC = () => {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleProfileImageChange(e.target.files?.[0])}
+                  onChange={(e) => { handleProfileImageChange(e.target.files?.[0]); e.currentTarget.value = ''; }}
                 />
 
                 <div className="flex items-center gap-4">
@@ -382,7 +409,7 @@ const CreateProfile: React.FC = () => {
                   type="file"
                   accept=".pdf,.doc,.docx"
                   className="hidden"
-                  onChange={(e) => handleResumeChange(e.target.files?.[0])}
+                  onChange={(e) => { handleResumeChange(e.target.files?.[0]); e.currentTarget.value = ''; }}
                 />
 
                 <div className="mt-1.5 flex items-center gap-3">
@@ -1250,11 +1277,15 @@ const CreateProfile: React.FC = () => {
                 Skip for now
               </Button>
               <Button
-                type="submit"
+                type="button" /* not "submit" — Enter in a field must never trigger a full save */
                 disabled={loading}
                 onClick={async (e) => {
                 e.preventDefault();
-                if (!validate()) return;
+                const errs = validate();
+                if (Object.keys(errs).length) {
+                  toast.error(Object.values(errs)[0]); // say WHY the save didn't happen
+                  return;
+                }
 
                 // 1. Prepare the Plain Object Payload
                 const payload: any = {

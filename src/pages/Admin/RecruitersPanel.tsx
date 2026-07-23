@@ -1,3 +1,4 @@
+import { useDialogFocus } from '@/components/useDialogFocus';
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -106,7 +107,7 @@ function CreateRecruiterModal({ onClose, onSaved }: { onClose: () => void; onSav
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label="Create recruiter" style={{ ...card, position: 'relative', width: 'min(600px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Create recruiter" style={{ ...card, position: 'relative', width: 'min(600px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
         <div className="brass-rule" style={{ marginBottom: 12 }} />
         <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Create recruiter</h2>
         <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>Created active. Logs in with email + password.</p>

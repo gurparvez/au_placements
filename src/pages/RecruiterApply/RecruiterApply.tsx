@@ -61,7 +61,7 @@ const RecruiterApply: React.FC = () => {
     if (!isValidEmail(form.email.trim())) er.email = 'Valid email required';
     if (form.password.length < 8) er.password = 'Minimum 8 characters';
     if (!form.company.trim()) er.company = 'Company name is required';
-    if (form.phone && !/^\d{10,15}$/.test(form.phone)) er.phone = 'Enter a 10–15 digit phone';
+    if (form.phone && !/^\d{10,15}$/.test(form.phone.trim())) er.phone = 'Enter a 10–15 digit phone';
     setErrors(er);
     if (Object.keys(er).length) return;
 

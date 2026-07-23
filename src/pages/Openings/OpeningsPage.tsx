@@ -82,7 +82,9 @@ const OpeningsPage: React.FC = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(1); load(); };
+  // Pass q/page explicitly — the memoized load() closure only refreshes when its
+  // deps change, so a bare load() here would search with a stale query.
+  const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(1); load({ q, page: 1 }); };
 
   return (
     <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>

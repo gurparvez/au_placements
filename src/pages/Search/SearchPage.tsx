@@ -28,8 +28,12 @@ const SearchPage: React.FC = () => {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
+  // Only the latest request may write results — a slow response for an older
+  // term must never overwrite what the user is looking at now.
+  const reqRef = useRef(0);
   const run = useCallback(async (term: string) => {
     const t = term.trim();
+    const req = ++reqRef.current;
     if (t.length < 2) { setPeople([]); setCompanies([]); setSearched(false); return; }
     setLoading(true);
     try {
@@ -37,13 +41,17 @@ const SearchPage: React.FC = () => {
         studentApi.searchStudents(t),
         companiesApi.list({ page: 1, limit: 8, q: t }),
       ]);
+      if (req !== reqRef.current) return;
       setPeople(ppl);
       setCompanies(comp.data);
     } catch {
+      if (req !== reqRef.current) return;
       setPeople([]); setCompanies([]);
     } finally {
-      setLoading(false);
-      setSearched(true);
+      if (req === reqRef.current) {
+        setLoading(false);
+        setSearched(true);
+      }
     }
   }, []);
 

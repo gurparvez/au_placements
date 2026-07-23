@@ -155,6 +155,7 @@ const StudentProfilePage: React.FC = () => {
 
   const { profile, loading, error } = useAppSelector((s) => s.student);
   const authUser = useAppSelector((s) => s.auth.user);
+  const authInitialized = useAppSelector((s) => s.auth.initialized);
 
   const [pwOpen, setPwOpen] = useState(false);
   const isRecruiter = !!authUser?.roles?.includes('recruiter');
@@ -178,6 +179,17 @@ const StudentProfilePage: React.FC = () => {
       console.error('Logout error:', err);
     }
   };
+
+  // Auth still resolving on a cold load — don't flash the Restricted screen
+  // at users who are actually signed in.
+  if (!authInitialized) {
+    return (
+      <StatusScreen>
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" aria-hidden />
+        <p className="text-muted-foreground mt-3 text-sm">Loading…</p>
+      </StatusScreen>
+    );
+  }
 
   if (!authUser) {
     return (

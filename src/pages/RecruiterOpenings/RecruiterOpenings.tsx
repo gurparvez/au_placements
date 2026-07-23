@@ -1,3 +1,4 @@
+import { useDialogFocus } from '@/components/useDialogFocus';
 import { confirmDialog } from '@/components/confirm';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -104,7 +105,7 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label={`Applicants for ${opening.title}`} style={{ position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`Applicants for ${opening.title}`} style={{ position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h2 className="font-display" style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Applicants</h2>
@@ -340,7 +341,7 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit opening' : 'Post an opening'} style={{ ...card, position: 'relative', width: 'min(620px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit opening' : 'Post an opening'} style={{ ...card, position: 'relative', width: 'min(620px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
         <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500 }}>{isEdit ? 'Edit opening' : 'Post an opening'}</h2>
         <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{isEdit ? 'Update the details students see.' : 'Share an internship or job.'}</p>
 
