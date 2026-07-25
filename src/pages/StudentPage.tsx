@@ -7,9 +7,10 @@ import { studentToCardVM } from '@/utils/cardVM';
 import { FILTER_SKILLS } from '@/utils/skills';
 import { Reveal, AnimatedNumber } from '@/components/motion';
 import { SelectField, DateField } from '@/components/ui/select-field';
+import { useAppSelector } from '@/context/hooks';
 
 const PAGE = 12;
-const PADX = 'clamp(20px,10vw,112px)';
+const PADX = 'clamp(20px,10vw,64px)';
 const UNIVERSITIES = ['Any', 'Akal University', 'Eternal University'];
 const OPPORTUNITIES = ['Any', 'Internship', 'Job'];
 const EXP_RANGES = [
@@ -23,21 +24,18 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '11px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
-  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none',
 };
-// Hover feedback for inline-styled buttons.
-const hoverBg = (over: string, base: string) => ({
-  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
-  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
-});
 const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div style={{ marginBottom: 14 }}>
-    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</label>
+    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</label>
     {children}
   </div>
 );
 
 const StudentsPage: React.FC = () => {
+  const user = useAppSelector((s) => s.auth.user);
+  const isStudent = !!user?.roles?.includes('student');
   // ---- filters ----
   const [q, setQ] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
@@ -150,12 +148,12 @@ const StudentsPage: React.FC = () => {
         const sel = skills.indexOf(name) >= 0;
         return (
           <button key={name} onClick={() => toggleSkill(name)} aria-pressed={sel} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', color: 'var(--text)', background: sel ? 'var(--primary-soft)' : 'transparent', border: 'none' }}>
-            <span aria-hidden style={{ width: box, height: box, borderRadius: 5, border: `1.5px solid ${sel ? 'var(--primary)' : 'var(--border-strong)'}`, background: sel ? 'var(--primary)' : 'transparent', color: 'var(--on-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flex: 'none' }}>{sel ? '✓' : ''}</span>
+            <span aria-hidden style={{ width: box, height: box, borderRadius: 5, border: `1.5px solid ${sel ? 'var(--primary)' : 'var(--border-strong)'}`, background: sel ? 'var(--primary)' : 'transparent', color: 'var(--on-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flex: 'none' }}>{sel ? '✓' : ''}</span>
             <span style={{ fontSize: font }}>{name}</span>
           </button>
         );
       })}
-      {skillRows.length === 0 && <div style={{ padding: '14px 10px', fontSize: 13, color: 'var(--text-subtle)' }}>No skills found.</div>}
+      {skillRows.length === 0 && <div style={{ padding: '14px 10px', fontSize: 14, color: 'var(--text-subtle)' }}>No skills found.</div>}
     </>
   );
 
@@ -194,14 +192,14 @@ const StudentsPage: React.FC = () => {
       <div style={{ borderTop: '1px solid var(--border)', margin: '6px 0 14px' }} />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontWeight: 650, fontSize: 13.5 }}>Skills</span>
-        {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 12.5, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
+        <span style={{ fontWeight: 650, fontSize: 14.5 }}>Skills</span>
+        {skills.length > 0 && <button onClick={() => setSkills([])} style={{ fontSize: 13.5, color: 'var(--primary)', cursor: 'pointer', fontWeight: 550, background: 'none', border: 'none' }}>Clear</button>}
       </div>
-      <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" aria-label="Search skills" style={{ ...inputStyle, padding: '9px 12px', fontSize: 13.5, marginBottom: 10 }} />
+      <input value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" aria-label="Search skills" style={{ ...inputStyle, padding: '9px 12px', fontSize: 14.5, marginBottom: 10 }} />
       {skills.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
           {skills.map((name) => (
-            <button key={name} onClick={() => toggleSkill(name)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 550, padding: '4px 9px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-soft-border)', cursor: 'pointer' }}>
+            <button key={name} onClick={() => toggleSkill(name)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 550, padding: '4px 9px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-soft-border)', cursor: 'pointer' }}>
               {name} <span aria-hidden>×</span>
             </button>
           ))}
@@ -214,34 +212,25 @@ const StudentsPage: React.FC = () => {
   );
 
   return (
-    <section style={{ width: '100%', padding: `36px ${PADX} 80px` }}>
-      <Reveal>
-        <div className="brass-rule" style={{ marginBottom: 14 }} />
-        <span className="ledger-label" style={{ color: 'var(--brass)' }}>The Akal &amp; Eternal Register</span>
-        <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', letterSpacing: '-.02em', fontWeight: 500, margin: '10px 0 0' }}>Explore the register</h1>
-        <p style={{ textAlign: 'left', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', maxWidth: '56ch', lineHeight: 1.6 }}>
-          Filter talent by skills, field, and availability.
-        </p>
-      </Reveal>
-
+    <section style={{ width: '100%', padding: `6px ${PADX} 80px` }}>
       {/* Layout: filter bar on top, results below */}
       <div style={{ marginTop: 26 }}>
         {/* Desktop filter bar */}
-        <div data-kp-show="desktop" style={{ flexDirection: 'column', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 16, boxShadow: 'var(--shadow)', marginBottom: 22 }}>
+        <div data-kp-show="desktop" style={{ marginBottom: 22 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', width: '100%' }}>
-            <span style={{ fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 7, flex: 'none' }}><SlidersHorizontal size={15} /> Filters</span>
             <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
               <Search size={15} aria-hidden style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, headline, field…" aria-label="Search students"
-                style={{ ...inputStyle, padding: '8px 11px 8px 34px', fontSize: 13.5, fontWeight: 500 }} />
+                style={{ ...inputStyle, padding: '10px 11px 10px 34px', fontSize: 14.5, fontWeight: 500 }} />
             </div>
-            <SelectField aria-label="University" value={university} onChange={setUniversity} style={{ width: 165 }}
+            {user && !isStudent && (<>
+            <SelectField aria-label="University" value={university} onChange={setUniversity} style={{ width: 165, padding: '10px 11px' }}
               options={UNIVERSITIES.map((u) => ({ value: u, label: u === 'Any' ? 'Any university' : u }))} />
-            <SelectField aria-label="Opportunity" value={opportunity} onChange={setOpportunity} style={{ width: 160 }}
+            <SelectField aria-label="Opportunity" value={opportunity} onChange={setOpportunity} style={{ width: 160, padding: '10px 11px' }}
               options={OPPORTUNITIES.map((o) => ({ value: o, label: o === 'Any' ? 'Any opportunity' : o }))} />
-            <SelectField aria-label="Preferred field" value={field} onChange={setField} style={{ width: 150 }}
+            <SelectField aria-label="Preferred field" value={field} onChange={setField} style={{ width: 150, padding: '10px 11px' }}
               options={fields.map((f) => ({ value: f, label: f === 'Any' ? 'Any field' : f }))} />
-            <SelectField aria-label="Experience" value={exp} onChange={setExp} style={{ width: 150 }}
+            <SelectField aria-label="Experience" value={exp} onChange={setExp} style={{ width: 150, padding: '10px 11px' }}
               options={EXP_RANGES.map((er) => ({ value: er.v, label: er.v === 'Any' ? 'Any experience' : er.l }))} />
             {/* Skills multi-select dropdown */}
             <div ref={skillsRef} style={{ position: 'relative', flex: 'none' }}>
@@ -251,11 +240,11 @@ const StudentsPage: React.FC = () => {
                 aria-expanded={skillsOpen}
                 style={{
                   /* mirrors SelectField's trigger exactly — same font, height, and metrics */
-                  display: 'flex', alignItems: 'center', gap: 8, width: 160, minWidth: 0, padding: '8px 11px',
+                  display: 'flex', alignItems: 'center', gap: 8, width: 160, minWidth: 0, padding: '10px 11px',
                   borderRadius: 'var(--r-ctl)', border: `1px solid ${skillsOpen ? 'var(--primary)' : 'var(--border-strong)'}`,
                   boxShadow: skillsOpen ? '0 0 0 3px var(--ring-soft)' : 'none',
                   background: 'var(--bg-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left',
-                  font: 'inherit', fontSize: 13.5, lineHeight: 1.2, fontWeight: 500,
+                  font: 'inherit', fontSize: 14.5, lineHeight: 1.2, fontWeight: 500,
                   transition: 'border-color .16s ease, background .16s ease, box-shadow .16s ease',
                 }}
                 onMouseEnter={(e) => { if (!skillsOpen) e.currentTarget.style.borderColor = 'var(--text-subtle)'; }}
@@ -269,45 +258,45 @@ const StudentsPage: React.FC = () => {
               {skillsOpen && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 280, zIndex: 60,
-                  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12,
-                  boxShadow: 'var(--shadow)', padding: 10,
+                  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', padding: 10,
                 }}>
                   <input autoFocus value={skillQuery} onChange={(e) => setSkillQuery(e.target.value)} placeholder="Search skills…" aria-label="Search skills"
-                    style={{ ...inputStyle, padding: '8px 11px', fontSize: 13, marginBottom: 8 }} />
+                    style={{ ...inputStyle, padding: '8px 11px', fontSize: 14, marginBottom: 8 }} />
                   <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <SkillList box={15} font={13} />
                   </div>
                   {skills.length > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 8 }}>
-                      <span className="data" style={{ fontSize: 12, color: 'var(--text-muted)' }}>{skills.length} selected</span>
-                      <button onClick={() => setSkills([])} style={{ fontSize: 12.5, color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
+                      <span className="data" style={{ fontSize: 13, color: 'var(--text-muted)' }}>{skills.length} selected</span>
+                      <button onClick={() => setSkills([])} style={{ fontSize: 13.5, color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
                     </div>
                   )}
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 'none' }}>
-              <DateField aria-label="Available from" title="Available from" value={from} onChange={setFrom} style={{ width: 132 }} />
+              <DateField aria-label="Available from" title="Available from" value={from} onChange={setFrom} style={{ width: 132, padding: '10px 11px' }} />
               <span aria-hidden style={{ color: 'var(--text-subtle)' }}>→</span>
-              <DateField aria-label="Available until" title="Available until" value={to} onChange={setTo} style={{ width: 132 }} />
+              <DateField aria-label="Available until" title="Available until" value={to} onChange={setTo} style={{ width: 132, padding: '10px 11px' }} />
             </div>
-            {anyActive && <button onClick={clearAll} style={{ flex: 'none', fontSize: 12.5, color: 'var(--primary)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>}
+            {anyActive && <button onClick={clearAll} style={{ flex: 'none', fontSize: 13.5, padding: '10px 14px', color: 'var(--text)', fontWeight: 600, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)', cursor: 'pointer' }}>Clear all</button>}
+            </>)}
           </div>
         </div>
 
         <div>
           {/* Results toolbar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
-            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-muted)' }}>
-              {loading ? 'Searching…' : <><strong className="data" style={{ color: 'var(--text)', fontWeight: 700 }}><AnimatedNumber value={total} /></strong> {total === 1 ? 'student in the register' : 'students in the register'}</>}
+            <p style={{ margin: 0, fontSize: 15, color: 'var(--text-muted)' }}>
+              {loading ? 'Searching…' : <><strong className="data" style={{ display: 'inline-block', padding: '1px 10px', borderRadius: 999, background: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 600 }}><AnimatedNumber value={total} /></strong> {total === 1 ? 'student in the register' : 'students in the register'}</>}
             </p>
-            <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '9px 15px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer' }}><SlidersHorizontal size={15} /> Filters{anyActive ? ' •' : ''}</button>
+            <button data-kp-show="mobile" onClick={() => setSheet(true)} style={{ display: 'none', alignItems: 'center', gap: 7, padding: '9px 15px', background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}><SlidersHorizontal size={15} /> Filters{anyActive ? ' •' : ''}</button>
           </div>
 
           {loading && results.length === 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 }}>
+            <div className="kp-grid-2">
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 18 }}>
+                <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow)', padding: 18 }}>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <span data-kp-sk="true" style={{ width: 46, height: 46, borderRadius: '50%' }} />
                     <div style={{ flex: 1 }}>
@@ -322,21 +311,21 @@ const StudentsPage: React.FC = () => {
             </div>
           ) : results.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '64px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
-              <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto', color: 'var(--text-subtle)' }}>⌕</div>
-              <h3 style={{ fontSize: 19, fontWeight: 650, margin: '18px 0 0' }}>No students found</h3>
-              <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>Try changing or clearing your filters.</p>
-              {anyActive && <button onClick={clearAll} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 18, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}>Clear all filters</button>}
+              <div aria-hidden style={{ width: 54, height: 54, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 23, margin: '0 auto', color: 'var(--text-muted)' }}>⌕</div>
+              <h3 style={{ fontSize: 20, fontWeight: 700, margin: '18px 0 0' }}>No students found</h3>
+              <p style={{ fontSize: 15.5, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>Try changing or clearing your filters.</p>
+              {anyActive && <button onClick={clearAll} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')} style={{ marginTop: 18, padding: '10px 18px', background: 'var(--primary)', color: 'var(--on-primary)', border: 'none', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 15, cursor: 'pointer', transition: 'background .18s' }}>Clear all filters</button>}
             </div>
           ) : (
             <>
               <Reveal>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18, opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
+                <div className="kp-grid-2" style={{ opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
                   {cards.map((vm) => <StudentCard key={vm.id} vm={vm} />)}
                 </div>
               </Reveal>
               {hasMore && (
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-                  <button onClick={() => runFetch(page + 1, false)} disabled={loadingMore} {...hoverBg('var(--surface-2)', 'var(--surface)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer', opacity: loadingMore ? 0.7 : 1, transition: 'background .18s ease' }}>
+                  <button onClick={() => runFetch(page + 1, false)} disabled={loadingMore} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 15.5, cursor: 'pointer', opacity: loadingMore ? 0.7 : 1 }}>
                     {loadingMore ? 'Loading…' : `Load more (${(total - results.length).toLocaleString()} more)`}
                   </button>
                 </div>
@@ -350,16 +339,16 @@ const StudentsPage: React.FC = () => {
       {sheet && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 310 }}>
           <div onClick={() => setSheet(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.5)', animation: 'kpFade .15s ease' }} />
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '86vh', background: 'var(--bg-2)', borderTopLeftRadius: 18, borderTopRightRadius: 18, borderTop: '1px solid var(--border)', padding: 18, display: 'flex', flexDirection: 'column', animation: 'kpPop .2s ease' }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '86vh', background: 'var(--bg-2)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 18, display: 'flex', flexDirection: 'column', animation: 'kpPop .2s ease' }}>
             <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border-strong)', margin: '0 auto 14px', flex: 'none' }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flex: 'none' }}>
-              <span style={{ fontWeight: 700, fontSize: 16 }}>Filters</span>
-              {anyActive && <button onClick={clearAll} style={{ fontSize: 13, color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, background: 'none', border: 'none' }}>Clear all</button>}
+              <span style={{ fontWeight: 700, fontSize: 17 }}>Filters</span>
+              {anyActive && <button onClick={clearAll} style={{ fontSize: 14, color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, background: 'none', border: 'none' }}>Clear all</button>}
             </div>
             <div style={{ overflow: 'auto', flex: 1, margin: '0 -2px', padding: '0 2px' }}>
               {renderFilters()}
             </div>
-            <button onClick={() => setSheet(false)} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 14, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', flex: 'none', transition: 'background .18s ease' }}>Show {total.toLocaleString()} results</button>
+            <button onClick={() => setSheet(false)} onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')} onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')} style={{ marginTop: 14, padding: 13, background: 'var(--primary)', color: 'var(--on-primary)', border: 'none', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 16, cursor: 'pointer', flex: 'none', transition: 'background .18s' }}>Show {total.toLocaleString()} results</button>
           </div>
         </div>
       )}
