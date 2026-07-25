@@ -28,7 +28,7 @@ const SearchPage = lazy(() => import('./pages/Search/SearchPage.tsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.tsx'));
 
 const RouteFallback = () => (
-  <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)', fontSize: 14 }} aria-busy="true">
+  <section style={{ padding: '60px clamp(20px,10vw,64px)', color: 'var(--text-muted)', fontSize: 15 }} aria-busy="true">
     Loading…
   </section>
 );
