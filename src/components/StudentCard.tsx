@@ -1,95 +1,147 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowUpRight, CalendarClock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { toast } from 'sonner';
+import { ArrowUpRight, CalendarClock, BadgeCheck } from 'lucide-react';
+import { useAppSelector } from '@/context/hooks';
 import type { CardVM } from '@/utils/cardVM';
 
-/* Each card carries a faint wash of its own avatar hue — distinct from the page
-   background in both themes (the mix base is the theme's surface token). */
+/* Register profile card — soft, matching the site, with two LIVE signals: a
+   slow light orbits each avatar, and a radar-ping beacon pulses on the status.
+   Hover layers on: a lift with a hue-tinted glow, a glare sweep, a charging
+   arrow, and skill chips that spring. Kept minimal — each motion is subtle. */
+const MotionLink = motion.create(Link);
 const tintOf = (hue: string, amount: number) => `color-mix(in srgb, ${hue} ${amount}%, var(--surface))`;
-
-const onHover = (lift: boolean, hue: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
-  e.currentTarget.style.transform = lift ? 'translateY(-4px)' : 'none';
-  e.currentTarget.style.borderColor = lift ? `color-mix(in srgb, ${hue} 45%, var(--border))` : 'var(--border)';
-  e.currentTarget.style.boxShadow = lift ? '0 20px 38px -22px rgba(0,0,0,.45)' : 'var(--shadow)';
-  e.currentTarget.style.background = tintOf(hue, lift ? 24 : 15);
-};
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 export default function StudentCard({ vm }: { vm: CardVM }) {
+  const hue = vm.avatarBg;
+  const user = useAppSelector((s) => s.auth.user);
+  const navigate = useNavigate();
   return (
-    <Link
+    <MotionLink
       to={vm.href}
+      data-theme="light"
       aria-label={`View profile of ${vm.name}`}
-      onMouseEnter={onHover(true, vm.avatarBg)}
-      onMouseLeave={onHover(false, vm.avatarBg)}
+      onClick={(e) => { if (!user) { e.preventDefault(); toast.error('Sign in to view profiles.'); navigate('/login'); } }}
+      initial="rest"
+      animate="rest"
+      whileHover="hover"
+      whileTap={{ scale: 0.985 }}
+      variants={{ rest: { y: 0 }, hover: { y: -6 } }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       style={{
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
+        gap: 13,
         padding: 18,
         height: '100%',
         boxSizing: 'border-box',
-        background: tintOf(vm.avatarBg, 15),
-        border: '1px solid var(--border)',
+        background: tintOf(hue, 18),
+        border: `1px solid color-mix(in srgb, ${hue} 28%, var(--border))`,
         borderRadius: 'var(--r-card)',
         textDecoration: 'none',
         color: 'var(--text)',
         boxShadow: 'var(--shadow)',
-        transition: 'border-color .18s, box-shadow .18s, transform .18s, background .18s',
+        overflow: 'hidden',
+        transition: 'border-color .22s ease, box-shadow .22s ease, background .22s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = `color-mix(in srgb, ${hue} 42%, var(--border))`;
+        e.currentTarget.style.boxShadow = `0 24px 48px -24px color-mix(in srgb, ${hue} 45%, transparent)`;
+        e.currentTarget.style.background = tintOf(hue, 24);
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = `color-mix(in srgb, ${hue} 28%, var(--border))`;
+        e.currentTarget.style.boxShadow = 'var(--shadow)';
+        e.currentTarget.style.background = tintOf(hue, 18);
       }}
     >
-      {/* header: avatar + name + arrow */}
-      <div style={{ display: 'flex', gap: 13, alignItems: 'center' }}>
-        <span
-          aria-hidden
-          style={{
-            width: 52, height: 52, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', fontWeight: 600, fontSize: 17, color: '#fff', background: vm.avatarBg,
-            boxShadow: '0 0 0 3px var(--surface), 0 0 0 4px var(--border)',
-          }}
-        >
-          {vm.initials}
+      {/* hover glare — a soft diagonal light slides across */}
+      <motion.span
+        aria-hidden
+        variants={{ rest: { x: '-130%' }, hover: { x: '230%' } }}
+        transition={{ duration: 0.75, ease: EASE }}
+        style={{
+          position: 'absolute', top: 0, bottom: 0, left: 0, width: '55%', pointerEvents: 'none', zIndex: 2,
+          background: 'linear-gradient(105deg, transparent, color-mix(in srgb, #ffffff 20%, transparent), transparent)',
+          transform: 'skewX(-14deg)',
+        }}
+      />
+
+      {/* ── header: live-ring avatar · name · arrow ── */}
+      <div style={{ position: 'relative', display: 'flex', gap: 14, alignItems: 'center' }}>
+        <span style={{ position: 'relative', width: 56, height: 56, flex: 'none' }}>
+          {/* LIVE: a light continuously sweeps the ring */}
+          <span aria-hidden style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            background: `conic-gradient(from 0deg, ${hue}, color-mix(in srgb, ${hue} 0%, transparent) 55%, ${hue})`,
+            animation: 'kpRingSpin 5s linear infinite',
+          }} />
+          <span aria-hidden style={{
+            position: 'absolute', inset: 3, borderRadius: '50%', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', fontWeight: 700, fontSize: 18, color: '#fff', background: hue,
+            border: '2px solid var(--surface)',
+          }}>
+            {vm.initials}
+          </span>
         </span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontWeight: 650, fontSize: 16, lineHeight: 1.25, letterSpacing: '-.01em', textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{vm.name}</div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.35, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontWeight: 700, fontSize: 18.5, lineHeight: 1.2, letterSpacing: '-.01em', textTransform: 'capitalize' }}>{vm.name}</span>
+            <BadgeCheck size={15} aria-hidden style={{ color: 'var(--brass)', flex: 'none' }} />
+          </div>
+          <div style={{ fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.35, marginTop: 1 }}>
             {vm.headline || '—'}
           </div>
         </div>
-        <span aria-hidden style={{ flex: 'none', width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>
+        <motion.span
+          aria-hidden
+          variants={{ rest: { x: 0, y: 0, rotate: 0 }, hover: { x: 3, y: -3, rotate: 45 } }}
+          transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+          style={{ flex: 'none', width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', color: 'var(--text-muted)' }}
+        >
           <ArrowUpRight size={15} />
-        </span>
+        </motion.span>
       </div>
 
-      {/* badges */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        <span style={{ fontSize: 11.5, fontWeight: 600, padding: '3px 10px', borderRadius: 'var(--r-pill)', background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+      {/* ── status: beacon pill (LIVE ping) + field ── */}
+      <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13.5, fontWeight: 650, padding: '4px 12px 4px 10px', borderRadius: 6, background: 'var(--primary-soft)', color: 'var(--primary)' }}>
+          <span aria-hidden style={{ position: 'relative', display: 'inline-flex', width: 7, height: 7 }}>
+            <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'var(--primary)', animation: 'kpPing 1.8s ease-out infinite' }} />
+            <span style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: 'var(--primary)' }} />
+          </span>
           {vm.oppLabel}
         </span>
         {vm.field && (
-          <span style={{ fontSize: 11.5, fontWeight: 500, padding: '3px 10px', borderRadius: 'var(--r-pill)', background: 'var(--surface-2)', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: 13.5, fontWeight: 550, color: 'var(--text-muted)' }}>
             {vm.field}
           </span>
         )}
       </div>
 
-      {vm.metaText && <div style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>{vm.metaText}</div>}
+      {/* ── meta + availability ── */}
+      {vm.metaText && <div style={{ position: 'relative', fontSize: 14.5, color: 'var(--text-muted)', lineHeight: 1.5 }}>{vm.metaText}</div>}
       {vm.hasAvail && (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-subtle)' }}>
+        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, color: 'var(--text-subtle)' }}>
           <CalendarClock size={13} /> Available {vm.availLabel}
         </div>
       )}
 
+      {/* ── skills ── */}
       {vm.skills.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+        <div style={{ position: 'relative', marginTop: 'auto', paddingTop: 13, fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.7 }}>
           {vm.skills.map((sk, i) => (
-            <span key={i} style={{ fontSize: 11.5, padding: '3px 9px', borderRadius: 'var(--r-chip)', background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+            <span key={i}>
+              {i > 0 && <span style={{ color: 'var(--text-subtle)', margin: '0 7px' }}>·</span>}
               {sk}
             </span>
           ))}
-          {vm.hasExtra && <span style={{ fontSize: 11.5, padding: '3px 4px', color: 'var(--text-subtle)', fontWeight: 550 }}>+{vm.extra}</span>}
+          {vm.hasExtra && <span style={{ color: 'var(--text-subtle)', fontWeight: 650, marginLeft: 7 }}>+{vm.extra}</span>}
         </div>
       )}
-    </Link>
+    </MotionLink>
   );
 }
