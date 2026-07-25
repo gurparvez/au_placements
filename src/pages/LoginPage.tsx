@@ -7,12 +7,12 @@ import { loginUser } from '@/context/auth/authSlice';
 
 type Errors = { [k: string]: string };
 
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 550, marginBottom: 6 };
-const errStyle: React.CSSProperties = { color: 'var(--danger)', fontSize: 12.5, marginTop: 5 };
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 14, fontWeight: 550, marginBottom: 6 };
+const errStyle: React.CSSProperties = { color: 'var(--danger)', fontSize: 13.5, marginTop: 5 };
 const fieldStyle = (err?: string): React.CSSProperties => ({
   width: '100%', padding: '11px 13px', borderRadius: 'var(--r-ctl)',
   border: `1px solid ${err ? 'var(--danger)' : 'var(--border-strong)'}`,
-  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none',
 });
 
 // The left panel always sits over a dark photo, so its accents are fixed
@@ -67,10 +67,10 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
+    <section style={{ padding: '24px clamp(20px,10vw,64px) 80px' }}>
       <div
         data-kp-split="true"
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, overflow: 'hidden', boxShadow: 'var(--shadow)', minHeight: 580 }}
+        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, boxShadow: 'var(--shadow)', overflow: 'hidden', minHeight: 580 }}
       >
         {/* ---------------- Left: editorial register panel ---------------- */}
         <div
@@ -90,8 +90,8 @@ const LoginPage: React.FC = () => {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* fixed dark panel — always the dark-mode mark, whatever the app theme */}
-              <img src="/logo2.png" alt="Kalgidhar Trust" width={30} height={30} style={{ display: 'block', objectFit: 'contain', borderRadius: 7 }} />
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Kalgidhar Placements</span>
+              <img src="/logo_light.png" alt="Kalgidhar Society" width={30} height={30} style={{ display: 'block', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+              <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Kalgidhar Placements</span>
             </div>
             <motion.div
               initial={{ scaleX: 0 }}
@@ -117,8 +117,8 @@ const LoginPage: React.FC = () => {
               >
                 <BadgeCheck size={18} aria-hidden style={{ color: PANEL_ACCENT, flex: 'none', marginTop: 1 }} />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14.5, color: '#fff' }}>{t}</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,.74)' }}>{s}</div>
+                  <div style={{ fontWeight: 600, fontSize: 15.5, color: '#fff' }}>{t}</div>
+                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,.74)' }}>{s}</div>
                 </div>
               </motion.li>
             ))}
@@ -132,17 +132,8 @@ const LoginPage: React.FC = () => {
           transition={{ duration: 0.6, ease: EASE, delay: 0.15 }}
           style={{ padding: 'clamp(28px,4vw,44px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
         >
-          <div>
-            <div className="brass-rule" style={{ marginBottom: 14 }} />
-            <span className="ledger-label">Sign in to the register</span>
-            <h1 className="font-display" style={{ fontSize: 30, fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Sign in</h1>
-            <p style={{ textAlign: 'left', fontSize: 13.5, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.55 }}>
-              Accounts are created by your placement office. Contact an administrator if you need access.
-            </p>
-          </div>
-
           {(banner || authError) && (
-            <div role="alert" style={{ marginTop: 18, padding: '11px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--danger-soft)', border: '1px solid var(--danger)', color: 'var(--danger)', fontSize: 13.5, fontWeight: 500 }}>
+            <div role="alert" style={{ marginTop: 18, padding: '11px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid color-mix(in srgb, var(--danger) 30%, transparent)', background: 'var(--danger-soft)', color: 'var(--danger)', fontSize: 14.5, fontWeight: 600 }}>
               {banner || authError}
             </div>
           )}
@@ -198,13 +189,13 @@ const LoginPage: React.FC = () => {
             <button
               onClick={submitSignin}
               disabled={submitting}
-              style={{ marginTop: 6, padding: 13, borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: submitting ? 'not-allowed' : 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}
+              style={{ marginTop: 6, padding: 13, border: 'none', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 16, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}
               onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = 'var(--primary-hover)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
             >
               {submitting ? 'Signing in…' : 'Sign in'}
             </button>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 0' }}>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)', textAlign: 'center', margin: '4px 0 0' }}>
               Are you a recruiter?{' '}
               <Link to="/recruiter/apply" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>Apply for access</Link>
             </p>
