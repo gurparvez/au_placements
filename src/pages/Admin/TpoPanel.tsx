@@ -15,17 +15,17 @@ import { SelectField } from '@/components/ui/select-field';
 /* ------------------------------ styles ------------------------------ */
 
 const card: React.CSSProperties = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9,
 };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '9px 12px', borderRadius: 'var(--r-ctl)',
   border: '1px solid var(--border-strong)', background: 'var(--bg-2)',
-  color: 'var(--text)', fontSize: 14, outline: 'none',
+  color: 'var(--text)', fontSize: 15, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
-  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
 const hoverBg = (over: string, base: string) => ({
@@ -35,12 +35,13 @@ const hoverBg = (over: string, base: string) => ({
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
-  fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border)',
+  transition: 'background .18s ease',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)',
+  display: 'block', fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)',
 };
-const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 12.5 };
+const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 13.5 };
 
 const STAGE_TONE: Record<InvitationStage, string> = {
   invited: 'var(--text-muted)',
@@ -89,8 +90,8 @@ const Toggle: React.FC<{
       }} />
     </span>
     <span style={{ minWidth: 0 }}>
-      <span style={{ display: 'block', fontSize: 13, fontWeight: 600, lineHeight: 1.35 }}>{label}</span>
-      {hint && <span style={{ display: 'block', ...muted, fontSize: 11.5, marginTop: 1, lineHeight: 1.4 }}>{hint}</span>}
+      <span style={{ display: 'block', fontSize: 14, fontWeight: 600, lineHeight: 1.35 }}>{label}</span>
+      {hint && <span style={{ display: 'block', ...muted, fontSize: 12.5, marginTop: 1, lineHeight: 1.4 }}>{hint}</span>}
     </span>
   </button>
 );
@@ -132,13 +133,13 @@ const PolicySection: React.FC = () => {
           <Lock size={14} />
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 className="font-display" style={{ margin: 0, fontSize: 14.5, fontWeight: 500, letterSpacing: '-.01em' }}>Placement policy</h3>
-          <p style={{ ...muted, margin: '1px 0 0', fontSize: 11.5, lineHeight: 1.4 }}>
+          <h3 className="font-display" style={{ margin: 0, fontSize: 15.5, fontWeight: 500, letterSpacing: '-.01em' }}>Placement policy</h3>
+          <p style={{ ...muted, margin: '1px 0 0', fontSize: 12.5, lineHeight: 1.4 }}>
             Offer rules applied to every drive.
           </p>
         </div>
         <button onClick={save} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')}
-          style={{ ...btnPrimary, opacity: saving ? 0.7 : 1, padding: '7px 14px', fontSize: 13, flex: 'none', alignSelf: 'flex-start', minWidth: 138, justifyContent: 'center' }}>
+          style={{ ...btnPrimary, opacity: saving ? 0.7 : 1, padding: '7px 14px', fontSize: 14, flex: 'none', alignSelf: 'flex-start', minWidth: 138, justifyContent: 'center' }}>
           <Save size={14} /> {saving ? 'Saving…' : 'Save policy'}
         </button>
       </div>
@@ -160,28 +161,28 @@ const PolicySection: React.FC = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 10, marginTop: 11 }}>
         <div>
-          <label style={{ ...labelStyle, fontSize: 12, marginBottom: 4 }}>Dream tier threshold (LPA)</label>
+          <label style={{ ...labelStyle, fontSize: 13, marginBottom: 4 }}>Dream tier threshold (LPA)</label>
           <input type="number" min={0} step="0.5" value={policy.dream_ctc_threshold}
             onChange={(e) => set('dream_ctc_threshold', Number(e.target.value))} style={{ ...inputStyle, padding: '7px 10px' }}
             title="This and above counts as dream." />
-          <p style={{ ...muted, marginTop: 3, fontSize: 11 }}>This and above counts as dream.</p>
+          <p style={{ ...muted, marginTop: 3, fontSize: 12 }}>This and above counts as dream.</p>
         </div>
         <div>
-          <label style={{ ...labelStyle, fontSize: 12, marginBottom: 4 }}>Max offers per student</label>
+          <label style={{ ...labelStyle, fontSize: 13, marginBottom: 4 }}>Max offers per student</label>
           <input type="number" min={0} value={policy.max_offers_per_student}
             onChange={(e) => set('max_offers_per_student', Number(e.target.value))} style={{ ...inputStyle, padding: '7px 10px' }}
             title="0 means unlimited." />
-          <p style={{ ...muted, marginTop: 3, fontSize: 11 }}>0 means unlimited.</p>
+          <p style={{ ...muted, marginTop: 3, fontSize: 12 }}>0 means unlimited.</p>
         </div>
         <div>
-          <label style={{ ...labelStyle, fontSize: 12, marginBottom: 4 }}>Default minimum CGPA</label>
+          <label style={{ ...labelStyle, fontSize: 13, marginBottom: 4 }}>Default minimum CGPA</label>
           <input type="number" min={0} max={10} step="0.1" value={policy.default_min_cgpa ?? 0}
             onChange={(e) => set('default_min_cgpa', Number(e.target.value))} style={{ ...inputStyle, padding: '7px 10px' }}
             title="Applied when an opening sets none." />
-          <p style={{ ...muted, marginTop: 3, fontSize: 11 }}>Applied when an opening sets none.</p>
+          <p style={{ ...muted, marginTop: 3, fontSize: 12 }}>Applied when an opening sets none.</p>
         </div>
         <div>
-          <label style={{ ...labelStyle, fontSize: 12, marginBottom: 4 }}>Default max backlogs</label>
+          <label style={{ ...labelStyle, fontSize: 13, marginBottom: 4 }}>Default max backlogs</label>
           <input type="number" min={0} value={policy.default_max_backlogs ?? 99}
             onChange={(e) => set('default_max_backlogs', Number(e.target.value))} style={{ ...inputStyle, padding: '7px 10px' }} />
         </div>
@@ -273,13 +274,13 @@ const InvitationsSection: React.FC = () => {
           <Building2 size={17} />
         </span>
         <div style={{ flex: 1, minWidth: 180 }}>
-          <h3 className="font-display" style={{ margin: 0, fontSize: 15, fontWeight: 500, letterSpacing: '-.01em' }}>Company outreach</h3>
+          <h3 className="font-display" style={{ margin: 0, fontSize: 16, fontWeight: 500, letterSpacing: '-.01em' }}>Company outreach</h3>
           <p style={{ ...muted, margin: '3px 0 0' }}>
             Invitations, replies, and visits per session.
           </p>
         </div>
         <button onClick={() => setAdding((a) => !a)} {...hoverBg('var(--primary-hover)', 'var(--primary)')}
-          style={{ ...btnPrimary, padding: '7px 14px', fontSize: 13, flex: 'none', alignSelf: 'flex-start', minWidth: 138, justifyContent: 'center' }}>
+          style={{ ...btnPrimary, padding: '7px 14px', fontSize: 14, flex: 'none', alignSelf: 'flex-start', minWidth: 138, justifyContent: 'center' }}>
           <Plus size={14} /> Add company
         </button>
       </div>
@@ -365,23 +366,23 @@ const InvitationsSection: React.FC = () => {
               }}>
                 <span className="font-display" aria-hidden style={{
                   width: 38, height: 38, flex: 'none', borderRadius: 10, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 550,
+                  alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 550,
                   background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)',
                 }}>
                   {r.company.charAt(0).toUpperCase()}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 14.5, fontWeight: 650, lineHeight: 1.35 }}>
+                  <span style={{ display: 'block', fontSize: 15.5, fontWeight: 650, lineHeight: 1.35 }}>
                     {r.company}
                   </span>
-                  <span className="data" style={{ display: 'block', ...muted, fontSize: 12, marginTop: 2, lineHeight: 1.45 }}>
+                  <span className="data" style={{ display: 'block', ...muted, fontSize: 13, marginTop: 2, lineHeight: 1.45 }}>
                     {r.sector || 'Sector not set'} · {r.session}-{String((r.session + 1) % 100).padStart(2, '0')}
                   </span>
                 </div>
                 <span style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <span title={`Stage: ${r.stage}`} style={{ width: 8, height: 8, borderRadius: '50%', background: STAGE_TONE[r.stage], boxShadow: `0 0 0 3px color-mix(in srgb, ${STAGE_TONE[r.stage]} 22%, transparent)` }} />
                   <span style={{
-                    padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+                    padding: '3px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 600,
                     background: 'var(--bg-2)', border: '1px solid var(--border)',
                     color: r.is_repeat ? '#22c55e' : 'var(--text-muted)',
                   }}>
@@ -398,17 +399,17 @@ const InvitationsSection: React.FC = () => {
                     value={r.stage}
                     onChange={(v) => setStage(r, v as InvitationStage)}
                     options={INVITATION_STAGES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))}
-                    style={{ padding: '5px 10px', fontSize: 12.5, borderRadius: 8 }}
+                    style={{ padding: '5px 10px', fontSize: 13.5, borderRadius: 8 }}
                   />
                 </div>
-                <span className="data" style={{ marginLeft: 'auto', flex: 'none', fontSize: 12.5, color: 'var(--text-muted)' }}>
-                  <strong style={{ color: 'var(--text)', fontSize: 15 }}>{r.hires ?? 0}</strong> hire{(r.hires ?? 0) === 1 ? '' : 's'}
+                <span className="data" style={{ marginLeft: 'auto', flex: 'none', fontSize: 13.5, color: 'var(--text-muted)' }}>
+                  <strong style={{ color: 'var(--text)', fontSize: 16 }}>{r.hires ?? 0}</strong> hire{(r.hires ?? 0) === 1 ? '' : 's'}
                 </span>
               </div>
 
               {/* contact + remove */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 17px 14px' }}>
-                <span style={{ ...muted, fontSize: 12, lineHeight: 1.5, overflowWrap: 'anywhere' }}>
+                <span style={{ ...muted, fontSize: 13, lineHeight: 1.5, overflowWrap: 'anywhere' }}>
                   {[r.contact_name, r.contact_email].filter(Boolean).join(' · ') || 'No contact recorded'}
                 </span>
                 <button
