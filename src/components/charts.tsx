@@ -33,20 +33,20 @@ export interface Slice {
   count: number;
 }
 
-const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 12.5 };
+const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 13.5 };
 const num: React.CSSProperties = { fontVariantNumeric: 'tabular-nums' };
 /** Floating hover readout shared by the time-series charts. */
 const tip: React.CSSProperties = {
   position: 'absolute', zIndex: 5, pointerEvents: 'none',
   background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9,
-  boxShadow: 'var(--shadow)', padding: '7px 10px', fontSize: 12, whiteSpace: 'nowrap',
+  boxShadow: 'var(--shadow)', padding: '7px 10px', fontSize: 13, whiteSpace: 'nowrap',
 };
 const EASE_DELAY = (i: number, step = 40) => ({ animationDelay: `${i * step}ms` });
 
 export const ChartEmpty: React.FC<{ label: string }> = ({ label }) => (
   <div style={{
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '36px 14px', color: 'var(--text-subtle)', fontSize: 12.5, textAlign: 'center',
+    padding: '36px 14px', color: 'var(--text-subtle)', fontSize: 13.5, textAlign: 'center',
     border: '1px dashed var(--border)', borderRadius: 10,
     background: 'color-mix(in srgb, var(--surface-2) 40%, transparent)',
   }}>
@@ -76,7 +76,7 @@ const Legend: React.FC<{
         onMouseEnter={() => onHover(i)}
         onMouseLeave={() => onHover(null)}
         style={{
-          display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5,
+          display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5,
           padding: '3px 7px', borderRadius: 6, cursor: 'default',
           background: active === i ? 'var(--surface-2)' : 'transparent',
           opacity: active === null || active === i ? 1 : 0.45,
@@ -288,7 +288,7 @@ export const BarChart: React.FC<{
                   </div>
                 </div>
               )}
-              <span className="kp-chart-fade" style={{ fontSize: 11.5, fontWeight: 600, textAlign: 'center', marginBottom: 4, color: 'var(--text-muted)', ...num, animationDelay: '.3s' }}>
+              <span className="kp-chart-fade" style={{ fontSize: 12.5, fontWeight: 600, textAlign: 'center', marginBottom: 4, color: 'var(--text-muted)', ...num, animationDelay: '.3s' }}>
                 {r.count}
               </span>
               <div
@@ -308,7 +308,7 @@ export const BarChart: React.FC<{
       <div style={{ display: 'flex', justifyContent: 'center', gap: 10, minWidth: Math.max(rows.length * 38, 180), marginTop: 7 }}>
         {rows.map((r) => (
           <span key={r.key} style={{
-            flex: 1, minWidth: 28, maxWidth: colMax, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
+            flex: 1, minWidth: 28, maxWidth: colMax, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center',
             lineHeight: 1.25, textTransform: 'capitalize', overflowWrap: 'anywhere', alignSelf: 'flex-start',
           }}>
             {r.key}
@@ -379,7 +379,7 @@ export const GroupedBarChart: React.FC<{
                   const v = Number(row[s.key]) || 0;
                   return (
                     <div key={s.key} style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                      <span className="kp-chart-fade" style={{ fontSize: 10.5, fontWeight: 600, textAlign: 'center', marginBottom: 3, color: 'var(--text-muted)', ...num, animationDelay: '.3s' }}>
+                      <span className="kp-chart-fade" style={{ fontSize: 11.5, fontWeight: 600, textAlign: 'center', marginBottom: 3, color: 'var(--text-muted)', ...num, animationDelay: '.3s' }}>
                         {v || ''}
                       </span>
                       <div
@@ -400,7 +400,7 @@ export const GroupedBarChart: React.FC<{
         <div style={{ display: 'flex', gap: 16, minWidth: Math.max(data.length * 68, 240), marginTop: 7 }}>
           {data.map((row) => (
             <span key={row.key} style={{
-              flex: 1, minWidth: 52, maxWidth: groupMax, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
+              flex: 1, minWidth: 52, maxWidth: groupMax, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center',
               lineHeight: 1.25, overflowWrap: 'anywhere', alignSelf: 'flex-start',
             }}>
               {row.key}
@@ -433,7 +433,7 @@ export const StackedBar: React.FC<{
       {showLegend && legend.length > 1 && (
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 1 }}>
           {legend.map((p) => (
-            <span key={p.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...muted, fontSize: 12 }}>
+            <span key={p.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...muted, fontSize: 13 }}>
               <Swatch color={p.color} />
               {p.label}
             </span>
@@ -445,12 +445,12 @@ export const StackedBar: React.FC<{
         const active = hover === ri;
         return (
           <div key={row.key} onMouseEnter={() => setHover(ri)} onMouseLeave={() => setHover(null)} style={{ cursor: 'default' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4, fontSize: 12.5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4, fontSize: 13.5 }}>
               <span style={{ fontWeight: active ? 650 : 550, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.key}</span>
               {active ? (
                 <span style={{ flex: 'none', display: 'inline-flex', gap: 9, ...num }}>
                   {row.parts.map((p) => (
-                    <span key={p.label} style={{ color: inkOf(p.color), fontWeight: 600, fontSize: 12 }}>
+                    <span key={p.label} style={{ color: inkOf(p.color), fontWeight: 600, fontSize: 13 }}>
                       {p.value} {p.label.toLowerCase()}
                     </span>
                   ))}
@@ -498,7 +498,7 @@ export const BarList: React.FC<{
     <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
       {rows.map((r, i) => (
         <div key={r.key}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 5, fontSize: 12.5 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 5, fontSize: 13.5 }}>
             <span style={{ fontWeight: 550, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
               {r.key}
             </span>
@@ -633,10 +633,10 @@ export const Gauge: React.FC<{
             strokeDasharray={`${dash} ${C * 2}`} strokeLinecap="round"
             style={{ transition: 'stroke-dasharray .9s cubic-bezier(.16,1,.3,1)' }} />
         </g>
-        <text x={size / 2} y={size / 2 - 14} textAnchor="middle" style={{ fontSize: 27, fontWeight: 650, fill: 'var(--text)', ...num }}>
+        <text x={size / 2} y={size / 2 - 14} textAnchor="middle" style={{ fontSize: 28, fontWeight: 650, fill: 'var(--text)', ...num }}>
           {pct}%
         </text>
-        <text x={size / 2} y={size / 2 + 4} textAnchor="middle" style={{ fontSize: 11, fill: 'var(--text-muted)' }}>
+        <text x={size / 2} y={size / 2 + 4} textAnchor="middle" style={{ fontSize: 12, fill: 'var(--text-muted)' }}>
           {label}
         </text>
       </svg>
@@ -676,7 +676,7 @@ export const FunnelChart: React.FC<{ data: Slice[]; emptyLabel: string }> = ({ d
             background: hover === i ? 'var(--surface-2)' : 'transparent', transition: 'background .14s ease',
           }}
         >
-          <span style={{ width: 80, flex: 'none', fontSize: 12.5, fontWeight: hover === i ? 650 : 550, textTransform: 'capitalize' }}>{r.key}</span>
+          <span style={{ width: 80, flex: 'none', fontSize: 13.5, fontWeight: hover === i ? 650 : 550, textTransform: 'capitalize' }}>{r.key}</span>
           <div style={{ flex: 1, height: barH, borderRadius: 5, background: 'var(--surface-2)', minWidth: 0 }}>
             <div
               className="kp-bar kp-grow-x"
@@ -687,18 +687,18 @@ export const FunnelChart: React.FC<{ data: Slice[]; emptyLabel: string }> = ({ d
               }}
             />
           </div>
-          <span style={{ width: 38, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: 600, ...num }}>
+          <span style={{ width: 38, flex: 'none', textAlign: 'right', fontSize: 13.5, fontWeight: 600, ...num }}>
             {r.count}
           </span>
           {isFunnel && (
-            <span style={{ width: 42, flex: 'none', textAlign: 'right', fontSize: 11, color: 'var(--text-subtle)', ...num }}>
+            <span style={{ width: 42, flex: 'none', textAlign: 'right', fontSize: 12, color: 'var(--text-subtle)', ...num }}>
               {`${Math.round((r.count / first) * 100)}%`}
             </span>
           )}
         </div>
       ))}
       {(isFunnel || !!rejected?.count) && (
-        <div style={{ marginTop: 6, paddingTop: 9, borderTop: '1px dashed var(--border)', fontSize: 11, color: 'var(--text-subtle)' }}>
+        <div style={{ marginTop: 6, paddingTop: 9, borderTop: '1px dashed var(--border)', fontSize: 12, color: 'var(--text-subtle)' }}>
           {isFunnel && <>% = share of “{rows[0]?.key}” that reached each stage</>}
           {isFunnel && !!rejected?.count && ' · '}
           {!!rejected?.count && <span style={{ color: 'var(--danger)' }}>{rejected.count} rejected</span>}
@@ -739,10 +739,10 @@ export const BoxPlot: React.FC<{
     <div className="kp-chart-fade">
       <div style={{ position: 'relative', height: 78, margin: '4px 6px 0' }}>
         {/* typical value, called out above its marker */}
-        <span className="data" style={{ position: 'absolute', top: 0, left: x(stats.median), transform: 'translateX(-50%)', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
+        <span className="data" style={{ position: 'absolute', top: 0, left: x(stats.median), transform: 'translateX(-50%)', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
           {stats.median} {unit}
         </span>
-        <span style={{ position: 'absolute', top: 17, left: x(stats.median), transform: 'translateX(-50%)', fontSize: 9.5, color: 'var(--text-subtle)', letterSpacing: '.05em', textTransform: 'uppercase' }}>
+        <span style={{ position: 'absolute', top: 17, left: x(stats.median), transform: 'translateX(-50%)', fontSize: 10.5, color: 'var(--text-subtle)', letterSpacing: '.05em', textTransform: 'uppercase' }}>
           typical
         </span>
 
@@ -763,9 +763,9 @@ export const BoxPlot: React.FC<{
         <div title={`Typical: ${stats.median} ${unit}`} style={{ position: 'absolute', top: 32, left: x(stats.median), width: 3, height: 26, transform: 'translateX(-50%)', borderRadius: 2, background: color }} />
 
         {/* range end labels */}
-        <span className="data" style={{ position: 'absolute', bottom: 0, left: 0, fontSize: 10.5, color: 'var(--text-muted)' }}>{stats.whisker_low}</span>
-        <span style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 10, color: 'var(--text-subtle)' }}>usual range</span>
-        <span className="data" style={{ position: 'absolute', bottom: 0, right: 0, fontSize: 10.5, color: 'var(--text-muted)' }}>{stats.whisker_high}</span>
+        <span className="data" style={{ position: 'absolute', bottom: 0, left: 0, fontSize: 11.5, color: 'var(--text-muted)' }}>{stats.whisker_low}</span>
+        <span style={{ position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)', fontSize: 11, color: 'var(--text-subtle)' }}>usual range</span>
+        <span className="data" style={{ position: 'absolute', bottom: 0, right: 0, fontSize: 11.5, color: 'var(--text-muted)' }}>{stats.whisker_high}</span>
       </div>
 
       {/* One plain sentence carries the whole story. */}
@@ -807,16 +807,16 @@ export const Heatmap: React.FC<{
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 3, fontSize: 12, minWidth: batches.length * 64 + 150 }}>
+      <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 3, fontSize: 13, minWidth: batches.length * 64 + 150 }}>
         <colgroup>
           <col style={{ width: 176 }} />
           {batches.map((b) => <col key={b} />)}
         </colgroup>
         <thead>
           <tr>
-            <th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-subtle)', fontWeight: 600, fontSize: 11 }} />
+            <th style={{ textAlign: 'left', padding: '4px 8px', color: 'var(--text-subtle)', fontWeight: 600, fontSize: 12 }} />
             {batches.map((b) => (
-              <th key={b} className="data" style={{ padding: '4px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 11 }}>{b}</th>
+              <th key={b} className="data" style={{ padding: '4px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 12 }}>{b}</th>
             ))}
           </tr>
         </thead>
@@ -845,7 +845,7 @@ export const Heatmap: React.FC<{
                     }}
                   >
                     {c ? `${c.rate}%` : '—'}
-                    {c && <div style={{ fontSize: 9.5, fontWeight: 400, color: 'var(--text-muted)' }}>{c.placed}/{c.total}</div>}
+                    {c && <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text-muted)' }}>{c.placed}/{c.total}</div>}
                   </td>
                 );
               })}
@@ -885,7 +885,7 @@ export const Waterfall: React.FC<{ steps: WaterfallStep[]; emptyLabel: string }>
       {steps.map((s, i) => (
         <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{
-            width: 168, flex: 'none', fontSize: 12, fontWeight: i === 0 ? 700 : 550,
+            width: 168, flex: 'none', fontSize: 13, fontWeight: i === 0 ? 700 : 550,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }} title={s.label}>
             {s.label}
@@ -902,10 +902,10 @@ export const Waterfall: React.FC<{ steps: WaterfallStep[]; emptyLabel: string }>
               />
             )}
           </div>
-          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: 650, ...num }}>
+          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 13.5, fontWeight: 650, ...num }}>
             {s.count}
           </span>
-          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 11, color: s.lost ? 'var(--danger)' : 'var(--text-subtle)', ...num }}>
+          <span style={{ width: 46, flex: 'none', textAlign: 'right', fontSize: 12, color: s.lost ? 'var(--danger)' : 'var(--text-subtle)', ...num }}>
             {s.lost ? `−${s.lost}` : '—'}
           </span>
         </div>
@@ -969,7 +969,7 @@ export const MultiLineChart: React.FC<{
             {[0, 0.5, 1].map((t) => (
               <g key={t}>
                 <line x1={PAD_L} x2={W - PAD} y1={yOf(peak * t)} y2={yOf(peak * t)} stroke="var(--border)" strokeDasharray="3 5" />
-                <text x={PAD_L - 5} y={yOf(peak * t) + 3} textAnchor="end" style={{ fontSize: 9.5, fill: 'var(--text-subtle)', ...num }}>
+                <text x={PAD_L - 5} y={yOf(peak * t) + 3} textAnchor="end" style={{ fontSize: 10.5, fill: 'var(--text-subtle)', ...num }}>
                   {Math.round(peak * t)}
                 </text>
               </g>
@@ -1005,7 +1005,7 @@ export const MultiLineChart: React.FC<{
 
             {labels.map((l, j) => (
               <text key={l + j} x={PAD_L + j * stepX} y={H - 8} textAnchor="middle"
-                style={{ fontSize: 9.5, fill: hover === j ? 'var(--text)' : 'var(--text-muted)', fontWeight: hover === j ? 650 : 400 }}>
+                style={{ fontSize: 10.5, fill: hover === j ? 'var(--text)' : 'var(--text-muted)', fontWeight: hover === j ? 650 : 400 }}>
                 {l}
               </text>
             ))}
@@ -1078,7 +1078,7 @@ export const RateChart: React.FC<{ data: RateRow[]; emptyLabel: string; height?:
                   </div>
                 </div>
               )}
-              <span className="kp-chart-fade" style={{ fontSize: 11.5, fontWeight: 700, textAlign: 'center', marginBottom: 4, color: d.rate >= 50 ? '#22c55e' : 'var(--text-muted)', ...num, animationDelay: '.35s' }}>
+              <span className="kp-chart-fade" style={{ fontSize: 12.5, fontWeight: 700, textAlign: 'center', marginBottom: 4, color: d.rate >= 50 ? '#22c55e' : 'var(--text-muted)', ...num, animationDelay: '.35s' }}>
                 {d.rate}%
               </span>
               <div className="kp-grow-y" style={{ position: 'relative', height: `${(d.total / peak) * 100}%`, minHeight: 4, ...EASE_DELAY(i, 35) }}>
@@ -1095,7 +1095,7 @@ export const RateChart: React.FC<{ data: RateRow[]; emptyLabel: string; height?:
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, minWidth: Math.max(data.length * 62, 220), marginTop: 7 }}>
           {data.map((d) => (
             <span key={d.key} style={{
-              flex: 1, minWidth: 46, maxWidth: rateColMax, fontSize: 10, color: 'var(--text-muted)', textAlign: 'center',
+              flex: 1, minWidth: 46, maxWidth: rateColMax, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center',
               lineHeight: 1.25, overflowWrap: 'anywhere', alignSelf: 'flex-start',
             }}>
               {d.key}
