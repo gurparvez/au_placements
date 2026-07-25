@@ -11,17 +11,17 @@ import skillsApi, { type Skill } from '@/api/skills';
 /* ------------------------------ styles ------------------------------ */
 
 const card: React.CSSProperties = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9,
 };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '8px 11px', borderRadius: 'var(--r-ctl)',
   border: '1px solid var(--border-strong)', background: 'var(--bg-2)',
-  color: 'var(--text)', fontSize: 13, outline: 'none',
+  color: 'var(--text)', fontSize: 14, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
-  fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none',
+  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
 const hoverBg = (over: string, base: string) => ({
@@ -31,9 +31,10 @@ const hoverBg = (over: string, base: string) => ({
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 11px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
-  fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border)',
+  transition: 'background .18s ease',
 };
-const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 12.5 };
+const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 13.5 };
 
 /** Tiny round icon button used inside chips. */
 const chipBtn: React.CSSProperties = {
@@ -139,13 +140,13 @@ function ManagedList({
         }}>
           <Icon size={14} />
         </span>
-        <h3 className="font-display" style={{ margin: 0, fontSize: 14.5, fontWeight: 500, letterSpacing: '-.01em', flex: 'none' }}>
+        <h3 className="font-display" style={{ margin: 0, fontSize: 15.5, fontWeight: 500, letterSpacing: '-.01em', flex: 'none' }}>
           {title} <span className="data" style={{ ...muted, fontWeight: 500 }}>· {items.length}</span>
         </h3>
         <div style={{ position: 'relative', marginLeft: 'auto', width: 200, minWidth: 140 }}>
           <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter…"
-            style={{ ...inputStyle, padding: '6px 10px 6px 29px', fontSize: 12.5 }} />
+            style={{ ...inputStyle, padding: '6px 10px 6px 29px', fontSize: 13.5 }} />
         </div>
         <button onClick={onReload} aria-label={`Refresh ${title.toLowerCase()}`} title="Refresh"
           style={{ ...btnGhost, width: 30, height: 30, padding: 0, justifyContent: 'center', flex: 'none' }}>
@@ -188,21 +189,21 @@ function ManagedList({
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') submitEdit(item._id); if (e.key === 'Escape') setEditId(null); }}
-                    style={{ ...inputStyle, width: 170, padding: '3px 9px', fontSize: 12.5, borderRadius: 999 }} />
+                    style={{ ...inputStyle, width: 170, padding: '3px 9px', fontSize: 13.5, borderRadius: 999 }} />
                   <button onClick={() => submitEdit(item._id)} disabled={busy} style={{ ...chipBtn, color: '#22c55e' }} aria-label="Save"><Check size={13} /></button>
                   <button onClick={() => setEditId(null)} style={chipBtn} aria-label="Cancel"><X size={13} /></button>
                 </span>
               ) : (
                 <>
-                  <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 0, lineHeight: 1.35, overflowWrap: 'anywhere' }}>
+                  <span style={{ fontSize: 14.5, fontWeight: 600, minWidth: 0, lineHeight: 1.35, overflowWrap: 'anywhere' }}>
                     {item.label}
                   </span>
                   {item.sub && (
-                    <span className="data" style={{ flex: 'none', fontSize: 10.5, fontWeight: 650, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>
+                    <span className="data" style={{ flex: 'none', fontSize: 11.5, fontWeight: 650, letterSpacing: '.05em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>
                       {item.sub}
                     </span>
                   )}
-                  {item.inactive && <span style={{ fontSize: 10.5, fontStyle: 'italic', color: 'var(--text-subtle)' }}>inactive</span>}
+                  {item.inactive && <span style={{ fontSize: 11.5, fontStyle: 'italic', color: 'var(--text-subtle)' }}>inactive</span>}
                   <span className="kp-chip-actions">
                     {onToggleActive && (
                       <button onClick={() => onToggleActive(item)} style={chipBtn} {...chipBtnHover('var(--text)')}
@@ -269,7 +270,7 @@ const ReferencePanel: React.FC = () => {
           background: 'color-mix(in srgb, var(--primary) 5%, var(--surface))',
         }}>
           <Layers size={15} style={{ color: 'var(--primary)', flex: 'none' }} />
-          <span style={{ fontSize: 12.5 }}>
+          <span style={{ fontSize: 13.5 }}>
             Official lists everyone picks from — renames update existing records.
           </span>
         </div>
