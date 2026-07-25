@@ -250,7 +250,7 @@ const StudentProfilePage: React.FC = () => {
 
   return (
     <div className="bg-secondary/30 text-foreground min-h-screen">
-      <div className="w-full space-y-4 px-[clamp(20px,10vw,112px)] pt-24 pb-16">
+      <div className="w-full space-y-4 px-[clamp(20px,10vw,64px)] pt-24 pb-16">
         <ProfileHeader />
         <AboutSection />
         <AcademicSection />
