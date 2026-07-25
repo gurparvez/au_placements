@@ -12,12 +12,17 @@ import { Reveal } from '@/components/motion';
 import { SelectField } from '@/components/ui/select-field';
 
 const SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
-const editInput: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none' };
-const editLabel: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
+const editInput: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none' };
+const editLabel: React.CSSProperties = { display: 'block', fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
 
-const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16 };
+/* Soft register: quiet surfaces, hairline borders, blurred shadows. */
+const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', transition: 'border-color .18s, box-shadow .18s, transform .18s' };
+const cardHover = {
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--primary) 35%, var(--border))'; e.currentTarget.style.boxShadow = '0 18px 34px -24px rgba(0,0,0,.42)'; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; },
+};
 const companyInitials = (c: string) => c.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'C';
-const metaPill: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)' };
+const metaPill: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: 'var(--text-muted)' };
 const hoverBg = (over: string, base: string) => ({
   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
   onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
@@ -53,9 +58,9 @@ function EditCompanyModal({ initial, onClose, onSaved }: { initial: CompanyProfi
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div role="dialog" aria-modal="true" aria-label="Edit company profile" style={{ position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>Edit company profile</h2>
-        <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>What students and other users see.</p>
+      <div role="dialog" aria-modal="true" aria-label="Edit company profile" style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, boxShadow: 'var(--shadow)' }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Edit company profile</h2>
+        <p style={{ margin: '6px 0 18px', fontSize: 14, color: 'var(--text-muted)' }}>What students and other users see.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div style={{ gridColumn: '1 / -1' }}><label style={editLabel}>Company name</label><input value={f.company} onChange={(e) => set('company', e.target.value)} style={editInput} /></div>
@@ -73,8 +78,8 @@ function EditCompanyModal({ initial, onClose, onSaved }: { initial: CompanyProfi
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
-          <button onClick={onClose} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' }}>Cancel</button>
-          <button onClick={save} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1, transition: 'background .18s ease' }}>{saving ? 'Saving…' : 'Save changes'}</button>
+          <button onClick={onClose} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', transition: 'background .18s ease' }}>Cancel</button>
+          <button onClick={save} disabled={saving} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', border: 'none', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', opacity: saving ? 0.7 : 1, transition: 'background .18s ease' }}>{saving ? 'Saving…' : 'Save changes'}</button>
         </div>
       </div>
     </div>
@@ -130,9 +135,9 @@ const CompanyProfilePage: React.FC = () => {
     finally { setBusy(false); }
   };
 
-  if (loading) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
+  if (loading) return <section style={{ padding: '60px clamp(20px,10vw,64px)', color: 'var(--text-muted)' }}>Loading…</section>;
   if (notFound || !c) return (
-    <section style={{ padding: '60px clamp(20px,10vw,112px)', textAlign: 'center', color: 'var(--text-muted)' }}>
+    <section style={{ padding: '60px clamp(20px,10vw,64px)', textAlign: 'center', color: 'var(--text-muted)' }}>
       <Building2 size={30} style={{ opacity: 0.5 }} />
       <p style={{ marginTop: 10 }}>This company profile isn’t available.</p>
       <button onClick={() => navigate('/companies')} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'background .18s ease' }}>Browse companies</button>
@@ -142,13 +147,13 @@ const CompanyProfilePage: React.FC = () => {
   const followerText = `${c.followers ?? 0} follower${(c.followers ?? 0) === 1 ? '' : 's'}`;
 
   return (
-    <section style={{ padding: '24px clamp(20px,10vw,112px) 80px' }}>
-      <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13.5, cursor: 'pointer', padding: '4px 0', marginBottom: 14 }}>
+    <section style={{ padding: '24px clamp(20px,10vw,64px) 80px' }}>
+      <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 14.5, cursor: 'pointer', padding: '4px 0', marginBottom: 14 }}>
         <ArrowLeft size={15} /> Back
       </button>
 
       <Reveal>
-      <div style={{ ...card, overflow: 'hidden' }}>
+      <div {...cardHover} style={{ ...card, overflow: 'hidden' }}>
         {/* Cover band — editorial register masthead */}
         <div style={{ height: 92, position: 'relative', overflow: 'hidden', background: 'linear-gradient(120deg, var(--surface-2), var(--surface-3))', borderBottom: '2px solid var(--brass)' }}>
           <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(70% 140% at 8% 0%, color-mix(in srgb, var(--brass) 14%, transparent), transparent 62%)' }} />
@@ -161,19 +166,19 @@ const CompanyProfilePage: React.FC = () => {
               {c.logo ? (
                 <img src={c.logo} alt={c.company} style={{ width: 84, height: 84, borderRadius: 18, objectFit: 'cover', border: '3px solid var(--surface)', background: 'var(--surface)' }} />
               ) : (
-                <span aria-hidden style={{ width: 84, height: 84, borderRadius: 18, border: '3px solid var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 28, background: avatarColor(c.company) }}>{companyInitials(c.company)}</span>
+                <span aria-hidden style={{ width: 84, height: 84, borderRadius: 18, border: '3px solid var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 29, background: avatarColor(c.company) }}>{companyInitials(c.company)}</span>
               )}
             </div>
             {isOwner ? (
               <button onClick={() => setEditOpen(true)} {...hoverBg('var(--surface-2)', 'var(--surface)')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', transition: 'background .18s ease' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', transition: 'background .18s ease' }}>
                 <Pencil size={15} /> Edit profile
               </button>
             ) : (
               <button onClick={toggleFollow} disabled={busy}
                 onMouseEnter={(e) => (e.currentTarget.style.background = c.is_following ? 'var(--surface-2)' : 'var(--primary-hover)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = c.is_following ? 'var(--surface)' : 'var(--primary)')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: busy ? 0.7 : 1, transition: 'background .18s ease',
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 15, cursor: 'pointer', opacity: busy ? 0.7 : 1, transition: 'background .18s ease',
                   border: c.is_following ? '1px solid var(--border-strong)' : 'none',
                   background: c.is_following ? 'var(--surface)' : 'var(--primary)',
                   color: c.is_following ? 'var(--text)' : 'var(--on-primary)' }}>
@@ -195,8 +200,8 @@ const CompanyProfilePage: React.FC = () => {
 
           {(c.website || c.linkedin_url) && (
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
-              {c.website && <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', fontSize: 13, fontWeight: 550, textDecoration: 'none' }}><Globe size={14} /> Website</a>}
-              {c.linkedin_url && <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', fontSize: 13, fontWeight: 550, textDecoration: 'none' }}><Linkedin size={14} /> LinkedIn</a>}
+              {c.website && <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', fontSize: 14, fontWeight: 550, textDecoration: 'none' }}><Globe size={14} /> Website</a>}
+              {c.linkedin_url && <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', fontSize: 14, fontWeight: 550, textDecoration: 'none' }}><Linkedin size={14} /> LinkedIn</a>}
             </div>
           )}
         </div>
@@ -205,9 +210,9 @@ const CompanyProfilePage: React.FC = () => {
 
       {c.about && (
         <Reveal delay={0.05} style={{ marginTop: 16 }}>
-        <div style={{ ...card, padding: 22 }}>
-          <h2 style={{ margin: '0 0 10px', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, letterSpacing: '-.01em' }}>About</h2>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>{c.about}</p>
+        <div {...cardHover} style={{ ...card, padding: 22 }}>
+          <h2 style={{ margin: '0 0 10px', fontFamily: 'var(--font-display)', fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>About</h2>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>{c.about}</p>
         </div>
         </Reveal>
       )}
@@ -215,13 +220,13 @@ const CompanyProfilePage: React.FC = () => {
       {/* Open positions */}
       {openings.length > 0 && (
         <Reveal delay={0.1} style={{ marginTop: 16 }}>
-        <div style={{ ...card, padding: 22 }}>
-          <h2 style={{ margin: '0 0 6px', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 8 }}><Briefcase size={17} style={{ color: 'var(--brass)' }} /> Open positions <span className="data" style={{ color: 'var(--text-subtle)', fontWeight: 500 }}>{openings.length}</span></h2>
+        <div {...cardHover} style={{ ...card, padding: 22 }}>
+          <h2 style={{ margin: '0 0 6px', fontFamily: 'var(--font-display)', fontSize: 19, fontWeight: 500, letterSpacing: '-.01em', display: 'flex', alignItems: 'center', gap: 8 }}><Briefcase size={17} style={{ color: 'var(--brass)' }} /> Open positions <span className="data" style={{ color: 'var(--text-subtle)', fontWeight: 500 }}>{openings.length}</span></h2>
           {openings.map((o) => (
             <Link key={o._id} to="/openings" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderTop: '1px solid var(--border)', textDecoration: 'none', color: 'inherit' }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14.5 }}>{o.title}</div>
-                <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>{o.type === 'job' ? 'Job' : 'Internship'}{o.location ? ` · ${o.location}` : ''}{o.work_mode ? ` · ${o.work_mode}` : ''}</div>
+                <div style={{ fontWeight: 600, fontSize: 15.5 }}>{o.title}</div>
+                <div style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 2 }}>{o.type === 'job' ? 'Job' : 'Internship'}{o.location ? ` · ${o.location}` : ''}{o.work_mode ? ` · ${o.work_mode}` : ''}</div>
               </div>
               <ArrowUpRight size={16} style={{ color: 'var(--text-subtle)', flex: 'none' }} />
             </Link>
@@ -232,8 +237,8 @@ const CompanyProfilePage: React.FC = () => {
 
       {/* Posts by this company */}
       <Reveal delay={0.15} style={{ marginTop: 16 }}>
-      <div style={{ ...card, padding: 22 }}>
-        <h2 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, letterSpacing: '-.01em' }}>Posts</h2>
+      <div {...cardHover} style={{ ...card, padding: 22 }}>
+        <h2 style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Posts</h2>
         <ProfilePosts userId={c.companyUserId} />
       </div>
       </Reveal>
