@@ -19,9 +19,9 @@
   --radius-control: 11px;
   --radius-chip: 8px;
 
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   /* shadcn core → prototype vars */
   --color-background: var(--bg);
@@ -134,31 +134,70 @@
   --r-ctl: var(--r-ctrl);
 }
 
-/* Theme-aware brand logo — navy Society mark in light, original mark in dark */
-img[data-kp-logo='light'] { display: block; }
+/* One brand mark everywhere: the white Society emblem. logo_light.png is the navy
+   Society mark on a transparent background; brightness(0) invert(1) recolors it to
+   pure white while keeping the transparency, so it shows identically in light and
+   dark mode with no tile behind it. */
+img[data-kp-logo='light'] { display: block; filter: brightness(0) invert(1); }
 img[data-kp-logo='dark'] { display: none; }
-.dark img[data-kp-logo='light'],
-[data-theme='dark'] img[data-kp-logo='light'] { display: none; }
-.dark img[data-kp-logo='dark'],
-[data-theme='dark'] img[data-kp-logo='dark'] { display: block; }
+
+/* ============================================================
+   ON-BLUE CHROME — the header & footer sit on the solid primary
+   blue (matching the "How to register" band). --pri (the blue) is
+   left intact for the surface itself; every CONTENT token is flipped
+   to read white on blue, so all descendant links / buttons / icons
+   invert without per-element edits. Popovers that must stay on a
+   normal surface (the notifications list) are portaled to <body>,
+   outside this scope, so they keep the page tokens.
+   ============================================================ */
+.kp-onblue {
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.82);
+  --subtle: rgba(255, 255, 255, 0.66);
+  --text-muted: rgba(255, 255, 255, 0.82);
+  --text-subtle: rgba(255, 255, 255, 0.66);
+  --border: rgba(255, 255, 255, 0.28);
+  --border2: rgba(255, 255, 255, 0.42);
+  --border-strong: rgba(255, 255, 255, 0.42);
+  --surface: rgba(255, 255, 255, 0.14);
+  --surface2: rgba(255, 255, 255, 0.20);
+  --surface3: rgba(255, 255, 255, 0.28);
+  --surface-2: rgba(255, 255, 255, 0.20);
+  --surface-3: rgba(255, 255, 255, 0.28);
+  --primary: #ffffff;
+  --pri-ink: #ffffff;
+  --primary-hover: rgba(255, 255, 255, 0.86);
+  --primary-soft: rgba(255, 255, 255, 0.20);
+  --pri-soft: rgba(255, 255, 255, 0.20);
+  --on-primary: var(--pri);
+  --on-pri: var(--pri);
+  --brass: #ffffff;
+  --brass-soft: rgba(255, 255, 255, 0.20);
+  --brass-line: rgba(255, 255, 255, 0.30);
+  --bg: var(--pri);
+  --bg-2: rgba(255, 255, 255, 0.10);
+  --bg2: rgba(255, 255, 255, 0.10);
+  --ring: rgba(255, 255, 255, 0.5);
+}
+/* (brand mark handled globally above — always the white Society emblem, no tile) */
 
 /* ------------------------------- DARK -------------------------------- */
 .dark,
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #0e1116;
-  --bg2: #141922;
-  --surface: #161c26;
-  --surface2: #1c2330;
-  --surface3: #232c3b;
+  --bg: #13171e;
+  --bg2: #181e27;
+  --surface: #1c2431;
+  --surface2: #222b39;
+  --surface3: #293343;
   --text: #f7f9fc;
   --muted: #c5cfdd; /* secondary text — bright, but a clear step below white */
   --subtle: #97a3b4; /* meta/labels — silver that recedes, still ~8:1 on the bg */
   --border: #232b38;
   --border2: #333d4d;
-  --pri: #4c8dff;
-  --on-pri: #0a0e14;
+  --pri: #2a5296;
+  --on-pri: #ffffff;
   --pri-ink: #7cabff;
   --pri-soft: color-mix(in srgb, var(--pri) 24%, transparent);
   --pri-line: color-mix(in srgb, var(--pri) 34%, transparent);
@@ -191,7 +230,7 @@ img[data-kp-logo='dark'] { display: none; }
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 550; /* heavier base — thin text never blends into either background */
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -302,7 +341,7 @@ img[data-kp-logo='dark'] { display: none; }
   /* Chart & graph titles — a clear step above ledger labels: bigger, heavier,
      and in full ink so they read as headings, not metadata. */
   .chart-label {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 800;
     letter-spacing: 0.09em;
     text-transform: uppercase;
@@ -310,7 +349,7 @@ img[data-kp-logo='dark'] { display: none; }
   }
 
   .ledger-label {
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 750;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -332,6 +371,10 @@ img[data-kp-logo='dark'] { display: none; }
    so cards never get pinched at tablet widths. */
 @media (max-width: 1180px) and (min-width: 881px) {
   [data-kp-browse] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+/* Feed side rails vanish first — the centre column always wins the space. */
+@media (max-width: 1230px) {
+  [data-kp-rail] { display: none !important; }
 }
 @media (max-width: 880px) {
   [data-kp-show="desktop"] { display: none !important; }
@@ -423,6 +466,304 @@ img[data-kp-logo='dark'] { display: none; }
 .rise { animation: kpRise .6s ease both; }
 .kp-spin { animation: kpSpin .8s linear infinite; }
 
+/* ==================== HERO ANIMATION PRIMITIVES ====================
+   Powers the landing hero: rotating-border CTA, slide-fill pills, orbit
+   visualization, partner ticker, typewriter caret. All colors ride the
+   existing token layer, so both themes work untouched. */
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes kpBorderSpin { to { --border-angle: 360deg; } }
+.btn-border-wrap {
+  position: relative;
+  display: inline-flex;
+  border-radius: 50px;
+  isolation: isolate;
+}
+.btn-border-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50px;
+  padding: 3px;
+  background: conic-gradient(from var(--border-angle), var(--pri-ink), var(--bg), var(--pri-ink), var(--bg), var(--pri-ink));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: kpBorderSpin 3s linear infinite;
+  pointer-events: none;
+}
+
+.kp-fill-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 50px;
+  z-index: 0;
+}
+.kp-fill-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pri);
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: -1;
+  border-radius: 50px;
+}
+.kp-fill-btn:hover::after { transform: translateX(0); }
+.kp-fill-btn[data-fill-from='right']::after { transform: translateX(100%); }
+.kp-fill-btn[data-fill-from='right']:hover::after { transform: translateX(0); }
+
+/* Infinite partner ticker with fade masks; pauses on hover. */
+.kp-ticker {
+  overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.kp-ticker-track {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: max-content;
+  animation: kpTicker 20s linear infinite;
+}
+.kp-ticker:hover .kp-ticker-track { animation-play-state: paused; }
+@keyframes kpTicker { to { transform: translateX(-50%); } }
+
+/* Masthead marquee — the two university names crawl forever, TV-ticker style.
+   No hover pause; edges fade softly. Reuses the kpTicker keyframe (translateX
+   -50%), so the track must hold two identical halves for a seamless loop. */
+.kp-marquee {
+  overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+.kp-marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: kpTicker 42s linear infinite;
+}
+
+/* Auto-scrolling profile reel — two identical halves + translateX(-50%) loop
+   seamlessly; pauses on hover. Vertical padding leaves room for the hover lift. */
+.kp-carousel {
+  overflow: hidden;
+  padding: 14px 0 28px;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+.kp-carousel-track { display: flex; width: max-content; animation: kpTicker 70s linear infinite; }
+.kp-carousel-half { display: flex; gap: 18px; padding-right: 18px; flex: none; }
+.kp-carousel:hover .kp-carousel-track { animation-play-state: paused; }
+
+/* Two-up card grid — exactly two per row on tablet/desktop, one on mobile.
+   Wide cards give every field room, so nothing has to truncate. */
+.kp-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 720px) {
+  .kp-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Concentric orbit rings — 1px vertical-fade gradient border via mask. */
+.kp-orbit {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+.kp-orbit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 1px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pri-ink) 0%, transparent) 0%, var(--pri-ink) 43%, color-mix(in srgb, var(--pri-ink) 0%, transparent) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+@keyframes kpSpinL { to { transform: translate(-50%, -50%) rotate(-360deg); } }
+@keyframes kpSpinR { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* Plain rotation pair — satellites counter-spin these to stay upright. */
+@keyframes kpRot { to { transform: rotate(360deg); } }
+@keyframes kpRotRev { to { transform: rotate(-360deg); } }
+
+/* Orbit box — fixed 720 design, scaled down the breakpoints. */
+.kp-orbitbox {
+  width: 720px;
+  height: 720px;
+  position: relative;
+  flex: none;
+}
+@media (max-width: 1440px) { .kp-orbitbox { transform: scale(0.85); } }
+@media (max-width: 1180px) { .kp-orbitbox { transform: scale(0.7); margin: -80px 0; } }
+@media (max-width: 880px) { .kp-orbitbox { transform: scale(0.55); margin: -150px auto; } }
+@media (max-width: 480px) { .kp-orbitbox { transform: scale(0.4); margin: -215px auto; } }
+
+/* Orbit satellites fly in: scaled, spun, blurred → settled. */
+@keyframes kpFlyIn {
+  from { opacity: 0; transform: scale(0.3) rotate(-180deg); filter: blur(8px); }
+  to { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+}
+
+/* ==================== FEATURE SPOTLIGHT CARDS ====================
+   A tone-colored spotlight follows the cursor across each card while the card
+   itself tilts in 3D toward the pointer. --kp-hue carries the tone; --mx/--my
+   are written by the component on mousemove. */
+.kp-spot {
+  position: relative;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s ease-out;
+  will-change: transform;
+}
+.kp-spot:hover {
+  border-color: var(--kp-hue) !important;
+  box-shadow: 0 20px 44px -22px color-mix(in srgb, var(--kp-hue) 60%, transparent);
+}
+.kp-spot-light {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 40%), color-mix(in srgb, var(--kp-hue) 28%, transparent), transparent 72%);
+  pointer-events: none;
+}
+.kp-spot:hover .kp-spot-light { opacity: 1; }
+.kp-spot-icon {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.kp-spot:hover .kp-spot-icon { transform: scale(1.14) rotate(-7deg); }
+
+/* Smaller brutal unit — buttons, chips, controls. Compose with any bg. */
+.kp-brutal-sm {
+  --kp-ink: var(--text);
+  border: 2px solid var(--kp-ink) !important;
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 0 var(--kp-ink) !important;
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease !important;
+}
+.kp-brutal-sm:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 0 var(--kp-hue, var(--kp-ink)) !important;
+  filter: none !important; /* beats the global button brightness hover */
+}
+.kp-brutal-sm:active:not(:disabled) {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0 0 var(--kp-ink) !important;
+}
+/* Static brutal frame — inputs, wells, panels that shouldn't jump. */
+.kp-brutal-flat {
+  --kp-ink: var(--text);
+  border: 2px solid var(--kp-ink) !important;
+  box-shadow: 4px 4px 0 0 var(--kp-ink) !important;
+}
+.kp-brutal-input {
+  --kp-ink: var(--text);
+  border: 2px solid var(--kp-ink) !important;
+  box-shadow: 3px 3px 0 0 var(--kp-ink) !important;
+  transition: box-shadow 0.15s ease, transform 0.15s ease !important;
+}
+.kp-brutal-input:focus,
+.kp-brutal-input:focus-within {
+  box-shadow: 5px 5px 0 0 var(--kp-hue, var(--brass)) !important;
+  outline: none !important;
+}
+
+/* ==================== NEUBRUTAL CARD KIT ====================
+   Thick ink borders, hard offset shadows, sticker badges. The per-card accent
+   arrives via the inline --kp-hue custom property; ink follows the theme. */
+.kp-brutal {
+  --kp-ink: var(--text);
+  border: 2px solid var(--kp-ink) !important;
+  box-shadow: 7px 7px 0 0 var(--kp-ink) !important;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease !important;
+}
+.kp-brutal:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 11px 11px 0 0 var(--kp-hue, var(--brass)) !important;
+}
+.kp-brutal:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 0 var(--kp-ink) !important;
+}
+.kp-brutal-avatar {
+  transform: rotate(-4deg);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.kp-brutal:hover .kp-brutal-avatar {
+  transform: rotate(4deg) scale(1.07);
+}
+.kp-brutal-arrow {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease, color 0.18s ease;
+}
+.kp-brutal:hover .kp-brutal-arrow {
+  background: var(--kp-hue, var(--brass)) !important;
+  color: #fff !important;
+  transform: translate(2px, -2px) rotate(45deg);
+}
+/* sticker badge — leans, and sways gently forever */
+@keyframes kpSticker {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+.kp-sticker {
+  animation: kpSticker 5s ease-in-out infinite;
+  transform-origin: center;
+}
+.kp-brutal-skill {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease;
+}
+.kp-brutal-skill:hover {
+  transform: translateY(-2px) rotate(-1.5deg);
+  background: var(--kp-hue, var(--brass)) !important;
+  color: #fff !important;
+}
+
+/* Animated gradient rule — a colour band that flows sideways forever. Used as
+   the header's underline and the footer's top edge. */
+@keyframes kpGradFlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+.kp-grad-rule {
+  background: linear-gradient(90deg, transparent 0%, var(--primary) 20%, var(--pri-ink) 40%, var(--primary) 60%, transparent 100%, transparent);
+  background-size: 200% 100%;
+  animation: kpGradFlow 7s linear infinite;
+}
+/* Soft colour wash for the header/footer surfaces. */
+.kp-chrome-tint {
+  background:
+    radial-gradient(60% 120% at 12% 0%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 60%),
+    radial-gradient(60% 120% at 88% 100%, color-mix(in srgb, var(--pri-ink) 12%, transparent), transparent 60%),
+    var(--bg-2);
+}
+
+/* Radar-ping beacon (live "available now" pulse) + slow ring sweep for avatars. */
+@keyframes kpPing { 0% { transform: scale(1); opacity: 0.5; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes kpRingSpin { to { transform: rotate(360deg); } }
+
+/* Typewriter caret. */
+@keyframes kpCaret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.kp-caret {
+  display: inline-block;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--pri-ink);
+  animation: kpCaret 0.9s step-end infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  .kp-ticker-track { animation: none; }
+  .kp-marquee-track { animation: none; }
+  .kp-carousel-track { animation: none; }
+  .btn-border-wrap::before { animation: none; }
 }
