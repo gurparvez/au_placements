@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import notificationsApi, { type AppNotification } from '@/api/notifications';
@@ -25,6 +26,9 @@ const NotificationsBell: React.FC<{ fixedPanel?: boolean }> = ({ fixedPanel }) =
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<AppNotification[]>([]);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; right: number }>({ top: 66, right: 12 });
 
   const refreshCount = useCallback(async () => {
     try { setUnread(await notificationsApi.unreadCount()); } catch { /* ignore */ }
@@ -44,10 +48,12 @@ const NotificationsBell: React.FC<{ fixedPanel?: boolean }> = ({ fixedPanel }) =
     return () => { clearInterval(t); s.off('notification:new', onNew); };
   }, [refreshCount, open]);
 
-  // Close on outside click.
+  // Close on outside click — the panel is portaled to <body>, so check it too.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (ref.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener('click', onClick);
     return () => document.removeEventListener('click', onClick);
@@ -55,6 +61,10 @@ const NotificationsBell: React.FC<{ fixedPanel?: boolean }> = ({ fixedPanel }) =
 
   const toggle = async () => {
     const next = !open;
+    if (next && !fixedPanel && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: Math.round(r.bottom + 8), right: Math.max(8, Math.round(window.innerWidth - r.right)) });
+    }
     setOpen(next);
     if (next) {
       try {
@@ -77,46 +87,49 @@ const NotificationsBell: React.FC<{ fixedPanel?: boolean }> = ({ fixedPanel }) =
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
+        ref={btnRef}
         onClick={toggle}
         aria-label="Notifications"
         style={{
-          position: 'relative', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          position: 'relative', width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           // open = filled with the accent so the active state is unmistakable
-          color: open ? 'var(--on-primary)' : 'var(--text-muted)',
-          background: open ? 'var(--primary)' : 'var(--surface-2)',
-          border: open ? '1px solid var(--primary)' : '1px solid var(--border)',
-          transition: 'background .18s ease, color .18s ease, border-color .18s ease',
+          color: open ? 'var(--on-primary)' : 'var(--text)',
+          background: open ? 'var(--primary)' : 'var(--surface)',
+          transition: 'background .18s ease, color .18s ease',
         }}
+        onMouseEnter={(e) => { if (!open) e.currentTarget.style.background = 'var(--surface-2)'; }}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.background = 'var(--surface)'; }}
       >
         <Bell size={17} />
         {unread > 0 && (
-          <span style={{ position: 'absolute', top: -3, right: -3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg)' }}>
+          <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg)' }}>
             {unread > 9 ? '9+' : unread}
           </span>
         )}
       </button>
 
-      {open && (
-        <div style={{
-          ...(fixedPanel
-            ? { position: 'fixed' as const, right: 12, top: 66 }
-            : { position: 'absolute' as const, right: 0, top: '100%', marginTop: 8 }),
-          width: 'min(340px, calc(100vw - 24px))', maxHeight: 420, overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', zIndex: 400,
+      {open && createPortal(
+        <div ref={panelRef} style={{
+          position: 'fixed', top: fixedPanel ? 66 : pos.top, right: fixedPanel ? 12 : pos.right,
+          width: 'min(340px, calc(100vw - 24px))', maxHeight: 420, overflow: 'auto', background: 'var(--surface)',
+          border: '1px solid var(--border)', borderRadius: 12, boxShadow: 'var(--shadow)', zIndex: 400,
         }}>
-          <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: 14, borderBottom: '1px solid var(--border)' }}>Notifications</div>
+          <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: 15, borderBottom: '1px solid var(--border)' }}>Notifications</div>
           {items.length === 0 ? (
-            <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13.5 }}>No notifications yet.</div>
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14.5 }}>No notifications yet.</div>
           ) : (
             items.map((n) => (
               <button key={n._id} onClick={() => go(n)}
-                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', border: 'none', borderBottom: '1px solid var(--border)', background: n.read ? 'none' : 'var(--primary-soft)', cursor: 'pointer', fontSize: 13.5, color: 'var(--text)' }}>
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '11px 14px', border: 'none', borderBottom: '1px solid var(--border)', background: n.read ? 'none' : 'var(--primary-soft)', cursor: 'pointer', fontSize: 14.5, color: 'var(--text)' }}>
                 <span style={{ fontWeight: 650, textTransform: 'capitalize' }}>{fullName(n.actor)}</span>{' '}
                 <span style={{ color: 'var(--text-muted)' }}>{n.text}</span>
-                <div style={{ fontSize: 11.5, color: 'var(--text-subtle)', marginTop: 3 }}>{timeAgo(n.createdAt)}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-subtle)', marginTop: 3 }}>{timeAgo(n.createdAt)}</div>
               </button>
             ))
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
