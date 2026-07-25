@@ -13,6 +13,11 @@ import MentionTextarea from './MentionTextarea';
 const fullName = (u?: { firstName?: string; lastName?: string } | null) => `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim();
 const timeLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
+const hoverBg = (over: string, base: string) => ({
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
+});
+
 const Avatar: React.FC<{ u?: { firstName?: string; lastName?: string } | null; size?: number }> = ({ u, size = 42 }) => {
   const name = fullName(u);
   return (
@@ -41,7 +46,7 @@ const ProfileLink: React.FC<{ u?: PostAuthor | null; style?: React.CSSProperties
 
 const roleChip = (roles?: string[]) =>
   roles?.includes('recruiter') ? (
-    <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 7px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)' }}>Recruiter</span>
+    <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Recruiter</span>
   ) : null;
 
 interface Props {
@@ -156,7 +161,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
   const parents = comments?.filter((c) => !c.parent) ?? [];
   const repliesOf = (id: string) => comments?.filter((c) => c.parent === id) ?? [];
 
-  const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 18 };
+  const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: 'var(--shadow)', padding: 18 };
 
   return (
     <article style={card}>
@@ -167,9 +172,9 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <ProfileLink u={p.author} style={{ fontWeight: 700, textTransform: 'capitalize', color: 'var(--text)' }}>{fullName(p.author) || 'User'}</ProfileLink>
             {roleChip(p.author?.roles)}
-            {p.archived && <span style={{ fontSize: 11, fontWeight: 600, padding: '1px 8px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Archived</span>}
+            {p.archived && <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 10px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Archived</span>}
           </div>
-          <div style={{ fontSize: 12.5, color: 'var(--text-subtle)' }}>{timeLabel(p.createdAt)}</div>
+          <div style={{ fontSize: 13.5, color: 'var(--text-subtle)' }}>{timeLabel(p.createdAt)}</div>
         </div>
         {canManage && (
           <div style={{ display: 'flex', gap: 6 }}>
@@ -184,7 +189,7 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
       </div>
 
       {/* content */}
-      {p.content && <p style={{ marginTop: 12, fontSize: 14.5, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{renderRichText(p.content, p.mentions)}</p>}
+      {p.content && <p style={{ marginTop: 12, fontSize: 15.5, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{renderRichText(p.content, p.mentions)}</p>}
 
       {/* media */}
       {p.media?.length > 0 && (
@@ -202,10 +207,10 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
         <div style={{ marginTop: 12, border: '1px solid var(--border)', borderRadius: 10, padding: 14, background: 'var(--bg-2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <ProfileLink u={p.shared_post.author}><Avatar u={p.shared_post.author} size={30} /></ProfileLink>
-            <ProfileLink u={p.shared_post.author} style={{ fontWeight: 650, fontSize: 13.5, textTransform: 'capitalize', color: 'var(--text)' }}>{fullName(p.shared_post.author) || 'User'}</ProfileLink>
-            <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>· {timeLabel(p.shared_post.createdAt)}</span>
+            <ProfileLink u={p.shared_post.author} style={{ fontWeight: 650, fontSize: 14.5, textTransform: 'capitalize', color: 'var(--text)' }}>{fullName(p.shared_post.author) || 'User'}</ProfileLink>
+            <span style={{ fontSize: 13, color: 'var(--text-subtle)' }}>· {timeLabel(p.shared_post.createdAt)}</span>
           </div>
-          <p style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{renderRichText(p.shared_post.content, p.shared_post.mentions)}</p>
+          <p style={{ marginTop: 8, fontSize: 15, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{renderRichText(p.shared_post.content, p.shared_post.mentions)}</p>
         </div>
       )}
 
@@ -213,14 +218,14 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
       {p.links?.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
           {p.links.map((l, i) => (
-            <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'var(--primary)', textDecoration: 'underline', wordBreak: 'break-all' }}>{l.title || l.url}</a>
+            <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'var(--primary)', textDecoration: 'underline', wordBreak: 'break-all' }}>{l.title || l.url}</a>
           ))}
         </div>
       )}
 
       {/* counts */}
       {(p.reaction_count > 0 || p.comment_count > 0 || p.share_count > 0) && (
-        <div style={{ display: 'flex', gap: 14, marginTop: 12, fontSize: 12.5, color: 'var(--text-muted)' }}>
+        <div style={{ display: 'flex', gap: 14, marginTop: 12, fontSize: 13.5, color: 'var(--text-muted)' }}>
           {p.reaction_count > 0 && <span>{p.reaction_count} reaction{p.reaction_count === 1 ? '' : 's'}</span>}
           {p.comment_count > 0 && <span>{p.comment_count} comment{p.comment_count === 1 ? '' : 's'}</span>}
           {p.share_count > 0 && <span>{p.share_count} share{p.share_count === 1 ? '' : 's'}</span>}
@@ -228,23 +233,23 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
       )}
 
       {/* action bar */}
-      <div style={{ display: 'flex', gap: 6, marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
         <div style={{ position: 'relative', flex: 1 }} onMouseEnter={() => setShowReactions(true)} onMouseLeave={() => setShowReactions(false)} onFocus={() => setShowReactions(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowReactions(false); }}>
-          <button onClick={() => react(p.my_reaction || 'like')} style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13.5, color: myReactionMeta ? 'var(--primary)' : 'var(--text-muted)' }}>
+          <button onClick={() => react(p.my_reaction || 'like')} {...hoverBg('var(--surface-2)', 'transparent')} style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: 14.5, color: myReactionMeta ? 'var(--primary)' : 'var(--text-muted)', transition: 'background .15s ease' }}>
             <span>{myReactionMeta ? myReactionMeta.emoji : '👍'}</span> {myReactionMeta ? myReactionMeta.label : 'React'}
           </button>
           {showReactions && (
-            <div style={{ position: 'absolute', bottom: '100%', left: 0, marginBottom: 6, display: 'flex', gap: 4, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 999, boxShadow: 'var(--shadow)', zIndex: 20 }}>
+            <div style={{ position: 'absolute', bottom: '100%', left: 0, marginBottom: 8, display: 'flex', gap: 4, padding: 6, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 999, boxShadow: 'var(--shadow)', zIndex: 20 }}>
               {REACTION_ORDER.map((t) => (
-                <button key={t} title={REACTION_META[t].label} onClick={() => react(t)} style={{ fontSize: 20, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>{REACTION_META[t].emoji}</button>
+                <button key={t} title={REACTION_META[t].label} onClick={() => react(t)} style={{ fontSize: 21, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>{REACTION_META[t].emoji}</button>
               ))}
             </div>
           )}
         </div>
-        <button onClick={toggleComments} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13.5, color: 'var(--text-muted)' }}>
+        <button onClick={toggleComments} {...hoverBg('var(--surface-2)', 'transparent')} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: 14.5, color: 'var(--text-muted)', transition: 'background .15s ease' }}>
           <MessageSquare size={16} /> Comment
         </button>
-        <button onClick={() => (requireAuth() && setShareOpen(true))} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', borderRadius: 8, border: 'none', background: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13.5, color: 'var(--text-muted)' }}>
+        <button onClick={() => (requireAuth() && setShareOpen(true))} {...hoverBg('var(--surface-2)', 'transparent')} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 10px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: 14.5, color: 'var(--text-muted)', transition: 'background .15s ease' }}>
           <Repeat2 size={16} /> Share
         </button>
       </div>
@@ -254,17 +259,17 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
         <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
           {currentUser && (
             <div style={{ marginBottom: 12 }}>
-              {replyTo && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Replying… <button onClick={() => setReplyTo(null)} style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>cancel</button></div>}
+              {replyTo && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>Replying… <button onClick={() => setReplyTo(null)} style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer' }}>cancel</button></div>}
               <MentionTextarea value={commentText} onChange={setCommentText} mentions={commentMentions} onMentionsChange={setCommentMentions} placeholder="Add a comment… use @ to mention" rows={2} />
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                <button onClick={submitComment} disabled={busy || !commentText.trim()} style={{ padding: '7px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 13, cursor: 'pointer', border: 'none', opacity: busy || !commentText.trim() ? 0.6 : 1 }}>Comment</button>
+                <button onClick={submitComment} disabled={busy || !commentText.trim()} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '7px 14px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'background .18s ease', opacity: busy || !commentText.trim() ? 0.6 : 1 }}>Comment</button>
               </div>
             </div>
           )}
           {comments === null ? (
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading…</p>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>Loading…</p>
           ) : parents.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>No comments yet.</p>
+            <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>No comments yet.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {parents.map((c) => (
@@ -286,12 +291,12 @@ const PostCard: React.FC<Props> = ({ post, currentUser, onDeleted, onShared }) =
       {shareOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={() => setShareOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-          <div role="dialog" aria-modal="true" aria-label="Repost" style={{ ...card, position: 'relative', width: 'min(520px,100%)' }}>
-            <h3 style={{ margin: '0 0 10px', fontSize: 17, fontWeight: 700 }}>Repost</h3>
-            <textarea value={shareQuote} onChange={(e) => setShareQuote(e.target.value)} rows={3} placeholder="Add a thought (optional)…" style={{ width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'vertical' }} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
-              <button onClick={() => setShareOpen(false)} style={{ padding: '9px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={doShare} disabled={busy} style={{ padding: '9px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, cursor: 'pointer', border: 'none', opacity: busy ? 0.7 : 1 }}>Repost</button>
+          <div role="dialog" aria-modal="true" aria-label="Repost" style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', ...card, borderRadius: 18, position: 'relative', width: 'min(520px,100%)' }}>
+            <h3 style={{ margin: '0 0 10px', fontSize: 18, fontWeight: 700 }}>Repost</h3>
+            <textarea value={shareQuote} onChange={(e) => setShareQuote(e.target.value)} rows={3} placeholder="Add a thought (optional)…" style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-ctl)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none', resize: 'vertical' }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 14 }}>
+              <button onClick={() => setShareOpen(false)} style={{ padding: '9px 14px', border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={doShare} disabled={busy} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '9px 16px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, cursor: 'pointer', transition: 'background .18s ease', opacity: busy ? 0.7 : 1 }}>Repost</button>
             </div>
           </div>
         </div>
@@ -318,11 +323,11 @@ const CommentRow: React.FC<{
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '8px 12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ProfileLink u={c.author} style={{ fontWeight: 650, fontSize: 13, textTransform: 'capitalize', color: 'var(--text)' }}>{fullName(c.author) || 'User'}</ProfileLink>
+            <ProfileLink u={c.author} style={{ fontWeight: 650, fontSize: 14, textTransform: 'capitalize', color: 'var(--text)' }}>{fullName(c.author) || 'User'}</ProfileLink>
           </div>
-          <div style={{ fontSize: 13.5, lineHeight: 1.5, whiteSpace: 'pre-wrap', marginTop: 2 }}>{renderRichText(c.content, c.mentions)}</div>
+          <div style={{ fontSize: 14.5, lineHeight: 1.5, whiteSpace: 'pre-wrap', marginTop: 2 }}>{renderRichText(c.content, c.mentions)}</div>
         </div>
-        <div style={{ display: 'flex', gap: 14, marginTop: 4, paddingLeft: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+        <div style={{ display: 'flex', gap: 14, marginTop: 4, paddingLeft: 6, fontSize: 13, color: 'var(--text-muted)' }}>
           <button onClick={() => onReact(c, 'like')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, color: liked ? 'var(--primary)' : 'var(--text-muted)' }}>Like{c.reaction_count > 0 ? ` (${c.reaction_count})` : ''}</button>
           {onReply && <button onClick={onReply} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><CornerDownRight size={12} /> Reply</button>}
           {canDelete && <button onClick={onDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>Delete</button>}
