@@ -16,7 +16,7 @@ import { SelectField } from '@/components/ui/select-field';
 const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) => (
   <span aria-hidden style={{
     width: 32, height: 32, borderRadius: '50%', flex: 'none', display: 'inline-flex',
-    alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12,
+    alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13,
     background: avatarColor(`${first ?? ''} ${last ?? ''}`),
   }}>{initials(first, last) || '?'}</span>
 );
@@ -24,11 +24,11 @@ const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) =>
 const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)',
-  border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+  border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--r-ctl)',
-  background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
 const hoverBg = (over: string, base: string) => ({
@@ -37,9 +37,10 @@ const hoverBg = (over: string, base: string) => ({
 });
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 'var(--r-ctl)',
-  background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+  border: '1px solid var(--border)', transition: 'background .18s ease',
 };
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
 const SIZES: CompanySize[] = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
 function extractError(err: unknown, fallback: string): string {
@@ -107,10 +108,10 @@ function CreateRecruiterModal({ onClose, onSaved }: { onClose: () => void; onSav
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Create recruiter" style={{ ...card, position: 'relative', width: 'min(600px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Create recruiter" style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', borderRadius: 18, background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', position: 'relative', width: 'min(600px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
         <div className="brass-rule" style={{ marginBottom: 12 }} />
-        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Create recruiter</h2>
-        <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>Created active. Logs in with email + password.</p>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 20, fontWeight: 500, letterSpacing: '-.01em' }}>Create recruiter</h2>
+        <p style={{ margin: '6px 0 18px', fontSize: 14, color: 'var(--text-muted)' }}>Created active. Logs in with email + password.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div><label style={labelStyle}>First name</label><input value={form.firstName} onChange={(e) => set('firstName', e.target.value)} style={inputStyle} /></div>
@@ -202,10 +203,10 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
       {/* Section header — mode-aware serif title + count; primary action sits top-right */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <div style={{ minWidth: 0 }}>
-          <h2 className="font-display" style={{ margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: '-.01em' }}>
+          <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>
             {isApprovals ? 'Approval requests' : 'Recruiter roster'}
           </h2>
-          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
+          <p style={{ margin: '3px 0 0', fontSize: 14, color: 'var(--text-muted)' }}>
             {pagination != null && <><span className="data">{pagination.total.toLocaleString()}</span> · </>}
             {isApprovals ? 'Requests awaiting review' : 'Approved recruiters with portal access'}
           </p>
@@ -265,10 +266,10 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
                   }}>
                     <Avatar first={r.user.firstName} last={r.user.lastName} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 14.5, fontWeight: 650, textTransform: 'capitalize', lineHeight: 1.35 }}>
+                      <span style={{ display: 'block', fontSize: 15.5, fontWeight: 650, textTransform: 'capitalize', lineHeight: 1.35 }}>
                         {`${r.user.firstName} ${r.user.lastName ?? ''}`.trim()}
                       </span>
-                      <span style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>
+                      <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>
                         {r.recruiter?.company || 'No company recorded'}
                       </span>
                     </div>
@@ -284,7 +285,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
 
                   {/* email + actions */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px 12px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, overflowWrap: 'anywhere', minWidth: 0, flex: 1 }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, overflowWrap: 'anywhere', minWidth: 0, flex: 1 }}>
                       {r.user.email || 'No email recorded'}
                     </span>
                     {isApprovals && (
@@ -294,7 +295,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 13px',
                             borderRadius: 8, border: 'none', background: 'var(--primary)', color: 'var(--on-primary)',
-                            fontWeight: 600, fontSize: 12.5, cursor: 'pointer', opacity: busy ? 0.6 : 1,
+                            fontWeight: 600, fontSize: 13.5, cursor: 'pointer', opacity: busy ? 0.6 : 1,
                             transition: 'background .16s ease',
                           }}>
                           <Check size={13} /> Approve
@@ -303,7 +304,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px',
                             borderRadius: 8, border: '1px solid var(--border)', background: 'none',
-                            color: 'var(--text-muted)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                            color: 'var(--text-muted)', fontWeight: 600, fontSize: 13.5, cursor: 'pointer',
                             opacity: busy ? 0.6 : 1, transition: 'color .15s ease, border-color .15s ease, background .15s ease',
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.borderColor = 'var(--danger)'; e.currentTarget.style.background = 'var(--danger-soft)'; }}
@@ -322,7 +323,7 @@ const RecruitersPanel: React.FC<{ mode?: 'active' | 'approvals'; onChanged?: () 
 
       {pagination && pagination.totalPages > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-          <span className="data" style={{ fontSize: 13, color: 'var(--text-muted)' }}>Page {pagination.page} of {pagination.totalPages} · {pagination.total.toLocaleString()} recruiters</span>
+          <span className="data" style={{ fontSize: 14, color: 'var(--text-muted)' }}>Page {pagination.page} of {pagination.totalPages} · {pagination.total.toLocaleString()} recruiters</span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ ...btnGhost, opacity: page <= 1 ? 0.5 : 1 }}>Previous</button>
             <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={page >= pagination.totalPages} style={{ ...btnGhost, opacity: page >= pagination.totalPages ? 0.5 : 1 }}>Next</button>
