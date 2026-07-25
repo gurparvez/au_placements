@@ -105,43 +105,43 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`Applicants for ${opening.title}`} style={{ position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`Applicants for ${opening.title}`} style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', position: 'relative', width: 'min(680px,100%)', maxHeight: '85vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 22, boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <h2 className="font-display" style={{ margin: 0, fontSize: 18, fontWeight: 500 }}>Applicants</h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{opening.title}</p>
+            <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500 }}>Applicants</h2>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--text-muted)' }}>{opening.title}</p>
           </div>
           <button onClick={onClose} aria-label="Close" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ width: 32, height: 32, borderRadius: 'var(--r-ctl)', border: '1px solid var(--border)', background: 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .18s ease' }}><X size={15} /></button>
         </div>
 
         <div style={{ marginTop: 14 }}>
           {rows === null ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: 13.5, padding: '20px 0', textAlign: 'center' }}>Loading…</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 14.5, padding: '20px 0', textAlign: 'center' }}>Loading…</p>
           ) : rows.length === 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '32px 0', color: 'var(--text-muted)' }}>
               <Users size={24} style={{ opacity: 0.5 }} />
-              <span style={{ fontSize: 13.5 }}>No applicants yet.</span>
+              <span style={{ fontSize: 14.5 }}>No applicants yet.</span>
             </div>
           ) : (
             rows.map((a) => (
               <div key={a._id} style={{ padding: '11px 0', borderTop: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span aria-hidden style={{ width: 38, height: 38, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, background: avatarColor(`${a.student?.firstName ?? ''} ${a.student?.lastName ?? ''}`) }}>{initials(a.student?.firstName, a.student?.lastName) || '?'}</span>
+                <span aria-hidden style={{ width: 38, height: 38, borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, background: avatarColor(`${a.student?.firstName ?? ''} ${a.student?.lastName ?? ''}`) }}>{initials(a.student?.firstName, a.student?.lastName) || '?'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {a.student ? (
-                    <Link to={`/profiles/${a.student._id}`} onClick={onClose} style={{ fontWeight: 650, fontSize: 14, textTransform: 'capitalize', color: 'var(--text)', textDecoration: 'none' }}>{`${a.student.firstName ?? ''} ${a.student.lastName ?? ''}`.trim() || 'Student'}</Link>
-                  ) : <span style={{ fontWeight: 650, fontSize: 14, color: 'var(--text-muted)' }}>Unknown</span>}
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{a.student?.auid ? `AUID ${a.student.auid}` : ''}{a.student?.university ? `${a.student?.auid ? ' · ' : ''}${a.student.university.replace(' University', '')}` : ''}</div>
+                    <Link to={`/profiles/${a.student._id}`} onClick={onClose} style={{ fontWeight: 650, fontSize: 15, textTransform: 'capitalize', color: 'var(--text)', textDecoration: 'none' }}>{`${a.student.firstName ?? ''} ${a.student.lastName ?? ''}`.trim() || 'Student'}</Link>
+                  ) : <span style={{ fontWeight: 650, fontSize: 15, color: 'var(--text-muted)' }}>Unknown</span>}
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{a.student?.auid ? `AUID ${a.student.auid}` : ''}{a.student?.university ? `${a.student?.auid ? ' · ' : ''}${a.student.university.replace(' University', '')}` : ''}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{fmt(a.appliedAt)}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-subtle)' }}>{fmt(a.appliedAt)}</span>
                   <select
                     value={a.status}
                     disabled={savingId === a._id}
                     onChange={(e) => updateStatus(a._id, e.target.value as ApplicationStatus)}
                     aria-label="Application status"
                     style={{
-                      padding: '5px 8px', borderRadius: 'var(--r-ctl)', fontSize: 12, fontWeight: 600,
+                      padding: '5px 8px', borderRadius: 'var(--r-ctl)', fontSize: 13, fontWeight: 600,
                       textTransform: 'capitalize', cursor: 'pointer',
                       border: `1px solid color-mix(in srgb, ${STATUS_TONE[a.status] ?? 'var(--text-muted)'} 34%, transparent)`,
                       background: `color-mix(in srgb, ${STATUS_TONE[a.status] ?? 'var(--text-muted)'} 12%, transparent)`,
@@ -162,7 +162,7 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
                       title={rd.notes || rd.name}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 4px 3px 9px',
-                        borderRadius: 999, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                        borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
                         border: `1px solid color-mix(in srgb, ${ROUND_TONE[rd.result]} 32%, transparent)`,
                         background: `color-mix(in srgb, ${ROUND_TONE[rd.result]} 11%, transparent)`,
                         color: ROUND_TONE[rd.result],
@@ -175,7 +175,7 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
                         aria-label={`${rd.name} result`}
                         style={{
                           border: 'none', background: 'transparent', color: 'inherit',
-                          fontSize: 11.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
+                          fontSize: 12.5, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
                         }}
                       >
                         {ROUND_RESULTS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -193,14 +193,14 @@ function ApplicantsModal({ opening, onClose }: { opening: Opening; onClose: () =
   );
 }
 
-const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 };
+const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: 'var(--shadow)' };
 const input: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)',
-  border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+  border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none',
 };
-const label: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
-const btnPrimary: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' };
-const btnGhost: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)', transition: 'background .18s ease' };
+const label: React.CSSProperties = { display: 'block', fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
+const btnPrimary: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', transition: 'background .18s ease' };
+const btnGhost: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 550, fontSize: 14, cursor: 'pointer', transition: 'background .18s ease' };
 const UNIS: University[] = ['Akal University', 'Eternal University'];
 
 function extractError(err: unknown, fallback: string): string {
@@ -341,9 +341,9 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit opening' : 'Post an opening'} style={{ ...card, position: 'relative', width: 'min(620px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500 }}>{isEdit ? 'Edit opening' : 'Post an opening'}</h2>
-        <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>{isEdit ? 'Update the details students see.' : 'Share an internship or job.'}</p>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit opening' : 'Post an opening'} style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', position: 'relative', width: 'min(620px,100%)', maxHeight: '90vh', overflow: 'auto', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, boxShadow: 'var(--shadow)' }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>{isEdit ? 'Edit opening' : 'Post an opening'}</h2>
+        <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-muted)' }}>{isEdit ? 'Update the details students see.' : 'Share an internship or job.'}</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 16 }}>
           {requireCompany && (
@@ -370,8 +370,8 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
             <SkillPicker label="Required skills" selected={form.skills} setSelected={(s) => set('skills', s)} initialData={initialSkills} />
           </div>
           <div style={{ gridColumn: '1 / -1', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-            <h3 className="font-display" style={{ margin: '0 0 3px', fontSize: 13.5, fontWeight: 500 }}>Eligibility criteria</h3>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>
+            <h3 className="font-display" style={{ margin: '0 0 3px', fontSize: 14.5, fontWeight: 500 }}>Eligibility criteria</h3>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
               Enforced server-side. Students see which criterion failed.
             </p>
           </div>
@@ -381,7 +381,7 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
             <label style={label}>Eligible departments <span style={{ fontWeight: 400 }}>(none selected = open to all)</span></label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {departments.length === 0 ? (
-                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>Loading departments…</span>
+                <span style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>Loading departments…</span>
               ) : (
                 departments.map((d) => {
                   const on = selectedDepts.includes(d.name);
@@ -391,7 +391,7 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
                       type="button"
                       onClick={() => toggleDept(d.name)}
                       style={{
-                        padding: '6px 11px', borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+                        padding: '6px 11px', borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
                         border: `1px solid ${on ? 'var(--primary)' : 'var(--border)'}`,
                         background: on ? 'var(--primary-soft)' : 'transparent',
                         color: on ? 'var(--primary)' : 'var(--text-muted)',
@@ -412,7 +412,7 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
           </div>
           <div><label style={label}>Package (LPA)</label><input type="number" min={0} step="0.5" value={form.ctc_lpa} onChange={(e) => set('ctc_lpa', e.target.value)} placeholder="e.g. 12" style={input} /></div>
           <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 13, paddingBottom: 10 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 14, paddingBottom: 10 }}>
               <input type="checkbox" checked={form.allow_placed} onChange={(e) => set('allow_placed', e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
               Open to already-placed students
             </label>
@@ -420,13 +420,13 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
 
           <div style={{ gridColumn: '1 / -1', marginTop: 6, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
             <label style={label}>Selection rounds</label>
-            <p style={{ margin: '0 0 9px', fontSize: 12, color: 'var(--text-muted)' }}>
+            <p style={{ margin: '0 0 9px', fontSize: 13, color: 'var(--text-muted)' }}>
               Recorded per applicant.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {form.rounds.map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ width: 22, flex: 'none', fontSize: 12, color: 'var(--text-subtle)', fontWeight: 600 }}>{i + 1}.</span>
+                  <span style={{ width: 22, flex: 'none', fontSize: 13, color: 'var(--text-subtle)', fontWeight: 600 }}>{i + 1}.</span>
                   <input
                     value={r}
                     onChange={(e) => set('rounds', form.rounds.map((x, j) => (j === i ? e.target.value : x)))}
@@ -452,7 +452,7 @@ function OpeningModal({ editing, requireCompany, onClose, onSaved }: { editing: 
             <div style={{ display: 'flex', gap: 10 }}>
               {UNIS.map((u) => (
                 <button key={u} type="button" onClick={() => toggleUni(u)}
-                  style={{ flex: 1, padding: '9px 12px', borderRadius: 'var(--r-ctl)', cursor: 'pointer', fontWeight: 600, fontSize: 13,
+                  style={{ flex: 1, padding: '9px 12px', borderRadius: 'var(--r-ctl)', cursor: 'pointer', fontWeight: 600, fontSize: 14,
                     border: `1px solid ${form.eligible_universities.includes(u) ? 'var(--primary)' : 'var(--border)'}`,
                     background: form.eligible_universities.includes(u) ? 'var(--primary-soft)' : 'transparent',
                     color: form.eligible_universities.includes(u) ? 'var(--primary)' : 'var(--text-muted)' }}>
@@ -527,8 +527,8 @@ const RecruiterOpenings: React.FC = () => {
     } catch (err) { toast.error(extractError(err, 'Failed to delete.')); }
   };
 
-  if (!initialized) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
-  if (!canManage) return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
+  if (!initialized) return <section style={{ padding: '60px clamp(20px,10vw,64px)', color: 'var(--text-muted)' }}>Loading…</section>;
+  if (!canManage) return <section style={{ padding: '60px clamp(20px,10vw,64px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
 
   const openCount = openings.filter((o) => o.status === 'open').length;
   const summary = openings.length === 0
@@ -536,14 +536,8 @@ const RecruiterOpenings: React.FC = () => {
     : `${openings.length} opening${openings.length === 1 ? '' : 's'} · ${openCount} open`;
 
   return (
-    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div className="brass-rule" style={{ marginBottom: 14 }} />
-          <span className="ledger-label" style={{ color: 'var(--brass)' }}>Recruiter tools</span>
-          <h1 className="font-display" style={{ margin: '10px 0 0', fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em' }}>My openings</h1>
-          <p style={{ textAlign: 'left', margin: '10px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>{summary}</p>
-        </div>
+    <section style={{ padding: '18px clamp(20px,10vw,64px) 80px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
         <button onClick={() => { setEditing(null); setModalOpen(true); }} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}><Plus size={16} /> Post opening</button>
       </div>
 
@@ -553,38 +547,40 @@ const RecruiterOpenings: React.FC = () => {
         ) : openings.length === 0 ? (
           <div style={{ ...card, padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
             <span style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Briefcase size={24} /></span>
-            <div style={{ fontWeight: 650, fontSize: 15.5 }}>No openings yet</div>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13.5, maxWidth: 340 }}>Post your first internship or job.</p>
+            <div style={{ fontWeight: 650, fontSize: 16.5 }}>No openings yet</div>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 14.5, maxWidth: 340 }}>Post your first internship or job.</p>
             <button onClick={() => { setEditing(null); setModalOpen(true); }} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ ...btnPrimary, marginTop: 6 }}><Plus size={16} /> Post opening</button>
           </div>
         ) : (
-          openings.map((o) => (
+          openings.map((o) => {
+            const hue = avatarColor(o.company);
+            return (
             <div key={o._id}
-              style={{ ...card, padding: 18, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', transition: 'border-color .15s, background .15s' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-2)'; e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--primary) 30%, var(--border))'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+              onClick={() => { setEditing(o); setModalOpen(true); }}
+              style={{ ...card, padding: 13, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', cursor: 'pointer', background: `color-mix(in srgb, ${hue} 18%, var(--surface))`, border: `1px solid color-mix(in srgb, ${hue} 28%, var(--border))`, transition: 'border-color .15s, background .15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${hue} 24%, var(--surface))`; e.currentTarget.style.borderColor = `color-mix(in srgb, ${hue} 42%, var(--border))`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = `color-mix(in srgb, ${hue} 18%, var(--surface))`; e.currentTarget.style.borderColor = `color-mix(in srgb, ${hue} 28%, var(--border))`; }}
             >
               <div style={{ display: 'flex', gap: 13, minWidth: 0 }}>
-                <span aria-hidden style={{ width: 44, height: 44, borderRadius: 11, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, color: '#fff', background: avatarColor(o.company) }}>{companyInitials(o.company)}</span>
+                <span aria-hidden style={{ width: 44, height: 44, borderRadius: 11, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: '#fff', background: avatarColor(o.company) }}>{companyInitials(o.company)}</span>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{o.title}</h3>
-                    <span style={{ fontSize: 11.5, fontWeight: 600, padding: '2px 9px', borderRadius: 999, textTransform: 'capitalize', background: o.status === 'open' ? 'var(--primary-soft)' : 'var(--surface-2)', color: o.status === 'open' ? 'var(--primary)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>{o.status}</span>
-                    <span style={{ fontSize: 11.5, fontWeight: 600, padding: '2px 9px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{o.type === 'job' ? 'Job' : 'Internship'}</span>
+                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{o.title}</h3>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, padding: '2px 9px', borderRadius: 999, textTransform: 'capitalize', background: o.status === 'open' ? 'var(--primary-soft)' : 'var(--surface-2)', color: o.status === 'open' ? 'var(--primary)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>{o.status}</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, padding: '2px 9px', borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{o.type === 'job' ? 'Job' : 'Internship'}</span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>{o.company}{o.location ? ` · ${o.location}` : ''}{o.skills?.length ? ` · ${o.skills.length} skill${o.skills.length === 1 ? '' : 's'}` : ''}</div>
+                  <div style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 6 }}>{o.company}{o.location ? ` · ${o.location}` : ''}{o.skills?.length ? ` · ${o.skills.length} skill${o.skills.length === 1 ? '' : 's'}` : ''}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
                 <button onClick={() => setApplicantsFor(o)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <Users size={15} /> Applicants{typeof o.application_count === 'number' ? ` (${o.application_count})` : ''}
                 </button>
                 <button onClick={() => toggleStatus(o)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={btnGhost}>{o.status === 'open' ? 'Close' : 'Reopen'}</button>
-                <button onClick={() => { setEditing(o); setModalOpen(true); }} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, padding: 8 }} aria-label="Edit"><Pencil size={15} /></button>
                 <button onClick={() => remove(o)} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ ...btnGhost, padding: 8, color: 'var(--danger)', borderColor: 'var(--danger)' }} aria-label="Delete"><Trash2 size={15} /></button>
               </div>
             </div>
-          ))
+          )})
         )}
       </div>
 
