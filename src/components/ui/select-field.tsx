@@ -42,7 +42,7 @@ const triggerBase: React.CSSProperties = {
   padding: '8px 11px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)',
   background: 'var(--bg-2)', color: 'var(--text)', cursor: 'pointer', textAlign: 'left',
   /* `font` shorthand FIRST — the longhands after it must win */
-  font: 'inherit', fontSize: 13.5, lineHeight: 1.2, fontWeight: 500,
+  font: 'inherit', fontSize: 14.5, lineHeight: 1.2, fontWeight: 500,
   transition: 'border-color .16s ease, background .16s ease, box-shadow .16s ease',
 };
 
@@ -222,7 +222,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
                 maxHeight: Math.max(140, Math.min(300, rect.below)),
                 overflowY: 'auto', padding: 5,
                 background: 'var(--surface)', border: '1px solid var(--border)',
-                borderRadius: 11, boxShadow: 'var(--shadow)',
+                borderRadius: 12, boxShadow: 'var(--shadow)',
                 pointerEvents: 'auto', // Radix modal dialogs set pointer-events:none on <body>
               }}
             >
@@ -240,7 +240,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
                     onMouseDown={(e) => { e.preventDefault(); choose(i); }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8, padding: '8px 9px',
-                      borderRadius: 7, fontSize: 13, lineHeight: 1.3,
+                      borderRadius: 7, fontSize: 14, lineHeight: 1.3,
                       color: opt.disabled ? 'var(--text-subtle)' : 'var(--text)',
                       fontWeight: isSel ? 600 : 500,
                       cursor: opt.disabled ? 'not-allowed' : 'pointer',
@@ -382,7 +382,7 @@ export const DateField: React.FC<{
           display: 'flex', alignItems: 'center', gap: 8, width: '100%', minWidth: 0,
           padding: '8px 11px', borderRadius: 'var(--r-ctl)', textAlign: 'left',
           /* `font` shorthand FIRST — the longhands after it must win (mirrors SelectField) */
-          font: 'inherit', fontSize: 13.5, lineHeight: 1.2, fontWeight: 500,
+          font: 'inherit', fontSize: 14.5, lineHeight: 1.2, fontWeight: 500,
           border: `1px solid ${open ? 'var(--primary)' : 'var(--border-strong)'}`,
           boxShadow: open ? '0 0 0 3px var(--ring-soft)' : 'none',
           background: 'var(--bg-2)', cursor: disabled ? 'not-allowed' : 'pointer',
@@ -436,7 +436,7 @@ export const DateField: React.FC<{
             >
               {/* month header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 9 }}>
-                <span className="font-display" style={{ flex: 1, fontSize: 14.5, fontWeight: 550, letterSpacing: '-.01em', paddingLeft: 4 }}>
+                <span className="font-display" style={{ flex: 1, fontSize: 15.5, fontWeight: 550, letterSpacing: '-.01em', paddingLeft: 4 }}>
                   {MONTHS[view.m]} <span className="data" style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{view.y}</span>
                 </span>
                 <button type="button" aria-label="Previous month" onClick={() => shiftMonth(-1)} style={navBtn} {...navHover}><ChevronLeft size={15} /></button>
@@ -446,7 +446,7 @@ export const DateField: React.FC<{
               {/* weekday rail */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 2, marginBottom: 2 }}>
                 {WEEKDAYS.map((w) => (
-                  <span key={w} style={{ textAlign: 'center', fontSize: 9.5, fontWeight: 650, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-subtle)', padding: '3px 0' }}>
+                  <span key={w} style={{ textAlign: 'center', fontSize: 10.5, fontWeight: 650, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text-subtle)', padding: '3px 0' }}>
                     {w}
                   </span>
                 ))}
@@ -470,7 +470,7 @@ export const DateField: React.FC<{
                       className="data"
                       style={{
                         height: 30, borderRadius: 8, border: 'none', padding: 0,
-                        fontSize: 12.5, fontWeight: isSel ? 650 : 500,
+                        fontSize: 13.5, fontWeight: isSel ? 650 : 500,
                         cursor: blocked ? 'not-allowed' : 'pointer',
                         background: isSel ? 'var(--primary)' : 'transparent',
                         color: isSel ? 'var(--on-primary)' : blocked ? 'var(--text-subtle)' : inMonth ? 'var(--text)' : 'var(--text-subtle)',
@@ -490,13 +490,13 @@ export const DateField: React.FC<{
               {/* quick actions */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 9, borderTop: '1px solid var(--border)' }}>
                 <button type="button" onClick={() => { onChange(''); setOpen(false); }}
-                  style={{ border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', padding: '2px 4px', transition: 'color .13s ease' }}
+                  style={{ border: 'none', background: 'none', fontSize: 13.5, fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', padding: '2px 4px', transition: 'color .13s ease' }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text)')}
                   onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}>
                   Clear
                 </button>
                 <button type="button" disabled={blockedDay(todayIso)} onClick={() => pick(todayIso)}
-                  style={{ border: 'none', background: 'none', fontSize: 12.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', padding: '2px 4px', opacity: blockedDay(todayIso) ? 0.5 : 1 }}>
+                  style={{ border: 'none', background: 'none', fontSize: 13.5, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer', padding: '2px 4px', opacity: blockedDay(todayIso) ? 0.5 : 1 }}>
                   Today
                 </button>
               </div>
