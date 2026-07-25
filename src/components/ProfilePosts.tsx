@@ -6,7 +6,7 @@ const timeLabel = (iso: string) => new Date(iso).toLocaleDateString(undefined, {
 
 const PostRow: React.FC<{ p: Post }> = ({ p }) => (
   <article style={{ padding: '16px 0', borderTop: '1px solid var(--border)' }}>
-    {p.content && <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap', color: 'var(--text)' }}>{p.content}</p>}
+    {p.content && <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, whiteSpace: 'pre-wrap', color: 'var(--text)' }}>{p.content}</p>}
     {p.media?.length > 0 && (
       <div style={{ display: 'grid', gridTemplateColumns: p.media.length === 1 ? '1fr' : '1fr 1fr', gap: 6, marginTop: p.content ? 10 : 0 }}>
         {p.media.slice(0, 4).map((m, i) => (
@@ -14,7 +14,7 @@ const PostRow: React.FC<{ p: Post }> = ({ p }) => (
         ))}
       </div>
     )}
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10, fontSize: 12.5, color: 'var(--text-muted)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10, fontSize: 13.5, color: 'var(--text-muted)' }}>
       <span>{timeLabel(p.createdAt)}</span>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Heart size={13} /> {p.reaction_count}</span>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MessageCircle size={13} /> {p.comment_count}</span>
@@ -42,18 +42,18 @@ const ProfilePosts: React.FC<{ userId: string; limit?: number }> = ({ userId, li
     return () => { cancelled = true; };
   }, [userId, limit]);
 
-  if (posts === null) return <p style={{ color: 'var(--text-muted)', fontSize: 13.5 }}>Loading posts…</p>;
+  if (posts === null) return <p style={{ color: 'var(--text-muted)', fontSize: 14.5 }}>Loading posts…</p>;
   if (posts.length === 0) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '24px 0', color: 'var(--text-muted)' }}>
       <Newspaper size={22} style={{ opacity: 0.5 }} />
-      <span style={{ fontSize: 13.5 }}>No posts yet.</span>
+      <span style={{ fontSize: 14.5 }}>No posts yet.</span>
     </div>
   );
 
   return (
     <div>
       {posts.map((p) => <PostRow key={p._id} p={p} />)}
-      {total > posts.length && <p style={{ fontSize: 12.5, color: 'var(--text-subtle)', margin: '12px 0 0' }}>Showing {posts.length} of {total} posts.</p>}
+      {total > posts.length && <p style={{ fontSize: 13.5, color: 'var(--text-subtle)', margin: '12px 0 0' }}>Showing {posts.length} of {total} posts.</p>}
     </div>
   );
 };
