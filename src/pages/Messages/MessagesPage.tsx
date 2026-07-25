@@ -133,6 +133,7 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
       <div
         style={{
           background: 'var(--surface)', border: modal ? 'none' : '1px solid var(--border)', borderRadius: modal ? 0 : 16,
+          boxShadow: modal ? 'none' : 'var(--shadow)',
           display: 'grid', gridTemplateColumns: isNarrow ? '1fr' : '320px 1fr', height: modal ? '100%' : 'min(72vh, 640px)', overflow: 'hidden',
         }}
       >
@@ -141,11 +142,11 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
         <div style={{ borderRight: isNarrow ? 'none' : '1px solid var(--border)', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{ padding: '13px 18px', borderBottom: '1px solid var(--border)' }}>
             <span className="ledger-label" style={{ color: 'var(--brass)', display: 'block', marginBottom: 3 }}>Inbox</span>
-            <span className="font-display" style={{ fontWeight: 500, fontSize: 20, letterSpacing: '-.02em' }}>Messages</span>
+            <span className="font-display" style={{ fontWeight: 700, fontSize: 21, letterSpacing: '-.02em' }}>Messages</span>
           </div>
           <div style={{ flex: 1, overflow: 'auto' }}>
             {convos.length === 0 ? (
-              <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 13.5 }}>No conversations yet. Start one from a profile.</div>
+              <div style={{ padding: 20, color: 'var(--text-muted)', fontSize: 14.5 }}>No conversations yet. Start one from a profile.</div>
             ) : (
               convos.map((c) => {
                 const active = activeId === c._id;
@@ -164,12 +165,12 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
                     <Avatar u={c.other ?? undefined} size={44} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
-                        <span style={{ fontWeight: c.unread > 0 ? 700 : 600, fontSize: 14, textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fullName(c.other ?? undefined)}</span>
-                        <span style={{ fontSize: 11.5, color: 'var(--text-subtle)', flex: 'none' }}>{listTime(c.last_message?.sent_at || c.last_activity)}</span>
+                        <span style={{ fontWeight: c.unread > 0 ? 700 : 600, fontSize: 15, textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{fullName(c.other ?? undefined)}</span>
+                        <span style={{ fontSize: 12.5, color: 'var(--text-subtle)', flex: 'none' }}>{listTime(c.last_message?.sent_at || c.last_activity)}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 2 }}>
-                        <span style={{ fontSize: 12.5, color: c.unread > 0 ? 'var(--text)' : 'var(--text-muted)', fontWeight: c.unread > 0 ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.last_message?.text || 'No messages yet'}</span>
-                        {c.unread > 0 && <span className="data" style={{ minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--primary)', color: 'var(--on-primary)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{c.unread}</span>}
+                        <span style={{ fontSize: 13.5, color: c.unread > 0 ? 'var(--text)' : 'var(--text-muted)', fontWeight: c.unread > 0 ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.last_message?.text || 'No messages yet'}</span>
+                        {c.unread > 0 && <span className="data" style={{ minWidth: 20, height: 20, padding: '0 5px', borderRadius: 999, background: 'var(--primary)', color: 'var(--on-primary)', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{c.unread}</span>}
                       </div>
                     </div>
                   </button>
@@ -192,7 +193,7 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
               )}
               <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
                 <MessagesSquare size={40} style={{ opacity: 0.5 }} />
-                <div style={{ marginTop: 10, fontSize: 14 }}>Select a conversation to start chatting</div>
+                <div style={{ marginTop: 10, fontSize: 15 }}>Select a conversation to start chatting</div>
               </div>
             </>
           ) : (
@@ -211,13 +212,13 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
                   ) : (
                     <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{fullName(other)}</span>
                   )}
-                  <div style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{other?.roles?.includes('recruiter') ? 'Recruiter' : 'Student'}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-subtle)' }}>{other?.roles?.includes('recruiter') ? 'Recruiter' : 'Student'}</div>
                 </div>
               </div>
 
               {/* messages */}
               <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: 18, display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--bg)' }}>
-                {thread.messages.length === 0 && <div style={{ margin: 'auto', color: 'var(--text-muted)', fontSize: 13.5 }}>Say hello 👋</div>}
+                {thread.messages.length === 0 && <div style={{ margin: 'auto', color: 'var(--text-muted)', fontSize: 14.5 }}>Say hello 👋</div>}
                 {thread.messages.map((m, i) => {
                   // deleted accounts arrive with a null sender — render them as "the other side"
                   const mine = m.sender?._id === user._id;
@@ -227,8 +228,8 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
                     <div key={m._id} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexDirection: mine ? 'row-reverse' : 'row', marginTop: grouped ? -4 : 0 }}>
                       {!mine && (grouped ? <span style={{ width: 28, flex: 'none' }} /> : <Avatar u={m.sender} size={28} />)}
                       <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
-                        <div style={{ padding: '9px 13px', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, fontSize: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: mine ? 'var(--primary)' : 'var(--surface)', color: mine ? 'var(--on-primary)' : 'var(--text)', border: mine ? 'none' : '1px solid var(--border)' }}>{m.content}</div>
-                        <span style={{ fontSize: 10.5, color: 'var(--text-subtle)', margin: '3px 4px 0' }}>{msgTime(m.createdAt)}</span>
+                        <div style={{ padding: '9px 13px', borderRadius: 16, borderBottomRightRadius: mine ? 4 : 16, borderBottomLeftRadius: mine ? 16 : 4, fontSize: 15, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: mine ? 'var(--primary)' : 'var(--surface)', color: mine ? 'var(--on-primary)' : 'var(--text)', border: mine ? 'none' : '1px solid var(--border)' }}>{m.content}</div>
+                        <span style={{ fontSize: 11.5, color: 'var(--text-subtle)', margin: '3px 4px 0' }}>{msgTime(m.createdAt)}</span>
                       </div>
                     </div>
                   );
@@ -236,15 +237,15 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
               </div>
 
               {/* composer */}
-              <div style={{ display: 'flex', gap: 10, padding: 14, borderTop: '1px solid var(--border)', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 12, padding: 14, borderTop: '1px solid var(--border)', alignItems: 'center' }}>
                 <input
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
                   placeholder="Write a message…"
-                  style={{ flex: 1, padding: '12px 16px', borderRadius: 999, border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none' }}
+                  style={{ flex: 1, padding: '12px 16px', borderRadius: 999, border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none' }}
                 />
-                <button onClick={send} disabled={sending || !text.trim()} aria-label="Send" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--primary)', color: 'var(--on-primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', transition: 'background .18s ease', opacity: sending || !text.trim() ? 0.5 : 1 }}>
+                <button onClick={send} disabled={sending || !text.trim()} aria-label="Send" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--primary)', color: 'var(--on-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none', opacity: sending || !text.trim() ? 0.5 : 1, transition: 'background .18s ease' }}>
                   <Send size={18} />
                 </button>
               </div>
@@ -257,7 +258,7 @@ export const MessagesPanel: React.FC<{ modal?: boolean; onNavigateAway?: () => v
 };
 
 const MessagesPage: React.FC = () => (
-  <section style={{ padding: '24px clamp(20px,10vw,112px) 40px' }}>
+  <section style={{ padding: '24px clamp(20px,10vw,64px) 40px' }}>
     <MessagesPanel />
   </section>
 );
