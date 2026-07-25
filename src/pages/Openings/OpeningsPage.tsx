@@ -10,21 +10,22 @@ import { Reveal, AnimatedNumber } from '@/components/motion';
 import { motion } from 'motion/react';
 import { SelectField } from '@/components/ui/select-field';
 
-const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 };
+/* Soft register: quiet surfaces, hairline borders, blurred shadows. */
+const card: React.CSSProperties = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: 'var(--shadow)' };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)',
-  border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+  border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none',
 };
 const hoverBg = (over: string, base: string) => ({
   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
   onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
 });
 const pill = (bg: string, color: string): React.CSSProperties => ({
-  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: bg, color,
+  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: bg, color,
 });
 const metaPill: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, padding: '4px 10px',
-  borderRadius: 999, background: 'var(--bg-2)', color: 'var(--text-muted)', border: '1px solid var(--border)',
+  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 500, padding: '3px 10px',
+  borderRadius: 999, background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)',
 };
 
 const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
@@ -87,16 +88,7 @@ const OpeningsPage: React.FC = () => {
   const submitSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(1); load({ q, page: 1 }); };
 
   return (
-    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
-      <Reveal>
-        <div className="brass-rule" style={{ marginBottom: 14 }} />
-        <span className="ledger-label" style={{ color: 'var(--brass)' }}>Internships &amp; jobs</span>
-        <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Openings</h1>
-        <p style={{ textAlign: 'left', color: 'var(--text-muted)', marginTop: 10, fontSize: 14 }}>
-          Internships and jobs from our recruiters.
-        </p>
-      </Reveal>
-
+    <section style={{ padding: '6px clamp(20px,10vw,64px) 80px' }}>
       <form onSubmit={submitSearch} style={{ display: 'flex', gap: 10, margin: '22px 0 20px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subtle)' }} />
@@ -106,17 +98,17 @@ const OpeningsPage: React.FC = () => {
           options={[{ value: '', label: 'Any type' }, { value: 'internship', label: 'Internship' }, { value: 'job', label: 'Job' }]} />
         <SelectField aria-label="University" value={university} onChange={(v) => { setUniversity(v); setPage(1); }} style={{ width: 190 }}
           options={[{ value: '', label: 'Any university' }, { value: 'Akal University', label: 'Akal University' }, { value: 'Eternal University', label: 'Eternal University' }]} />
-        <button type="submit" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', fontWeight: 550, fontSize: 13, cursor: 'pointer', transition: 'background .18s ease' }}>Search</button>
+        <button type="submit" {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '10px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', fontWeight: 550, fontSize: 14, cursor: 'pointer', transition: 'background .18s ease' }}>Search</button>
       </form>
 
       {loading ? (
         <p style={{ color: 'var(--text-muted)', padding: '40px 0', textAlign: 'center' }}>Loading…</p>
       ) : openings.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '56px 24px', background: 'var(--surface)', border: '1px dashed var(--border-strong)', borderRadius: 'var(--r-card)' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 650, margin: 0 }}>
+          <h3 style={{ fontSize: 19, fontWeight: 650, margin: 0 }}>
             {q || type || university ? 'No openings match your filters' : 'No openings posted yet'}
           </h3>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>
+          <p style={{ fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', textAlign: 'center' }}>
             {q || type || university ? 'Try a broader search, or clear the filters to see everything.' : 'Check back soon — new roles from recruiting partners appear here.'}
           </p>
           {(q || type || university) && (
@@ -129,16 +121,18 @@ const OpeningsPage: React.FC = () => {
                 else { setType(''); setUniversity(''); }
               }}
               {...hoverBg('var(--primary-hover)', 'var(--primary)')}
-              style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}
+              style={{ marginTop: 16, padding: '10px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', transition: 'background .18s ease' }}
             >
               Clear filters
             </button>
           )}
         </div>
       ) : (
-        /* Two cards per row — equal heights, staggered entrance, springy lift on hover */
-        <div data-kp-split style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'stretch' }}>
-          {openings.map((o, i) => (
+        /* Two cards per row — equal heights; all details visible */
+        <div data-kp-split style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, alignItems: 'stretch' }}>
+          {openings.map((o, i) => {
+            const hue = avatarColor(o.company);
+            return (
             <motion.article
               key={o._id}
               initial={{ opacity: 0, y: 22 }}
@@ -146,19 +140,19 @@ const OpeningsPage: React.FC = () => {
               viewport={{ once: true, margin: '-4% 0px' }}
               whileHover={{ y: -5 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: (i % 2) * 0.08 }}
-              style={{ ...card, padding: 20, height: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', transition: 'border-color .18s, box-shadow .18s' }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--primary) 35%, var(--border))'; e.currentTarget.style.boxShadow = '0 16px 32px -24px rgba(0,0,0,.4)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
+              style={{ ...card, padding: 24, height: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', background: `color-mix(in srgb, ${hue} 18%, var(--surface))`, border: `1px solid color-mix(in srgb, ${hue} 28%, var(--border))`, transition: 'border-color .18s, box-shadow .18s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = `color-mix(in srgb, ${hue} 42%, var(--border))`; e.currentTarget.style.boxShadow = `0 20px 38px -24px color-mix(in srgb, ${hue} 45%, transparent)`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = `color-mix(in srgb, ${hue} 28%, var(--border))`; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: 14, minWidth: 0 }}>
-                  <span aria-hidden style={{ width: 48, height: 48, borderRadius: 12, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: '#fff', background: avatarColor(o.company) }}>
+                  <span aria-hidden style={{ width: 48, height: 48, borderRadius: 12, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 17, color: '#fff', background: hue }}>
                     {companyInitials(o.company)}
                   </span>
                   <div style={{ minWidth: 0 }}>
-                    <h2 className="font-display" style={{ fontSize: 18, fontWeight: 500, margin: 0, letterSpacing: '-.01em' }}>{o.title}</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, color: 'var(--text-muted)', fontSize: 13.5, flexWrap: 'wrap' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 550, color: 'var(--text)' }}><Building2 size={14} /> {o.company}</span>
+                    <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0, letterSpacing: '-.01em' }}>{o.title}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, color: 'var(--text-muted)', fontSize: 14.5, flexWrap: 'wrap' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 600, color: 'var(--text)' }}><Building2 size={14} /> {o.company}</span>
                       {o.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><MapPin size={14} /> {o.location}</span>}
                       {o.work_mode && <span style={{ textTransform: 'capitalize' }}>{o.work_mode}</span>}
                     </div>
@@ -172,35 +166,32 @@ const OpeningsPage: React.FC = () => {
                 </div>
               </div>
 
-              <p style={{ marginTop: 12, fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.6, whiteSpace: 'pre-wrap', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{o.description}</p>
+              <p style={{ marginTop: 16, fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{o.description}</p>
 
               {o.skills?.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-                  {o.skills.slice(0, 5).map((s) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9, marginTop: 16 }}>
+                  {o.skills.map((s) => (
                     <span key={s._id} style={pill('var(--surface-2)', 'var(--text-muted)')}>{s.displayName || s.name}</span>
                   ))}
-                  {o.skills.length > 5 && (
-                    <span className="data" style={pill('transparent', 'var(--text-subtle)')}>+{o.skills.length - 5}</span>
-                  )}
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 'auto', paddingTop: 14, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 'auto', paddingTop: 18, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                   {o.eligible_universities?.length > 0 && <span style={metaPill}><GraduationCap size={13} /> {o.eligible_universities.map((u) => u.replace(' University', '')).join(', ')}</span>}
                   {typeof o.min_experience === 'number' && o.min_experience > 0 && <span style={metaPill}><Clock size={13} /> {o.min_experience} mo+</span>}
                   {o.apply_by && <span style={metaPill}><CalendarClock size={13} /> Apply by {fmtDate(o.apply_by)}</span>}
                   {typeof o.application_count === 'number' && o.application_count > 0 && <span style={metaPill}><Users size={13} /> <span className="data">{o.application_count.toLocaleString()}</span> applied</span>}
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   {o.apply_url && (
-                    <a href={o.apply_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 13, textDecoration: 'none' }}>External link <ArrowUpRight size={14} /></a>
+                    <a href={o.apply_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 550, fontSize: 14, textDecoration: 'none' }}>External link <ArrowUpRight size={14} /></a>
                   )}
                   {o.has_applied ? (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 600, fontSize: 13.5 }}><Check size={15} /> Applied</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', color: 'var(--primary)', fontWeight: 600, fontSize: 14.5 }}><Check size={15} /> Applied</span>
                   ) : (
                     (!user || isStudent) && (
-                      <button onClick={() => apply(o)} disabled={applying === o._id} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 13.5, border: 'none', cursor: 'pointer', opacity: applying === o._id ? 0.7 : 1, transition: 'background .18s ease' }}>
+                      <button onClick={() => apply(o)} disabled={applying === o._id} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14.5, border: 'none', cursor: 'pointer', opacity: applying === o._id ? 0.7 : 1, transition: 'background .18s ease' }}>
                         {applying === o._id ? 'Applying…' : 'Apply'}
                       </button>
                     )
@@ -208,16 +199,17 @@ const OpeningsPage: React.FC = () => {
                 </div>
               </div>
             </motion.article>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {pagination && pagination.totalPages > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Page <span className="data">{pagination.page}</span> of <span className="data">{pagination.totalPages}</span> · <AnimatedNumber className="data" value={pagination.total} /> openings</span>
+          <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>Page <span className="data">{pagination.page}</span> of <span className="data">{pagination.totalPages}</span> · <AnimatedNumber className="data" value={pagination.total} /> openings</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ padding: '8px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', opacity: page <= 1 ? 0.5 : 1 }}>Previous</button>
-            <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={page >= pagination.totalPages} style={{ padding: '8px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', opacity: page >= pagination.totalPages ? 0.5 : 1 }}>Next</button>
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '8px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, cursor: 'pointer', opacity: page <= 1 ? 0.5 : 1, transition: 'background .18s ease' }}>Previous</button>
+            <button onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))} disabled={page >= pagination.totalPages} {...hoverBg('var(--surface-3)', 'var(--surface-2)')} style={{ padding: '8px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 550, cursor: 'pointer', opacity: page >= pagination.totalPages ? 0.5 : 1, transition: 'background .18s ease' }}>Next</button>
           </div>
         </div>
       )}
