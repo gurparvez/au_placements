@@ -17,17 +17,17 @@ import { SelectField, DateField } from '@/components/ui/select-field';
 /* ------------------------------ styles ------------------------------ */
 
 const card: React.CSSProperties = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14,
+  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9,
 };
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)',
   border: '1px solid var(--border-strong)', background: 'var(--bg-2)',
-  color: 'var(--text)', fontSize: 14, outline: 'none',
+  color: 'var(--text)', fontSize: 15, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
-  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
 const hoverBg = (over: string, base: string) => ({
@@ -37,10 +37,11 @@ const hoverBg = (over: string, base: string) => ({
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
-  fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border)',
+  transition: 'background .18s ease',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)',
+  display: 'block', fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)',
 };
 
 const TYPES: PlacementType[] = ['job', 'internship', 'ppo'];
@@ -107,7 +108,7 @@ const StudentPicker: React.FC<{
         display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
         borderRadius: 'var(--r-ctl)', border: '1px solid var(--primary)', background: 'var(--primary-soft)',
       }}>
-        <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600, textTransform: 'capitalize', minWidth: 0 }}>
+        <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600, textTransform: 'capitalize', minWidth: 0 }}>
           {fullName(value)}
           <span style={{ fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none' }}>
             {value.auid ? ` · AUID ${value.auid}` : ''}
@@ -136,7 +137,7 @@ const StudentPicker: React.FC<{
           maxHeight: 220, overflowY: 'auto', boxShadow: 'var(--shadow)', padding: 4,
         }}>
           {searching && !results.length ? (
-            <div style={{ padding: 12, fontSize: 12.5, color: 'var(--text-muted)' }}>Searching…</div>
+            <div style={{ padding: 12, fontSize: 13.5, color: 'var(--text-muted)' }}>Searching…</div>
           ) : (
             results.map((r) => (
               <button
@@ -146,7 +147,7 @@ const StudentPicker: React.FC<{
                 style={{
                   display: 'block', width: '100%', textAlign: 'left', padding: '9px 11px',
                   border: 'none', background: 'transparent', cursor: 'pointer', borderRadius: 8,
-                  fontSize: 13, color: 'var(--text)',
+                  fontSize: 14, color: 'var(--text)',
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
@@ -257,10 +258,10 @@ function PlacementModal({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit placement' : 'Record placement'} style={{ ...card, position: 'relative', width: 'min(580px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit placement' : 'Record placement'} style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', borderRadius: 18, background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', position: 'relative', width: 'min(580px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
         <div className="brass-rule" style={{ marginBottom: 12 }} />
-        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit placement' : 'Record placement'}</h2>
-        <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 20, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit placement' : 'Record placement'}</h2>
+        <p style={{ margin: '6px 0 18px', fontSize: 14, color: 'var(--text-muted)' }}>
           Only <strong>accepted</strong>, <strong>joined</strong>, and <strong>completed</strong> count towards statistics.
         </p>
 
@@ -326,7 +327,7 @@ function PlacementModal({
                     border: `1px solid ${form.source === s ? 'var(--primary)' : 'var(--border)'}`,
                     background: form.source === s ? 'var(--primary-soft)' : 'transparent',
                     color: form.source === s ? 'var(--primary)' : 'var(--text-muted)',
-                    fontWeight: 600, fontSize: 13,
+                    fontWeight: 600, fontSize: 14,
                   }}>
                   {s === 'campus' ? 'On campus' : 'Off campus'}
                 </button>
@@ -349,10 +350,10 @@ function PlacementModal({
 /* ------------------------------ panel ------------------------------ */
 
 const th: React.CSSProperties = {
-  padding: '12px 14px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase',
+  padding: '12px 14px', fontWeight: 600, fontSize: 13, textTransform: 'uppercase',
   letterSpacing: '.04em', whiteSpace: 'nowrap', textAlign: 'left',
 };
-const td: React.CSSProperties = { padding: '12px 14px', fontSize: 13.5, whiteSpace: 'nowrap' };
+const td: React.CSSProperties = { padding: '12px 14px', fontSize: 14.5, whiteSpace: 'nowrap' };
 
 const PlacementsPanel: React.FC = () => {
   const [rows, setRows] = useState<PlacementRow[]>([]);
@@ -435,8 +436,8 @@ const PlacementsPanel: React.FC = () => {
       {/* Section header — serif title + record count; primary action sits top-right */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
         <div style={{ minWidth: 0 }}>
-          <h2 className="font-display" style={{ margin: 0, fontSize: 18, fontWeight: 500, letterSpacing: '-.01em' }}>Placement records</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--text-muted)' }}>
+          <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Placement records</h2>
+          <p style={{ margin: '3px 0 0', fontSize: 14, color: 'var(--text-muted)' }}>
             <span className="data">{total.toLocaleString()}</span> record{total === 1 ? '' : 's'} on file
           </p>
         </div>
@@ -503,7 +504,7 @@ const PlacementsPanel: React.FC = () => {
                       <td style={{ ...td, fontWeight: 600, textTransform: 'capitalize' }}>
                         {fullName(r.student)}
                         {r.student?.auid && (
-                          <span className="data" style={{ display: 'block', fontSize: 11.5, fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none' }}>
+                          <span className="data" style={{ display: 'block', fontSize: 12.5, fontWeight: 400, color: 'var(--text-muted)', textTransform: 'none' }}>
                             AUID {r.student.auid}
                           </span>
                         )}
@@ -511,7 +512,7 @@ const PlacementsPanel: React.FC = () => {
                       <td style={td}>{r.company}</td>
                       <td style={{ ...td, color: 'var(--text-muted)' }}>{r.role}</td>
                       <td style={td}>
-                        <span className="data" style={{ fontSize: 10.5, fontWeight: 650, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>
+                        <span className="data" style={{ fontSize: 11.5, fontWeight: 650, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--text-subtle)' }}>
                           {r.type}
                         </span>
                       </td>
@@ -554,7 +555,7 @@ const PlacementsPanel: React.FC = () => {
 
       {pages > 1 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-          <span className="data" style={{ fontSize: 13, color: 'var(--text-muted)' }}>Page {page} of {pages} · {total.toLocaleString()} records</span>
+          <span className="data" style={{ fontSize: 14, color: 'var(--text-muted)' }}>Page {page} of {pages} · {total.toLocaleString()} records</span>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} style={{ ...btnGhost, opacity: page <= 1 ? 0.5 : 1 }}>Previous</button>
             <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages} style={{ ...btnGhost, opacity: page >= pages ? 0.5 : 1 }}>Next</button>
