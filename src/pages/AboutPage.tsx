@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { Reveal, Stagger, StaggerItem } from '@/components/motion';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-const GUTTER = 'clamp(20px,10vw,112px)';
+const GUTTER = 'clamp(20px,10vw,64px)';
 
 const TRUST_STATS = [
   { num: '130+', label: 'Akal Academies' },
@@ -59,6 +59,19 @@ const hoverBg = (over: string, base: string) => ({
   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
   onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
 });
+/* Soft lift on the image-led cards. */
+const hoverLift = {
+  onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.transform = 'translateY(-4px)';
+    e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--primary) 35%, var(--border))';
+    e.currentTarget.style.boxShadow = '0 18px 34px -24px rgba(0,0,0,.42)';
+  },
+  onMouseLeave: (e: React.MouseEvent<HTMLElement>) => {
+    e.currentTarget.style.transform = 'none';
+    e.currentTarget.style.borderColor = 'var(--border)';
+    e.currentTarget.style.boxShadow = 'var(--shadow)';
+  },
+};
 
 /* One consistent section opener — mirrors the home page. */
 const SectionHead: React.FC<{ eyebrow: string; title: string }> = ({ eyebrow, title }) => (
@@ -107,25 +120,11 @@ const Photo: React.FC<{ src: string; alt: string; ratio?: string; position?: str
 const AboutPage: React.FC = () => {
   return (
     <>
-      {/* ===================== MASTHEAD ===================== */}
-      <section style={{ padding: `64px ${GUTTER} 24px` }}>
-        <Reveal>
-          <div className="brass-rule" style={{ marginBottom: 14 }} />
-          <span className="ledger-label" style={{ color: 'var(--brass)' }}>About the register</span>
-          <h1 className="font-display" style={{ fontSize: 'clamp(30px,4.5vw,48px)', lineHeight: 1.08, letterSpacing: '-.02em', fontWeight: 500, margin: '12px 0 0' }}>
-            One Trust. Two universities. A timeless idea.
-          </h1>
-          <p style={{ textAlign: 'left', fontSize: 'clamp(16px,1.7vw,19px)', color: 'var(--text-muted)', margin: '20px 0 0', lineHeight: 1.65 }}>
-            Kalgidhar Placements is run by The Kalgidhar Trust, Baru Sahib, the social and educational movement behind Akal University and Eternal University. This is the story of the institutions whose graduates you meet here.
-          </p>
-        </Reveal>
-      </section>
-
       {/* ===================== THE TRUST ===================== */}
-      <section style={{ padding: `48px ${GUTTER} 0` }}>
+      <section style={{ padding: `24px ${GUTTER} 0` }}>
         {/* Full-bleed photo banner — the story sits on the campus itself, behind a soft tint */}
         <Reveal>
-          <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', border: '1px solid var(--border)', minHeight: 'clamp(340px,40vw,460px)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ position: 'relative', border: '1px solid var(--border)', borderRadius: 20, boxShadow: 'var(--shadow)', overflow: 'hidden', minHeight: 'clamp(340px,40vw,460px)', display: 'flex', alignItems: 'center' }}>
             <img
               src="/baru_sahib.webp"
               alt="Baru Sahib campus in the Himalayan foothills"
@@ -138,15 +137,15 @@ const AboutPage: React.FC = () => {
             <div style={{ position: 'relative', padding: 'clamp(30px,4.5vw,56px)', maxWidth: 640 }}>
               <span className="ledger-label" style={{ color: '#d8b25a' }}>Established 1956</span>
               <h2 className="font-display" style={{ color: '#fff', fontSize: 'clamp(26px,3.4vw,38px)', letterSpacing: '-.02em', fontWeight: 500, margin: '10px 0 0' }}>The Kalgidhar Trust</h2>
-              <p style={{ textAlign: 'left', fontSize: 15.5, color: 'rgba(255,255,255,.88)', margin: '16px 0 0', lineHeight: 1.65, maxWidth: '56ch' }}>
+              <p style={{ textAlign: 'left', fontSize: 16.5, color: 'rgba(255,255,255,.88)', margin: '16px 0 0', lineHeight: 1.65, maxWidth: '56ch' }}>
                 A movement for value-based, modern education rooted in service. The first Akal Academy opened at Baru Sahib in 1986 with just five students. Today the Trust runs a network of academies and two universities across north India.
               </p>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 22, padding: '8px 16px', borderRadius: 'var(--r-pill)', background: 'rgba(255,255,255,.13)', border: '1px solid rgba(255,255,255,.3)' }}>
-                <span style={{ fontSize: 13.5, fontWeight: 650, color: '#fff', letterSpacing: '.04em' }}>Educate · Enshrine · Empower</span>
+                <span style={{ fontSize: 14.5, fontWeight: 650, color: '#fff', letterSpacing: '.04em' }}>Educate · Enshrine · Empower</span>
               </div>
             </div>
 
-            <span className="ledger-label" style={{ position: 'absolute', right: 22, bottom: 18, color: 'rgba(255,255,255,.75)', fontSize: 10.5 }}>
+            <span className="ledger-label" style={{ position: 'absolute', right: 22, bottom: 18, color: 'rgba(255,255,255,.75)', fontSize: 11.5 }}>
               Baru Sahib · Himachal Pradesh
             </span>
           </div>
@@ -154,7 +153,7 @@ const AboutPage: React.FC = () => {
 
         {/* stat lattice */}
         <Stagger stagger={0.05}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 1, marginTop: 44, background: 'var(--border)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 1, marginTop: 44, background: 'var(--border)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
             {TRUST_STATS.map((ts) => (
               <StaggerItem key={ts.label} style={{ background: 'var(--surface)', padding: '22px 18px' }}>
                 <div className="font-display data" style={{ fontSize: 'clamp(22px,2.6vw,28px)', fontWeight: 500, letterSpacing: '-.01em' }}>{ts.num}</div>
@@ -172,18 +171,17 @@ const AboutPage: React.FC = () => {
           <div data-kp-browse="true" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 18 }}>
             {FOUNDERS.map((fo) => (
               <StaggerItem key={fo.name} style={{ minWidth: 0, height: '100%' }}>
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                  style={{ ...card, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}
+                <div
+                  {...hoverLift}
+                  style={{ ...card, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', transition: 'transform .18s ease, border-color .18s ease, box-shadow .18s ease' }}
                 >
                   <Photo src={fo.img} alt={`Portrait of ${fo.name}`} ratio="4/4.4" position="top" style={{ borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border)' }} />
                   <div style={{ padding: '18px 20px 20px' }}>
-                    <div className="font-display" style={{ fontWeight: 500, fontSize: 19, letterSpacing: '-.01em' }}>{fo.name}</div>
+                    <div className="font-display" style={{ fontWeight: 700, fontSize: 20, letterSpacing: '-.01em' }}>{fo.name}</div>
                     <div className="ledger-label" style={{ color: 'var(--brass)', marginTop: 5 }}>{fo.years}</div>
-                    <p style={{ textAlign: 'left', fontSize: 13.5, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.6 }}>{fo.note}</p>
+                    <p style={{ textAlign: 'left', fontSize: 14.5, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.6 }}>{fo.note}</p>
                   </div>
-                </motion.div>
+                </div>
               </StaggerItem>
             ))}
           </div>
@@ -196,18 +194,17 @@ const AboutPage: React.FC = () => {
         <div data-kp-2col="true" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, alignItems: 'stretch' }}>
           {UNIVERSITIES.map((u, i) => (
             <Reveal key={u.name} delay={i * 0.08} style={{ height: '100%' }}>
-              <motion.div
-                whileHover={{ y: -4 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                style={{ ...card, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}
+              <div
+                {...hoverLift}
+                style={{ ...card, overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column', transition: 'transform .18s ease, border-color .18s ease, box-shadow .18s ease' }}
               >
                 <Photo src={u.img} alt={u.name} ratio="16/9" style={{ borderRadius: 0, border: 'none', borderBottom: '1px solid var(--border)' }} />
                 <div style={{ padding: 28, display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <span className="ledger-label">{u.loc}</span>
-                  <h3 className="font-display" style={{ fontSize: 24, letterSpacing: '-.02em', fontWeight: 500, margin: '10px 0 0' }}>{u.name}</h3>
-                  <p style={{ textAlign: 'left', fontSize: 14.5, color: 'var(--text-muted)', margin: '14px 0 0', lineHeight: 1.7 }}>{u.body}</p>
+                  <h3 className="font-display" style={{ fontSize: 25, letterSpacing: '-.02em', fontWeight: 700, margin: '10px 0 0' }}>{u.name}</h3>
+                  <p style={{ textAlign: 'left', fontSize: 15.5, color: 'var(--text-muted)', margin: '14px 0 0', lineHeight: 1.7 }}>{u.body}</p>
                 </div>
-              </motion.div>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -218,8 +215,8 @@ const AboutPage: React.FC = () => {
         <Stagger stagger={0.1} className="kp-ledger" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
           {VALUES.map((vl, i) => (
             <StaggerItem key={vl.word} style={{ paddingLeft: i === 0 ? 0 : 26, paddingRight: 26 }}>
-              <div className="font-display" style={{ fontSize: 26, fontWeight: 500, letterSpacing: '-.01em', color: 'var(--brass)' }}>{vl.word}</div>
-              <p style={{ textAlign: 'left', fontSize: 14.5, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.6 }}>{vl.body}</p>
+              <div className="font-display" style={{ fontSize: 27, fontWeight: 500, letterSpacing: '-.01em', color: 'var(--brass)' }}>{vl.word}</div>
+              <p style={{ textAlign: 'left', fontSize: 15.5, color: 'var(--text-muted)', margin: '10px 0 0', lineHeight: 1.6 }}>{vl.body}</p>
             </StaggerItem>
           ))}
         </Stagger>
@@ -231,10 +228,10 @@ const AboutPage: React.FC = () => {
           <div style={{ ...card, borderRadius: 20, padding: 'clamp(28px,4vw,44px)' }}>
             <h2 className="font-display" style={{ fontSize: 'clamp(22px,3vw,30px)', letterSpacing: '-.02em', fontWeight: 500, margin: 0, maxWidth: '24ch', textWrap: 'balance' }}>Meet the students this story produced.</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 22 }}>
-              <Link to="/students" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 14.5, textDecoration: 'none', transition: 'background .18s ease' }}>Browse the register <span aria-hidden>→</span></Link>
-              <Link to="/login" {...hoverBg('var(--surface-2)', 'var(--surface)')} style={{ display: 'inline-flex', alignItems: 'center', padding: '12px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 14.5, textDecoration: 'none', transition: 'background .18s ease' }}>Create your profile</Link>
+              <Link to="/students" {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15.5, textDecoration: 'none', transition: 'background .18s ease' }}>Browse the register <span aria-hidden>→</span></Link>
+              <Link to="/login" {...hoverBg('var(--surface-2)', 'var(--surface)')} style={{ display: 'inline-flex', alignItems: 'center', padding: '12px 20px', borderRadius: 'var(--r-ctl)', background: 'var(--surface)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontWeight: 600, fontSize: 15.5, textDecoration: 'none', transition: 'background .18s ease' }}>Create your profile</Link>
             </div>
-            <p style={{ textAlign: 'left', fontSize: 12.5, color: 'var(--text-subtle)', margin: '24px 0 0', lineHeight: 1.6 }}>
+            <p style={{ textAlign: 'left', fontSize: 13.5, color: 'var(--text-subtle)', margin: '24px 0 0', lineHeight: 1.6 }}>
               Sources &amp; further reading: auts.ac.in · eternaluniversity.edu.in · barusahib.org. Figures are indicative and drawn from the Trust's public materials.
             </p>
           </div>
