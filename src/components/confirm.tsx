@@ -74,32 +74,33 @@ export const ConfirmHost: React.FC = () => {
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
             style={{
               position: 'relative', width: 'min(420px, 100%)', padding: '22px 22px 18px',
-              background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow)',
+              background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: 'var(--shadow)',
             }}
           >
             <div className="brass-rule" style={{ marginBottom: 12, background: o.danger ? 'var(--danger)' : undefined }} />
-            <h2 className="font-display" style={{ fontSize: 18.5, fontWeight: 500, letterSpacing: '-.015em', margin: 0, lineHeight: 1.3 }}>{o.title}</h2>
+            <h2 className="font-display" style={{ fontSize: 19.5, fontWeight: 500, letterSpacing: '-.015em', margin: 0, lineHeight: 1.3 }}>{o.title}</h2>
             {o.message && (
-              <p style={{ fontSize: 13.5, color: 'var(--text-muted)', margin: '9px 0 0', lineHeight: 1.55, textAlign: 'left' }}>{o.message}</p>
+              <p style={{ fontSize: 14.5, color: 'var(--text-muted)', margin: '9px 0 0', lineHeight: 1.55, textAlign: 'left' }}>{o.message}</p>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
               <button
                 ref={cancelRef}
                 onClick={() => close(false)}
-                style={{ padding: '9px 16px', borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)', fontWeight: 600, fontSize: 13.5, border: '1px solid var(--border)', cursor: 'pointer', transition: 'background .15s ease' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-3)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                style={{ padding: '9px 16px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer', transition: 'background .18s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface)')}
               >
                 {o.cancelLabel ?? 'Cancel'}
               </button>
               <button
                 onClick={() => close(true)}
                 style={{
-                  padding: '9px 16px', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 13.5, border: 'none', cursor: 'pointer', transition: 'filter .15s ease',
+                  padding: '9px 16px', border: 'none', borderRadius: 'var(--r-ctl)', fontWeight: 600, fontSize: 14.5, cursor: 'pointer',
                   background: o.danger ? 'var(--danger)' : 'var(--primary)', color: o.danger ? '#fff' : 'var(--on-primary)',
+                  transition: 'background .18s ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
-                onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
+                onMouseEnter={(e) => { if (!o.danger) e.currentTarget.style.background = 'var(--primary-hover)'; }}
+                onMouseLeave={(e) => { if (!o.danger) e.currentTarget.style.background = 'var(--primary)'; }}
               >
                 {o.confirmLabel ?? 'Confirm'}
               </button>
