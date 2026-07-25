@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/context/hooks';
-import { Menu } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Menu, Search } from 'lucide-react';
 import { initials } from '@/utils/avatar';
 import NotificationsBell from '@/components/NotificationsBell';
 import MessagesBubble from '@/components/MessagesBubble';
@@ -32,7 +33,7 @@ const Navbar: React.FC = () => {
       if (!n) return;
       const s = (window.scrollY || document.documentElement.scrollTop || 0) > 6;
       n.style.borderBottomColor = s ? 'var(--border)' : 'transparent';
-      n.style.boxShadow = s ? '0 8px 24px -20px rgba(0,0,0,.6)' : 'none';
+      n.style.boxShadow = s ? 'var(--shadow)' : 'none';
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
@@ -43,18 +44,20 @@ const Navbar: React.FC = () => {
     <>
       <header
         ref={headerRef}
+        className="kp-onblue"
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 120,
-          background: 'color-mix(in srgb, var(--bg) 82%, transparent)',
-          backdropFilter: 'saturate(140%) blur(12px)',
-          WebkitBackdropFilter: 'saturate(140%) blur(12px)',
+          background: 'var(--pri)',
+          color: 'var(--text)',
           borderBottom: '1px solid transparent',
           transition: 'border-color .2s ease, box-shadow .2s ease',
         }}
       >
-        <div style={{ width: '100%', padding: '0 12px 0 clamp(20px,3vw,48px)', height: 76, display: 'flex', alignItems: 'center', gap: 14 }}>
+        {/* flowing colour band along the bottom edge */}
+        <span aria-hidden className="kp-grad-rule" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, opacity: 0.7, pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', width: '100%', padding: '0 12px 0 clamp(20px,3vw,48px)', height: 76, display: 'flex', alignItems: 'center', gap: 14 }}>
           <Link
             to="/"
             aria-label="Kalgidhar Placements home"
@@ -73,7 +76,7 @@ const Navbar: React.FC = () => {
             <LogoMark />
             {/* Serif wordmark — the register identity, with a brass line that draws in on hover */}
             <span data-kp-show="desktop" style={{ position: 'relative', display: 'inline-block' }}>
-              <span className="font-display" style={{ fontWeight: 550, fontSize: 27, letterSpacing: '-.018em', lineHeight: 1.15 }}>
+              <span className="font-display" style={{ fontWeight: 550, fontSize: 28, letterSpacing: '-.018em', lineHeight: 1.15 }}>
                 Kalgidhar Placements
               </span>
               <span aria-hidden data-kp-logo-line style={{
@@ -87,13 +90,11 @@ const Navbar: React.FC = () => {
           <nav data-kp-show="desktop" aria-label="Primary" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 'auto' }}>
             {[
               { to: '/', label: 'Home', exact: true },
-              { to: '/feed', label: 'Feed' },
               { to: '/students', label: 'Students' },
               { to: '/openings', label: 'Openings' },
               { to: '/companies', label: 'Companies' },
               ...(user ? [{ to: '/network', label: 'Network' }] : []),
-              { to: '/about', label: 'About' },
-              { to: '/search', label: 'Search' },
+              ...(user ? [{ to: '/feed', label: 'Feed' }] : []),
               ...(isRecruiter || isAdmin ? [{ to: '/recruiter/openings', label: 'My openings' }] : []),
               ...(isAdmin ? [{ to: '/admin', label: 'Admin' }] : []),
             ].map(({ to, label, exact }) => {
@@ -104,23 +105,30 @@ const Navbar: React.FC = () => {
                   to={to}
                   aria-current={active ? 'page' : undefined}
                   style={{
-                    position: 'relative', padding: '8px 13px', borderRadius: 'var(--r-ctl)', fontWeight: active ? 650 : 550,
-                    fontSize: 14, textDecoration: 'none', color: active ? 'var(--text)' : 'var(--text-muted)',
-                    background: active ? 'var(--surface-2)' : 'transparent',
-                    transition: 'color .18s ease, background .18s ease, transform .18s ease',
+                    position: 'relative', padding: '9px 15px', borderRadius: 'var(--r-ctl)', fontWeight: active ? 800 : 650,
+                    fontSize: active ? 17.5 : 16, textDecoration: 'none', color: active ? 'var(--pri-ink)' : 'var(--text-muted)',
+                    background: 'transparent',
+                    transition: 'color .18s ease, transform .18s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--text)';
-                    if (!active) e.currentTarget.style.background = 'var(--surface-2)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.color = 'var(--primary)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    if (!active) { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }
+                    if (!active) e.currentTarget.style.color = 'var(--text-muted)';
                     e.currentTarget.style.transform = 'none';
                   }}
                 >
-                  {label}
-                  {active && <span aria-hidden style={{ position: 'absolute', left: 13, right: 13, bottom: 1, height: 2, borderRadius: 2, background: 'var(--brass)' }} />}
+                  {/* active-page marker — no box; the label brightens, grows a touch, and the underline slides */}
+                  <span style={{ position: 'relative', zIndex: 1 }}>{label}</span>
+                  {active && (
+                    <motion.span
+                      layoutId="nav-active-bar"
+                      aria-hidden
+                      transition={{ type: 'spring', stiffness: 440, damping: 34 }}
+                      style={{ position: 'absolute', left: 12, right: 12, bottom: -2, height: 3, borderRadius: 3, background: 'var(--primary)', zIndex: 1 }}
+                    />
+                  )}
                 </Link>
               );
             })}
@@ -131,6 +139,23 @@ const Navbar: React.FC = () => {
               <span data-kp-sk="true" style={{ width: 38, height: 38, borderRadius: '50%' }} aria-hidden />
             ) : (
               <>
+                {/* Search — a round icon button matching the bell; fills when on /search */}
+                <Link
+                  to="/search"
+                  aria-label="Search"
+                  data-kp-show="desktop"
+                  style={{
+                    position: 'relative', width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: pathname === '/search' ? 'var(--on-primary)' : 'var(--text)',
+                    background: pathname === '/search' ? 'var(--primary)' : 'var(--surface)',
+                    textDecoration: 'none', transition: 'background .18s ease, color .18s ease',
+                  }}
+                  onMouseEnter={(e) => { if (pathname !== '/search') e.currentTarget.style.background = 'var(--surface-2)'; }}
+                  onMouseLeave={(e) => { if (pathname !== '/search') e.currentTarget.style.background = 'var(--surface)'; }}
+                >
+                  <Search size={17} />
+                </Link>
                 {user && (
                   <>
                     <span data-kp-show="desktop"><MessagesBubble /></span>
@@ -141,9 +166,12 @@ const Navbar: React.FC = () => {
                   <Link
                     to="/login"
                     style={{
-                      display: 'inline-flex', alignItems: 'center', padding: '9px 17px', borderRadius: 'var(--r-ctl)',
-                      background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 550, fontSize: 14, textDecoration: 'none',
+                      display: 'inline-flex', alignItems: 'center', padding: '9px 17px', border: 'none', borderRadius: 'var(--r-ctl)',
+                      background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, textDecoration: 'none',
+                      transition: 'background .18s ease',
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--primary-hover)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--primary)')}
                   >
                     Sign in
                   </Link>
@@ -156,16 +184,18 @@ const Navbar: React.FC = () => {
                   style={
                     user
                       ? {
-                          width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontWeight: 600, fontSize: 14, color: 'var(--on-primary)', background: 'var(--primary)',
-                          flex: 'none', cursor: 'pointer', border: '2px solid var(--bg-2)', boxShadow: '0 0 0 1px var(--border)',
+                          width: 38, height: 38, borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', fontWeight: 700, fontSize: 15, color: 'var(--on-primary)', background: 'var(--primary)',
+                          flex: 'none', cursor: 'pointer', transition: 'background .18s ease',
                         }
                       : {
-                          width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center',
+                          width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--border)', display: 'flex', alignItems: 'center',
                           justifyContent: 'center', cursor: 'pointer', color: 'var(--text)',
-                          background: 'var(--surface-2)', border: '1px solid var(--border)',
+                          background: 'var(--surface)', transition: 'background .18s ease',
                         }
                   }
+                  onMouseEnter={(e) => { e.currentTarget.style.background = user ? 'var(--primary-hover)' : 'var(--surface-2)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = user ? 'var(--primary)' : 'var(--surface)'; }}
                 >
                   {user ? initials(user.firstName, user.lastName) || 'U' : <Menu size={19} />}
                 </button>
