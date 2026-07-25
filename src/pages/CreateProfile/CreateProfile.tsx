@@ -243,18 +243,7 @@ const CreateProfile: React.FC = () => {
 
   return (
     <main className="bg-background text-foreground min-h-screen">
-      <div className="flex w-full flex-col px-[clamp(20px,10vw,112px)] pt-24 pb-10">
-        <div className="mb-8">
-          <div className="brass-rule mb-3.5" />
-          <span className="ledger-label text-brass">Build your profile</span>
-          <h1 className="font-display mt-2.5 text-[clamp(28px,4vw,40px)] font-medium tracking-[-.02em]">
-            Create your profile
-          </h1>
-          <p className="text-muted-foreground mt-2 max-w-[65ch] text-sm">
-            Fields marked <span className="text-danger">*</span> are required.
-          </p>
-        </div>
-
+      <div className="flex w-full flex-col px-[clamp(20px,10vw,64px)] pt-10 pb-10">
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           {/* BASIC INFO */}
           <Card>
