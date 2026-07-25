@@ -8,21 +8,21 @@ import { isValidEmail } from '@/utils/validation';
 import { SelectField } from '@/components/ui/select-field';
 
 const SectionCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
-  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 22, marginTop: 16 }}>
+  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: 'var(--shadow)', padding: 22, marginTop: 20 }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16 }}>
-      <span style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--brass-soft)', color: 'var(--brass)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
-      <h2 className="font-display" style={{ margin: 0, fontSize: 15.5, fontWeight: 500 }}>{title}</h2>
+      <span style={{ width: 36, height: 36, borderRadius: 9, background: 'var(--brass-soft)', color: 'var(--brass)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
+      <h2 className="font-display" style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>{title}</h2>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>{children}</div>
   </div>
 );
 
-const label: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 550, marginBottom: 6 };
-const err: React.CSSProperties = { color: 'var(--danger)', fontSize: 12.5, marginTop: 5 };
+const label: React.CSSProperties = { display: 'block', fontSize: 14, fontWeight: 550, marginBottom: 6 };
+const err: React.CSSProperties = { color: 'var(--danger)', fontSize: 13.5, marginTop: 5 };
 const field = (e?: string): React.CSSProperties => ({
   width: '100%', padding: '11px 13px', borderRadius: 'var(--r-ctl)',
   border: `1px solid ${e ? 'var(--danger)' : 'var(--border-strong)'}`,
-  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none',
+  background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none',
 });
 const hoverBg = (over: string, base: string) => ({
   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
@@ -94,9 +94,9 @@ const RecruiterApply: React.FC = () => {
 
   if (done) {
     return (
-      <section style={{ padding: '60px clamp(20px,10vw,112px)', textAlign: 'center' }}>
+      <section style={{ padding: '60px clamp(20px,10vw,64px)', textAlign: 'center' }}>
         <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
-        <h1 className="font-display" style={{ fontSize: 24, fontWeight: 500, letterSpacing: '-.02em', margin: 0 }}>Request submitted</h1>
+        <h1 className="font-display" style={{ fontSize: 25, fontWeight: 500, letterSpacing: '-.02em', margin: 0 }}>Request submitted</h1>
         <p style={{ color: 'var(--text-muted)', marginTop: 12, lineHeight: 1.6 }}>
           Your recruiter account is <strong>pending admin approval</strong>. Sign in once approved.
         </p>
@@ -108,13 +108,8 @@ const RecruiterApply: React.FC = () => {
   }
 
   return (
-    <section style={{ padding: '36px clamp(20px,10vw,112px) 80px' }}>
-      <div className="brass-rule" style={{ marginBottom: 14 }} />
-      <span className="ledger-label" style={{ color: 'var(--brass)' }}>Recruiter access</span>
-      <h1 className="font-display" style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 500, letterSpacing: '-.02em', margin: '10px 0 0' }}>Apply as a recruiter</h1>
-      <p style={{ textAlign: 'left', color: 'var(--text-muted)', margin: '10px 0 0', fontSize: 14 }}>Tell us about you and your company.</p>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 20, padding: '11px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', border: '1px solid var(--primary-soft-border)', color: 'var(--primary)', fontSize: 13.5, fontWeight: 500 }}>
+    <section style={{ padding: '18px clamp(20px,10vw,64px) 80px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 4, padding: '11px 14px', borderRadius: 'var(--r-ctl)', background: 'var(--primary-soft)', border: '1px solid var(--primary-soft-border)', color: 'var(--primary)', fontSize: 14.5, fontWeight: 500 }}>
         <ShieldCheck size={16} /> An admin reviews every request.
       </div>
 
@@ -183,8 +178,8 @@ const RecruiterApply: React.FC = () => {
       </SectionCard>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 }}>
-        <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13.5, textDecoration: 'none' }}><ArrowLeft size={15} /> Back to sign in</Link>
-        <button onClick={submit} disabled={submitting} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '12px 24px', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}>
+        <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 14.5, fontWeight: 500, textDecoration: 'none' }}><ArrowLeft size={15} /> Back to sign in</Link>
+        <button onClick={submit} disabled={submitting} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={{ padding: '12px 24px', border: 'none', borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)', fontWeight: 600, fontSize: 16, cursor: 'pointer', opacity: submitting ? 0.7 : 1, transition: 'background .18s ease' }}>
           {submitting ? 'Submitting…' : 'Submit request'}
         </button>
       </div>
