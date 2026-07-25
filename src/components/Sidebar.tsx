@@ -18,7 +18,7 @@ interface Item {
 
 const rowStyle = (active = false, accent = false): React.CSSProperties => ({
   display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 'var(--r-ctl)',
-  textDecoration: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none', width: '100%',
+  textDecoration: 'none', fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none', width: '100%',
   textAlign: 'left', background: active ? 'var(--primary-soft)' : 'transparent',
   color: active || accent ? 'var(--primary)' : 'var(--text)',
 });
@@ -69,7 +69,7 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
   // mirrors it for small screens where the top-bar links are hidden.
   const mobileItems: Item[] = [
     { to: '/', label: 'Home', icon: <Home size={18} /> },
-    { to: '/feed', label: 'Feed', icon: <Newspaper size={18} /> },
+    { to: '/feed', label: 'Feed', icon: <Newspaper size={18} />, show: !!user },
     { to: '/students', label: 'Students', icon: <GraduationCap size={18} /> },
     { to: '/openings', label: 'Openings', icon: <Briefcase size={18} /> },
     { to: '/companies', label: 'Companies', icon: <Building2 size={18} /> },
@@ -121,7 +121,7 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
         position: 'fixed', right: 12, top: 65, zIndex: 300,
         width: 'fit-content', minWidth: 188, maxWidth: 'min(80vw, 280px)',
         height: 'fit-content', maxHeight: 'calc(100vh - 77px)',
-        background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: 10,
+        background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow)', padding: 10,
         display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', overflowX: 'visible',
         /* Drops down from under the avatar, matching the bell popup. Transform must
            clear entirely when open — a lingering transform makes this panel the
@@ -130,7 +130,6 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
         transformOrigin: 'top right',
         opacity: open ? 1 : 0,
         transition: 'transform .18s cubic-bezier(.16,1,.3,1), opacity .16s ease, visibility .18s',
-        boxShadow: open ? '0 12px 40px -12px rgba(0,0,0,.45)' : 'none',
         pointerEvents: open ? 'auto' : 'none',
         visibility: open ? 'visible' : 'hidden', // closed drawer leaves the tab order entirely
       }}
@@ -141,14 +140,14 @@ const Sidebar: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
           <span style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
             <span aria-hidden style={{
               width: 30, height: 30, borderRadius: '50%', flex: 'none', display: 'inline-flex', alignItems: 'center',
-              justifyContent: 'center', fontWeight: 600, fontSize: 12.5, color: 'var(--on-primary)', background: 'var(--primary)',
+              justifyContent: 'center', fontWeight: 700, fontSize: 13.5, color: 'var(--on-primary)', background: 'var(--primary)',
             }}>{initials(user.firstName, user.lastName) || 'U'}</span>
-            <span style={{ fontWeight: 700, fontSize: 14.5, textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ fontWeight: 700, fontSize: 15.5, textTransform: 'capitalize', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Your account'}
             </span>
           </span>
         ) : (
-          <span style={{ fontWeight: 700, fontSize: 15 }}>Menu</span>
+          <span style={{ fontWeight: 700, fontSize: 16 }}>Menu</span>
         )}
         {user && <span data-kp-show="mobile" style={{ flex: 'none' }}><NotificationsBell fixedPanel /></span>}
       </div>
