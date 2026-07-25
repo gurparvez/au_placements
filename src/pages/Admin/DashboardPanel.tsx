@@ -25,14 +25,18 @@ import { SelectField, DateField } from '@/components/ui/select-field';
 const PANEL_PAD = 18;
 
 const card: React.CSSProperties = {
-  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)',
+  background: 'var(--surface)', border: '1px solid var(--border)',
+  borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow)',
 };
+const divider = '1px solid var(--border)';
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px',
-  borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
-  fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  background: 'var(--surface-2)', color: 'var(--text)',
+  border: '1px solid var(--border)', borderRadius: 'var(--r-ctl)',
+  fontWeight: 600, fontSize: 14, cursor: 'pointer',
+  transition: 'background .18s ease',
 };
-const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 12.5 };
+const muted: React.CSSProperties = { color: 'var(--text-muted)', fontSize: 13.5 };
 const grid2: React.CSSProperties = {
   display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 16,
 };
@@ -70,7 +74,7 @@ const Panel: React.FC<{
     <div style={{ ...card, padding: PANEL_PAD, minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 className="font-display" style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: '-.01em' }}>{title}</h3>
+          <h3 className="font-display" style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: '-.01em' }}>{title}</h3>
           {subtitle && <p style={{ ...muted, margin: '4px 0 0', lineHeight: 1.5 }}>{subtitle}</p>}
         </div>
         {action}
@@ -108,20 +112,20 @@ const StatCard: React.FC<{
       <div className="data" style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-.02em', lineHeight: 1.1 }}>
         {typeof value === 'number' ? <AnimatedNumber value={value} decimals={decimalsOf(value)} /> : value}
       </div>
-      <div style={{ fontSize: 14, fontWeight: 650, color: 'var(--text-muted)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-      {hint && <div style={{ fontSize: 12.5, fontWeight: 550, color: 'var(--text-subtle)', marginTop: 3, lineHeight: 1.45 }}>{hint}</div>}
+      <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-muted)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
+      {hint && <div style={{ fontSize: 13.5, fontWeight: 550, color: 'var(--text-subtle)', marginTop: 3, lineHeight: 1.45 }}>{hint}</div>}
     </div>
   </MotionCard>
 );
 
 const th: React.CSSProperties = {
-  padding: '9px 12px', fontWeight: 600, fontSize: 11, textTransform: 'uppercase',
+  padding: '9px 12px', fontWeight: 600, fontSize: 12, textTransform: 'uppercase',
   letterSpacing: '.04em', whiteSpace: 'nowrap', textAlign: 'left', color: 'var(--text-subtle)',
 };
-const td: React.CSSProperties = { padding: '10px 12px', fontSize: 12.5, whiteSpace: 'nowrap' };
+const td: React.CSSProperties = { padding: '10px 12px', fontSize: 13.5, whiteSpace: 'nowrap' };
 
 const Table: React.FC<{ headers: string[]; children: React.ReactNode }> = ({ headers, children }) => (
-  <div style={{ overflowX: 'auto', margin: `0 -${PANEL_PAD}px -${PANEL_PAD}px`, borderTop: '1px solid var(--border)' }}>
+  <div style={{ overflowX: 'auto', margin: `0 -${PANEL_PAD}px -${PANEL_PAD}px`, borderTop: divider }}>
     <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 460 }}>
       <thead>
         <tr style={{ background: 'var(--surface-2)' }}>{headers.map((h, i) => <th key={i} style={th}>{h}</th>)}</tr>
@@ -137,11 +141,10 @@ const Note: React.FC<{ children: React.ReactNode; tone?: string; icon?: React.El
   <Reveal>
     <div style={{
       ...card, padding: 14, display: 'flex', alignItems: 'center', gap: 11,
-      borderColor: `color-mix(in srgb, ${tone} 40%, var(--border))`,
-      background: `color-mix(in srgb, ${tone} 7%, var(--surface))`,
+      background: `color-mix(in srgb, ${tone} 9%, var(--surface))`,
     }}>
       <Icon size={18} style={{ color: tone, flex: 'none' }} />
-      <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>{children}</span>
+      <span style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.5 }}>{children}</span>
     </div>
   </Reveal>
 );
@@ -186,7 +189,7 @@ const FilterBar: React.FC<{
         {activeCount > 0 && (
           <button
             onClick={() => onChange({})}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '3px 6px', borderRadius: 6, transition: 'color .16s ease' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '3px 6px', borderRadius: 6, transition: 'color .16s ease' }}
             onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text)')}
             onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
@@ -194,7 +197,7 @@ const FilterBar: React.FC<{
           </button>
         )}
         {updatedAt && (
-          <span className="data" style={{ fontSize: 11, color: 'var(--text-subtle)', marginLeft: 6 }}>
+          <span className="data" style={{ fontSize: 12, color: 'var(--text-subtle)', marginLeft: 6 }}>
             Updated {new Date(updatedAt).toLocaleTimeString()}
           </span>
         )}
@@ -230,7 +233,7 @@ const FilterBar: React.FC<{
           options={withAll('All types', (options?.types ?? []).map((t) => ({ value: t, label: t === 'ppo' ? 'PPO' : t.charAt(0).toUpperCase() + t.slice(1) })))} />
         <div style={{ display: 'flex', gap: 7, alignItems: 'center', gridColumn: 'span 2', minWidth: 0 }}>
           <DateField aria-label="From" title="Offers from" value={filters.from ?? ''} onChange={(v) => set('from', v)} />
-          <span style={{ color: 'var(--text-subtle)', flex: 'none', fontSize: 12 }}>→</span>
+          <span style={{ color: 'var(--text-subtle)', flex: 'none', fontSize: 13 }}>→</span>
           <DateField aria-label="To" title="Offers until" value={filters.to ?? ''} onChange={(v) => set('to', v)} />
         </div>
       </div>
@@ -307,10 +310,10 @@ const DashboardPanel: React.FC = () => {
   }, [data]);
 
   if (loading && !data) {
-    return <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)', marginTop: 18 }}>Loading dashboard…</div>;
+    return <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontWeight: 600, marginTop: 18 }}>Loading dashboard…</div>;
   }
   if (!data || !o) {
-    return <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)', marginTop: 18 }}>No data available.</div>;
+    return <div style={{ ...card, padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontWeight: 600, marginTop: 18 }}>No data available.</div>;
   }
 
   const fy = data.final_year;
@@ -320,11 +323,10 @@ const DashboardPanel: React.FC = () => {
     <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 16, opacity: loading ? 0.6 : 1, transition: 'opacity .2s' }}>
       <FilterBar filters={filters} options={options} onChange={setFilters} updatedAt={data.generated_at} onRefresh={load} />
 
-      {/* section sub-tabs — same segmented card as the top tabs, sliding active pill */}
+      {/* section sub-tabs — soft segmented card, sliding primary-soft active pill */}
       <div style={{
+        ...card,
         display: 'flex', gap: 4, flexWrap: 'wrap', padding: 6,
-        background: 'var(--surface)', border: '1px solid var(--border)',
-        borderRadius: 'var(--r-card)', boxShadow: 'var(--shadow-sm)',
       }}>
         {SECTIONS.map(([s, label, Icon]) => {
           const active = section === s;
@@ -338,8 +340,8 @@ const DashboardPanel: React.FC = () => {
                 position: 'relative', flex: 1, minWidth: 130, display: 'inline-flex', alignItems: 'center',
                 justifyContent: 'center', gap: 7, padding: '10px 8px', border: 'none', cursor: 'pointer',
                 background: 'transparent', borderRadius: 'var(--r-ctl)',
-                fontWeight: active ? 700 : 600, fontSize: 13.5,
-                color: active ? 'var(--pri-ink)' : 'var(--text-muted)',
+                fontWeight: active ? 700 : 600, fontSize: 14.5,
+                color: active ? 'var(--primary)' : 'var(--text-muted)',
                 transition: 'color .18s ease, background .18s ease',
               }}
             >
@@ -347,7 +349,7 @@ const DashboardPanel: React.FC = () => {
                 <motion.span
                   layoutId="admin-subtab"
                   aria-hidden
-                  style={{ position: 'absolute', inset: 0, background: 'var(--pri-soft)', borderRadius: 'var(--r-ctl)' }}
+                  style={{ position: 'absolute', inset: 0, background: 'var(--primary-soft)', borderRadius: 'var(--r-ctl)' }}
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               )}
@@ -410,7 +412,7 @@ const DashboardPanel: React.FC = () => {
 
           <Reveal style={{ minWidth: 0 }}>
             <div style={{ ...card, padding: PANEL_PAD }}>
-              <h3 className="font-display" style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 500, letterSpacing: '-.01em' }}>Final year — batch of {fy.batch}</h3>
+              <h3 className="font-display" style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, letterSpacing: '-.01em' }}>Final year — batch of {fy.batch}</h3>
               <p style={{ ...muted, margin: '0 0 16px' }}>
                 {fy.enrolled} enrolled · {fy.opted_out} not seeking placement · {fy.total} in the pool.
               </p>
@@ -428,7 +430,7 @@ const DashboardPanel: React.FC = () => {
                     {/* Mini graph: how this batch compares to the others */}
                     {data.trends.yoy.length > 1 && (
                       <div>
-                        <span style={{ ...muted, fontSize: 11.5, fontWeight: 600, display: 'block', marginBottom: 7 }}>Rate by batch</span>
+                        <span style={{ ...muted, fontSize: 12.5, fontWeight: 600, display: 'block', marginBottom: 7 }}>Rate by batch</span>
                         {data.trends.yoy.map((y) => {
                           const current = y.batch === fy.batch;
                           return (
@@ -439,13 +441,13 @@ const DashboardPanel: React.FC = () => {
                               onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
                               onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                             >
-                              <span className="data" style={{ width: 34, flex: 'none', fontSize: 11.5, fontWeight: current ? 700 : 500, color: current ? 'var(--text)' : 'var(--text-muted)' }}>
+                              <span className="data" style={{ width: 34, flex: 'none', fontSize: 12.5, fontWeight: current ? 700 : 500, color: current ? 'var(--text)' : 'var(--text-muted)' }}>
                                 {y.batch}
                               </span>
                               <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
                                 <div className="kp-grow-x" style={{ width: `${y.rate}%`, height: '100%', borderRadius: 999, background: current ? 'var(--success)' : 'color-mix(in srgb, var(--success) 42%, transparent)' }} />
                               </div>
-                              <span className="data" style={{ width: 44, flex: 'none', textAlign: 'right', fontSize: 11.5, fontWeight: current ? 650 : 400, color: current ? 'var(--text)' : 'var(--text-muted)' }}>
+                              <span className="data" style={{ width: 44, flex: 'none', textAlign: 'right', fontSize: 12.5, fontWeight: current ? 650 : 400, color: current ? 'var(--text)' : 'var(--text-muted)' }}>
                                 {y.rate}%
                               </span>
                             </div>
@@ -461,7 +463,7 @@ const DashboardPanel: React.FC = () => {
                       ].map((r) => (
                         <div
                           key={r.k}
-                          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7.5px 6px', borderTop: '1px solid var(--border)', fontSize: 12.5, borderRadius: 5, transition: 'background .15s ease' }}
+                          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7.5px 6px', borderTop: '1px solid var(--border)', fontSize: 13.5, borderRadius: 5, transition: 'background .15s ease' }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
                           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
@@ -478,7 +480,7 @@ const DashboardPanel: React.FC = () => {
                     <span className="chart-label" style={{ display: 'block' }}>Outcome mix</span>
                     <DonutChart data={data.distribution.outcome_composition} emptyLabel="No intent recorded." size={196} stacked centerLabel="students" />
                     <div>
-                      <span style={{ ...muted, fontSize: 11.5, fontWeight: 600, display: 'block', marginBottom: 7 }}>
+                      <span style={{ ...muted, fontSize: 12.5, fontWeight: 600, display: 'block', marginBottom: 7 }}>
                         Of the {o.seeking_placement} seeking placement
                       </span>
                       <StackedBar
@@ -779,7 +781,7 @@ const DashboardPanel: React.FC = () => {
                   ))}
                 </Table>
                 {/* One quiet roll-up line anchors the panel bottom */}
-                <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px dashed var(--border)', display: 'flex', flexWrap: 'wrap', gap: '5px 18px', ...muted, fontSize: 12 }}>
+                <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: divider, display: 'flex', flexWrap: 'wrap', gap: '5px 18px', ...muted, fontSize: 13 }}>
                   {(() => {
                     const byCity = new Map<string, number>();
                     data.placements.internship_destinations.forEach((d) => {
@@ -802,7 +804,12 @@ const DashboardPanel: React.FC = () => {
             title="Recent placements"
             subtitle="Latest confirmed offers."
             action={data.placements.recent.length > 0 ? (
-              <button onClick={() => downloadCsv('recent-placements.csv', data.placements.recent as unknown as Record<string, unknown>[])} style={btnGhost}>
+              <button
+                onClick={() => downloadCsv('recent-placements.csv', data.placements.recent as unknown as Record<string, unknown>[])}
+                style={btnGhost}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-3)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+              >
                 <Download size={14} /> CSV
               </button>
             ) : undefined}
@@ -823,7 +830,7 @@ const DashboardPanel: React.FC = () => {
                     <td style={{ ...td, color: 'var(--text-muted)' }}>{p.role}</td>
                     <td style={td}>
                       <span style={{
-                        padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
+                        padding: '2px 8px', borderRadius: 999, fontSize: 12, fontWeight: 600,
                         background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)',
                       }}>{p.type}</span>
                     </td>
@@ -870,7 +877,7 @@ const DashboardPanel: React.FC = () => {
               </p>
             ) : (
               <>
-                <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap', ...muted, fontSize: 12 }}>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap', ...muted, fontSize: 13 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)' }} /> No student lists it — train here
                   </span>
@@ -892,11 +899,11 @@ const DashboardPanel: React.FC = () => {
                           onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                           <span aria-hidden style={{ width: 8, height: 8, borderRadius: '50%', flex: 'none', background: missing ? 'var(--danger)' : 'var(--success)' }} />
-                          <span style={{ flex: 1, minWidth: 0, fontWeight: 600, fontSize: 13, overflowWrap: 'anywhere' }}>{s.key}</span>
-                          <span className="data" style={{ flex: 'none', fontSize: 12, color: 'var(--text-muted)' }}>
+                          <span style={{ flex: 1, minWidth: 0, fontWeight: 600, fontSize: 14, overflowWrap: 'anywhere' }}>{s.key}</span>
+                          <span className="data" style={{ flex: 'none', fontSize: 13, color: 'var(--text-muted)' }}>
                             {s.demand} role{s.demand === 1 ? '' : 's'}
                           </span>
-                          <span className="data" style={{ flex: 'none', minWidth: 88, textAlign: 'right', fontSize: 12.5, fontWeight: 600, color: missing ? 'var(--danger)' : 'var(--success)' }}>
+                          <span className="data" style={{ flex: 'none', minWidth: 88, textAlign: 'right', fontSize: 13.5, fontWeight: 600, color: missing ? 'var(--danger)' : 'var(--success)' }}>
                             {missing ? 'no students' : `${s.supply} student${s.supply === 1 ? '' : 's'}`}
                           </span>
                         </div>
@@ -912,9 +919,19 @@ const DashboardPanel: React.FC = () => {
             subtitle="Unplaced and seeking, ordered by risk."
             action={
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={loadUnplaced} style={btnGhost}><RefreshCw size={14} /> Reload</button>
+                <button
+                  onClick={loadUnplaced}
+                  style={btnGhost}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-3)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                ><RefreshCw size={14} /> Reload</button>
                 {unplaced && unplaced.length > 0 && (
-                  <button onClick={() => downloadCsv(`at-risk-batch-${fy.batch}.csv`, unplaced as unknown as Record<string, unknown>[])} style={btnGhost}>
+                  <button
+                    onClick={() => downloadCsv(`at-risk-batch-${fy.batch}.csv`, unplaced as unknown as Record<string, unknown>[])}
+                    style={btnGhost}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-3)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
+                  >
                     <Download size={14} /> CSV
                   </button>
                 )}
@@ -935,9 +952,8 @@ const DashboardPanel: React.FC = () => {
                     return (
                       <span key={band} style={{
                         display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 12px', borderRadius: 999,
-                        fontSize: 12.5, fontWeight: 600, textTransform: 'capitalize',
-                        background: `color-mix(in srgb, ${tone} 12%, transparent)`,
-                        border: `1px solid color-mix(in srgb, ${tone} 30%, transparent)`, color: tone,
+                        fontSize: 12.5, fontWeight: 600,
+                        background: `color-mix(in srgb, ${tone} 14%, transparent)`, color: tone,
                       }}>
                         <span className="data">{n}</span> {band} risk
                       </span>
@@ -958,9 +974,8 @@ const DashboardPanel: React.FC = () => {
                       >
                         <td style={td}>
                           <span style={{
-                            padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                            padding: '2px 8px', borderRadius: 999, fontSize: 12, fontWeight: 600,
                             background: `color-mix(in srgb, ${tone} 14%, transparent)`, color: tone,
-                            border: `1px solid color-mix(in srgb, ${tone} 32%, transparent)`,
                           }}>{s.risk_band}</span>
                         </td>
                         <td style={{ ...td, color: 'var(--text-muted)' }} className="data">{s.auid ?? '—'}</td>
@@ -993,23 +1008,21 @@ const DashboardPanel: React.FC = () => {
                     title={`${s.count} students list ${s.key}`}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 11px',
-                      borderRadius: 999, fontSize: 12.5, fontWeight: 550, cursor: 'default',
-                      background: `color-mix(in srgb, ${colorAt(i)} 12%, transparent)`,
-                      border: `1px solid color-mix(in srgb, ${colorAt(i)} 30%, transparent)`,
-                      transition: 'transform .15s ease, background .15s ease, box-shadow .15s ease',
+                      borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: 'default',
+                      background: `color-mix(in srgb, ${colorAt(i)} 12%, var(--surface))`,
+                      border: '1px solid var(--border)',
+                      transition: 'background .18s ease, border-color .18s ease',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.background = `color-mix(in srgb, ${colorAt(i)} 20%, transparent)`;
-                      e.currentTarget.style.boxShadow = 'var(--shadow)';
+                      e.currentTarget.style.background = `color-mix(in srgb, ${colorAt(i)} 22%, var(--surface))`;
+                      e.currentTarget.style.borderColor = `color-mix(in srgb, ${colorAt(i)} 35%, var(--border))`;
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'none';
-                      e.currentTarget.style.background = `color-mix(in srgb, ${colorAt(i)} 12%, transparent)`;
-                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.background = `color-mix(in srgb, ${colorAt(i)} 12%, var(--surface))`;
+                      e.currentTarget.style.borderColor = 'var(--border)';
                     }}
                   >
-                    {s.key}<span className="data" style={{ color: 'var(--text-muted)', fontSize: 11.5 }}>{s.count}</span>
+                    {s.key}<span className="data" style={{ color: 'var(--text-muted)', fontSize: 12.5 }}>{s.count}</span>
                   </span>
                 ))}
               </div>
