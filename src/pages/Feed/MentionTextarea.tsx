@@ -80,20 +80,20 @@ const MentionTextarea: React.FC<Props> = ({ value, onChange, mentions, onMention
         onChange={handleChange}
         placeholder={placeholder}
         rows={rows}
-        style={{ width: '100%', padding: '11px 13px', borderRadius: 'var(--r-ctl)', border: '1px solid var(--border-strong)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 14, outline: 'none', resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', padding: '11px 13px', border: '1px solid var(--border-strong)', borderRadius: 'var(--r-ctl)', background: 'var(--bg-2)', color: 'var(--text)', fontSize: 15, outline: 'none', resize: 'vertical', lineHeight: 1.5 }}
       />
       {open && (
         <div style={{ position: 'absolute', zIndex: 50, left: 8, right: 8, marginTop: 2, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: 'var(--shadow)', maxHeight: 220, overflow: 'auto' }}>
           {results.length === 0 ? (
-            <div style={{ padding: '10px 12px', fontSize: 13, color: 'var(--text-muted)' }}>No people found.</div>
+            <div style={{ padding: '10px 12px', fontSize: 14, color: 'var(--text-muted)' }}>No people found.</div>
           ) : (
             results.map((u) => (
               <button key={u._id} type="button" onClick={() => pick(u)}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '9px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, color: 'var(--text)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', padding: '9px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14.5, color: 'var(--text)' }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}>
                 <span style={{ textTransform: 'capitalize', fontWeight: 550 }}>{fullName(u) || 'User'}</span>
-                <span style={{ fontSize: 11.5, color: 'var(--text-subtle)' }}>{u.roles?.includes('recruiter') ? 'Recruiter' : 'Student'}</span>
+                <span style={{ fontSize: 12.5, color: 'var(--text-subtle)' }}>{u.roles?.includes('recruiter') ? 'Recruiter' : 'Student'}</span>
               </button>
             ))
           )}
