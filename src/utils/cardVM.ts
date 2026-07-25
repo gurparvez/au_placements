@@ -7,6 +7,8 @@ export interface CardVM {
   name: string;
   initials: string;
   avatarBg: string;
+  profileImage: string;
+  university: string;
   headline: string;
   oppLabel: string;
   field: string;
@@ -38,14 +40,16 @@ export function studentToCardVM(s: any): CardVM {
     name,
     initials: initials(first, last) || '?',
     avatarBg: avatarColor(name),
+    profileImage: s?.profile_image || s?.user?.profile_image || '',
+    university: s?.user?.university || '',
     headline: s?.headline || '',
     oppLabel: lf.type === 'job' ? 'Open to work' : 'Open to internship',
     field: s?.preferred_field || '',
     metaText: meta,
     availLabel: av,
     hasAvail: !!av,
-    skills: skills.slice(0, 4),
-    extra: Math.max(0, skills.length - 4),
-    hasExtra: skills.length > 4,
+    skills,
+    extra: 0,
+    hasExtra: false,
   };
 }
