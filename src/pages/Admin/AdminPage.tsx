@@ -47,21 +47,21 @@ const card: React.CSSProperties = {
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '10px 12px', borderRadius: 'var(--r-ctl)',
   border: '1px solid var(--border-strong)', background: 'var(--bg-2)',
-  color: 'var(--text)', fontSize: 14, outline: 'none',
+  color: 'var(--text)', fontSize: 15, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
   borderRadius: 'var(--r-ctl)', background: 'var(--primary)', color: 'var(--on-primary)',
-  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: 'none',
+  fontWeight: 600, fontSize: 15, cursor: 'pointer', border: 'none',
   transition: 'background .18s ease',
 };
 const btnGhost: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px',
   borderRadius: 'var(--r-ctl)', background: 'var(--surface-2)', color: 'var(--text)',
-  fontWeight: 550, fontSize: 13, cursor: 'pointer', border: '1px solid var(--border)',
+  fontWeight: 600, fontSize: 14, cursor: 'pointer', border: '1px solid var(--border)',
   transition: 'background .18s ease',
 };
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13.5, fontWeight: 600, marginBottom: 5, color: 'var(--text-muted)' };
 const hoverBg = (over: string, base: string) => ({
   onMouseEnter: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = over; },
   onMouseLeave: (e: React.MouseEvent<HTMLElement>) => { e.currentTarget.style.background = base; },
@@ -70,7 +70,7 @@ const hoverBg = (over: string, base: string) => ({
 const Avatar: React.FC<{ first?: string; last?: string }> = ({ first, last }) => (
   <span aria-hidden style={{
     width: 32, height: 32, borderRadius: '50%', flex: 'none', display: 'inline-flex',
-    alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 12,
+    alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13,
     background: avatarColor(`${first ?? ''} ${last ?? ''}`),
   }}>{initials(first, last) || '?'}</span>
 );
@@ -170,9 +170,9 @@ function UserFormModal({
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit user' : 'Create user'} style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit user' : 'Create user'}</h2>
-        <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label={isEdit ? 'Edit user' : 'Create user'} style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', borderRadius: 18, background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 20, fontWeight: 500, letterSpacing: '-.01em' }}>{isEdit ? 'Edit user' : 'Create user'}</h2>
+        <p style={{ margin: '6px 0 18px', fontSize: 14, color: 'var(--text-muted)' }}>
           {isEdit ? `Updating ${editing?.firstName} (AUID ${editing?.auid}).` : 'Create a student or admin account.'}
         </p>
 
@@ -229,7 +229,7 @@ function UserFormModal({
                     border: `1px solid ${form.roles.includes(role) ? 'var(--primary)' : 'var(--border)'}`,
                     background: form.roles.includes(role) ? 'var(--primary-soft)' : 'transparent',
                     color: form.roles.includes(role) ? 'var(--primary)' : 'var(--text-muted)',
-                    fontWeight: 600, fontSize: 13, textTransform: 'capitalize',
+                    fontWeight: 600, fontSize: 14, textTransform: 'capitalize',
                   }}>
                   {role}
                 </button>
@@ -301,9 +301,9 @@ function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(6,8,12,.55)' }} />
-      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Academic record" style={{ ...card, position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24, boxShadow: 'var(--shadow)' }}>
-        <h2 className="font-display" style={{ margin: 0, fontSize: 19, fontWeight: 500, letterSpacing: '-.01em' }}>Academic record</h2>
-        <p style={{ margin: '6px 0 18px', fontSize: 13, color: 'var(--text-muted)' }}>
+      <div ref={useDialogFocus<HTMLDivElement>()} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Academic record" style={{ animation: 'kpPop .3s cubic-bezier(0.22, 1, 0.36, 1) both', borderRadius: 18, background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', position: 'relative', width: 'min(560px,100%)', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
+        <h2 className="font-display" style={{ margin: 0, fontSize: 20, fontWeight: 500, letterSpacing: '-.01em' }}>Academic record</h2>
+        <p style={{ margin: '6px 0 18px', fontSize: 14, color: 'var(--text-muted)' }}>
           {user.firstName} (AUID {user.auid}). Blank fields keep current values.
         </p>
 
@@ -320,7 +320,7 @@ function RecordModal({ user, onClose, onSaved }: { user: AdminUser; onClose: () 
           {num('mock_interview_score', 'Mock score (0–10)', { min: 0, max: 10, step: '0.1' })}
           {num('training_attendance', 'Training attendance %', { min: 0, max: 100 })}
           <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 10 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 13.5 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer', fontSize: 14.5 }}>
               <input type="checkbox" checked={form.resume_verified} onChange={(e) => set('resume_verified', e.target.checked)}
                 style={{ width: 16, height: 16, cursor: 'pointer' }} />
               Resume verified
@@ -415,24 +415,16 @@ const AdminPage: React.FC = () => {
   const rows = useMemo(() => users, [users]);
 
   if (!initialized) {
-    return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Loading…</section>;
+    return <section style={{ padding: '60px clamp(20px,10vw,64px)', color: 'var(--text-muted)' }}>Loading…</section>;
   }
   if (!isAdmin) {
-    return <section style={{ padding: '60px clamp(20px,10vw,112px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
+    return <section style={{ padding: '60px clamp(20px,10vw,64px)', color: 'var(--text-muted)' }}>Redirecting…</section>;
   }
 
   return (
     // The dashboard has far more to show than the CRUD tables — give it room.
-    <section style={{ padding: '40px clamp(20px,10vw,112px) 80px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div className="brass-rule" style={{ marginBottom: 12 }} />
-          <span className="ledger-label" style={{ color: 'var(--brass)' }}>Placement office</span>
-          <h1 className="font-display" style={{ margin: '8px 0 0', fontSize: 'clamp(24px,3vw,30px)', fontWeight: 500, letterSpacing: '-.02em' }}>Admin</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-muted)' }}>
-            Placement analytics, user management, and recruiter approvals.
-          </p>
-        </div>
+    <section style={{ padding: '18px clamp(20px,10vw,64px) 80px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
         {tab === 'users' && <button onClick={openCreate} {...hoverBg('var(--primary-hover)', 'var(--primary)')} style={btnPrimary}><Plus size={16} /> New user</button>}
       </div>
 
@@ -454,7 +446,7 @@ const AdminPage: React.FC = () => {
                 position: 'relative', flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
                 padding: '10px 8px', border: 'none', cursor: 'pointer', minWidth: 110,
                 background: 'transparent', borderRadius: 'var(--r-ctl)',
-                fontWeight: active ? 700 : 600, fontSize: 13.5, textTransform: 'capitalize',
+                fontWeight: active ? 700 : 600, fontSize: 14.5, textTransform: 'capitalize',
                 whiteSpace: 'nowrap', color: active ? 'var(--pri-ink)' : 'var(--text-muted)',
                 transition: 'color .18s ease, background .18s ease',
               }}
@@ -471,7 +463,7 @@ const AdminPage: React.FC = () => {
                 <Icon size={16} /> {t}
                 {t === 'approvals' && !!pendingCount && (
                   <span className="data" style={{
-                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, fontSize: 11, fontWeight: 700,
+                    minWidth: 18, height: 18, padding: '0 6px', borderRadius: 999, fontSize: 12, fontWeight: 700,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     background: 'color-mix(in srgb, orange 18%, transparent)', color: 'orange',
                   }}>{pendingCount}</span>
@@ -569,17 +561,17 @@ const AdminPage: React.FC = () => {
                           }}>
                             <Avatar first={u.firstName} last={u.lastName} />
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <span style={{ display: 'block', fontSize: 14.5, fontWeight: 650, textTransform: 'capitalize', lineHeight: 1.35 }}>
+                              <span style={{ display: 'block', fontSize: 15.5, fontWeight: 650, textTransform: 'capitalize', lineHeight: 1.35 }}>
                                 {`${u.firstName} ${u.lastName ?? ''}`.trim()}
                               </span>
-                              <span className="data" style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>
+                              <span className="data" style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.45 }}>
                                 AUID {u.auid} · {u.university}
                               </span>
                             </div>
                             <span style={{ flex: 'none', display: 'inline-flex', gap: 6 }}>
                               {u.roles.map((r) => (
                                 <span key={r} style={{
-                                  padding: '3px 9px', borderRadius: 999, fontSize: 11, fontWeight: 600, textTransform: 'capitalize',
+                                  padding: '3px 9px', borderRadius: 999, fontSize: 11.5, fontWeight: 600, textTransform: 'capitalize',
                                   background: 'var(--bg-2)', border: '1px solid var(--border)',
                                   color: r === 'admin' ? 'var(--primary)' : 'var(--text-muted)',
                                 }}>{r}</span>
@@ -589,7 +581,7 @@ const AdminPage: React.FC = () => {
 
                           {/* email + actions */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px 12px' }}>
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, overflowWrap: 'anywhere', minWidth: 0 }}>
+                            <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, overflowWrap: 'anywhere', minWidth: 0 }}>
                               {u.email || 'No email recorded'}
                             </span>
                             <span style={{ marginLeft: 'auto', flex: 'none', display: 'inline-flex', gap: 2 }}>
@@ -622,7 +614,7 @@ const AdminPage: React.FC = () => {
 
               {pagination && pagination.totalPages > 1 && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-                  <span className="data" style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  <span className="data" style={{ fontSize: 14, color: 'var(--text-muted)' }}>
                     Page {pagination.page} of {pagination.totalPages} · {pagination.total} users
                   </span>
                   <div style={{ display: 'flex', gap: 8 }}>
