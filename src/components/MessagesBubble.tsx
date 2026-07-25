@@ -51,17 +51,19 @@ const MessagesBubble: React.FC = () => {
         aria-label="Messages"
         aria-expanded={open}
         style={{
-          position: 'relative', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          position: 'relative', width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
           // open = filled with the accent so the active state is unmistakable
-          color: open ? 'var(--on-primary)' : 'var(--text-muted)',
-          background: open ? 'var(--primary)' : 'var(--surface-2)',
-          border: open ? '1px solid var(--primary)' : '1px solid var(--border)',
-          transition: 'background .18s ease, color .18s ease, border-color .18s ease',
+          color: open ? 'var(--on-primary)' : 'var(--text)',
+          background: open ? 'var(--primary)' : 'var(--surface)',
+          transition: 'background .18s ease, color .18s ease',
         }}
+        onMouseEnter={(e) => { if (!open) e.currentTarget.style.background = 'var(--surface-2)'; }}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.background = 'var(--surface)'; }}
       >
         <MessageCircle size={17} />
         {unread > 0 && (
-          <span style={{ position: 'absolute', top: -3, right: -3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg)' }}>
+          <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 999, background: 'var(--danger)', color: '#fff', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg)' }}>
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -74,9 +76,9 @@ const MessagesBubble: React.FC = () => {
             role="dialog"
             aria-modal="true"
             aria-label="Messages"
-            style={{ position: 'relative', width: 'min(1080px, 96vw)', height: 'min(82vh, 720px)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow)', background: 'var(--surface)' }}
+            style={{ position: 'relative', width: 'min(1080px, 96vw)', height: 'min(82vh, 720px)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow)', overflow: 'hidden', background: 'var(--surface)' }}
           >
-            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 14 }}>Loading…</div>}>
+            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: 15 }}>Loading…</div>}>
               <MessagesPanel modal onNavigateAway={() => setOpen(false)} />
             </Suspense>
             <button
